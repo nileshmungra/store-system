@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOM Master | Store System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        /* 🌓 Global Dark / Light Theme System */
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: #0f172a;
+            --input-text: #f8fafc;
+            --shadow-glow: rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="light"] {
+            --bg-main: #f1f5f9;
+            --bg-card: #ffffff;
+            --border-color: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --input-bg: #ffffff;
+            --input-text: #0f172a;
+            --shadow-glow: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            background-color: var(--bg-main) !important;
+            color: var(--text-main) !important;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .glass-card, .card {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-main) !important;
+            box-shadow: 0 8px 24px var(--shadow-glow) !important;
+        }
+
+        .form-control, .form-select, .form-control-dark, .form-select-dark {
+            background-color: var(--input-bg) !important;
+            color: var(--input-text) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        .table, .table td, .table th {
+            color: var(--text-main) !important;
+        }
+
+        [data-theme="light"] .text-white,
+        [data-theme="light"] .text-slate-300,
+        [data-theme="light"] .text-slate-400 {
+            color: #0f172a !important;
+        }
+
+        /* 🚀 High-End Pill Navigation Buttons & 4 Clean Dropdowns */
+        .navbar-custom {
+            background-color: rgba(15, 23, 42, 0.95) !important;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .nav-pill-custom {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            padding: 8px 16px !important;
+            border-radius: 12px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            color: #cbd5e1 !important;
+            text-decoration: none !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.2s ease-in-out !important;
+            white-space: nowrap !important;
+        }
+
+        .nav-pill-custom:hover, .nav-pill-custom:focus {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-1.5px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+            text-decoration: none !important;
+        }
+
+        .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+            border-color: #818cf8 !important;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45) !important;
+            font-weight: 700 !important;
+            text-decoration: none !important;
+        }
+
+        .dropdown-menu-custom {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 30px var(--shadow-glow) !important;
+            padding: 8px !important;
+            margin-top: 8px !important;
+        }
+
+        .dropdown-item-custom {
+            color: var(--text-main) !important;
+            border-radius: 8px !important;
+            padding: 9px 14px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .dropdown-item-custom:hover {
+            background-color: rgba(99, 102, 241, 0.15) !important;
+            color: #818cf8 !important;
+            transform: translateX(3px) !important;
+        }
+
+        [data-theme="light"] .navbar-custom {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom {
+            color: #334155 !important;
+            background: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom:hover {
+            color: #0f172a !important;
+            background: #e2e8f0 !important;
+            border-color: #94a3b8 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+            border-color: #4338ca !important;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
+        }
+
+        [data-theme="light"] .dropdown-menu-custom {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .dropdown-item-custom:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        .nav-pill-custom {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            padding: 8px 16px !important;
+            border-radius: 12px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            color: #cbd5e1 !important;
+            text-decoration: none !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.2s ease-in-out !important;
+            white-space: nowrap !important;
+        }
+
+        .nav-pill-custom:hover {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-1.5px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+            text-decoration: none !important;
+        }
+
+        .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+            border-color: #fbbf24 !important;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.45) !important;
+            font-weight: 700 !important;
+            text-decoration: none !important;
+        }
+
+        [data-theme="light"] .navbar-custom {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom {
+            color: #334155 !important;
+            background: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom:hover {
+            color: #0f172a !important;
+            background: #e2e8f0 !important;
+            border-color: #94a3b8 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+        }
+    </style>
+
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
+            <span class="fs-4 text-warning">📦</span> 
+            <span>STORE MANAGEMENT SYSTEM</span>
+        </a>
+        
+        <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#topNavbarMenu">
+            <i class="bi bi-list fs-2"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="topNavbarMenu">
+            <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+                
+                <!-- 1. Inward & Factory Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-box-seam me-1 text-info"></i> આવક અને ઉત્પાદન
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <li><a class="dropdown-item dropdown-item-custom" href="/dashboard"><i class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
+                    </ul>
+                </div>
+
+                <!-- 2. Dispatch & Yard Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-truck me-1 text-success"></i> ડિસ્પેચ અને સ્કેનિંગ
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a></li>
+                    </ul>
+                </div>
+
+                <!-- 3. Master Controls Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-pill-custom dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-sliders me-1 text-warning"></i> માસ્ટર કંટ્રોલ
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
+                    </ul>
+                </div>
+
+                <!-- 4. Reports & Logs Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bar-chart-line me-1 text-primary"></i> રિપોર્ટ્સ અને લોગ
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
+                    </ul>
+                </div>
+
+                <!-- 🌓 Global Theme Toggle Button -->
+                <button id="globalThemeBtn" onclick="toggleGlobalTheme()" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
+                    <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+                    <span id="themeText">Dark Mode</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container my-4">
+    <!-- Header Title -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h3 class="fw-bold text-white m-0"><i class="bi bi-diagram-3-fill text-warning me-2"></i> Bill of Materials (BOM) Master</h3>
+            <p class="text-muted small m-0 mt-1">ફિનિશ્ડ પ્રોડક્ટ બનાવવા માટે વપરાતા કાચા માલ (Components) ની યાદી મેનેજ કરો.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column: Create/Edit BOM -->
+        <div class="col-lg-5">
+            <div class="glass-card p-4 position-sticky" style="top: 100px;">
+                <h5 class="fw-bold text-warning mb-3"><i class="bi bi-plus-circle-fill me-2"></i> Create / Edit BOM</h5>
+                <form id="bomForm" onsubmit="saveBOM(event)">
+                    <div class="mb-3">
+                        <label for="finishedGood" class="form-label small text-muted">1. Finished Good (બનાવટની મુખ્ય આઈટમ)</label>
+                        <input class="form-control form-control-dark" list="finishedGoodsList" id="finishedGood" placeholder="🔍 Own Production આઈટમ શોધો..." required autocomplete="off">
+                        <datalist id="finishedGoodsList"></datalist>
+                    </div>
+
+                    <hr class="border-secondary">
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="form-label small text-muted mb-0">2. Components (વપરાતો કાચો માલ)</label>
+                        <button type="button" class="btn btn-sm btn-outline-info py-0" onclick="addComponentRow()">
+                            <i class="bi bi-plus"></i> Add Component
+                        </button>
+                    </div>
+
+                    <div id="componentsContainer" class="d-grid gap-2" style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
+                        <!-- Component rows will be added here by JS -->
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                         <button type="submit" class="btn btn-warning fw-bold">
+                            <i class="bi bi-save-fill me-1"></i> Save BOM
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearForm()">
+                            Clear Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column: Existing BOMs List -->
+        <div class="col-lg-7">
+            <div class="glass-card p-4">
+                 <h5 class="fw-bold text-warning mb-3"><i class="bi bi-list-check me-2"></i> Existing BOMs</h5>
+                 <div id="bomsListContainer" class="d-grid gap-3">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-warning" role="status"></div>
+                        <p class="text-muted mt-2">BOMs લોડ થઈ રહ્યા છે...</p>
+                    </div>
+                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = "";
+    let allItems = [];
+    let finishedGoods = [];
+    let rawMaterials = [];
+    let currentEditingBomId = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadAllItems();
+        loadBOMs();
+    });
+
+    async function loadAllItems() {
+        try {
+            const res = await fetch(`${API_URL}/api/items/list?limit=0`);
+            const data = await res.json();
+            allItems = data.items || [];
+            
+            finishedGoods = allItems.filter(i => i.is_own_production === 1 || i.item_group === 'Own Production');
+            rawMaterials = allItems.filter(i => i.is_own_production === 0 && i.item_group !== 'Own Production');
+
+            const fgDatalist = document.getElementById('finishedGoodsList');
+            fgDatalist.innerHTML = finishedGoods.map(i => `<option value="${i.item_name}" data-id="${i.id}"></option>`).join('');
+
+        } catch (err) {
+            console.error("Error loading items for BOM:", err);
+        }
+    }
+
+    async function loadBOMs() {
+        const container = document.getElementById('bomsListContainer');
+        try {
+            const res = await fetch(`${API_URL}/api/boms/list`);
+            const data = await res.json();
+
+            if (!data.boms || data.boms.length === 0) {
+                container.innerHTML = `<div class="text-center text-muted p-4"><i class="bi bi-diagram-2 fs-1"></i><p>કોઈ BOM બનાવેલ નથી.</p></div>`;
+                return;
+            }
+
+            container.innerHTML = data.boms.map(bom => `
+                <div class="glass-card p-3" style="background: #0f172a;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-white mb-0">${bom.finished_good_name}</h6>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick='editBOM(${JSON.stringify(bom)})'>
+                                <i class="bi bi-pencil"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteBOM(${bom.bom_id})">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled mb-0 small">
+                        ${bom.components.map(c => `
+                            <li class="d-flex justify-content-between border-bottom border-secondary py-1">
+                                <span class="text-muted">${c.component_name}</span>
+                                <span class="fw-bold text-info">${c.quantity} ${c.unit || ''}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `).join('');
+
+        } catch (err) {
+            console.error("Error loading BOMs:", err);
+            container.innerHTML = `<div class="alert alert-danger">BOMs લોડ કરવામાં એરર આવી.</div>`;
+        }
+    }
+
+    function addComponentRow(component = null) {
+        const container = document.getElementById('componentsContainer');
+        const row = document.createElement('div');
+        row.className = 'row g-2 align-items-center component-row';
+
+        const componentId = component ? component.component_item_id : '';
+        const componentName = component ? component.component_name : '';
+        const quantity = component ? component.quantity : '';
+
+        const rmOptionsId = `rawMaterialsList_${Date.now()}`;
+        row.innerHTML = `
+            <div class="col-7">
+                <input class="form-control form-control-sm form-control-dark component-item" list="${rmOptionsId}" placeholder="કાચો માલ શોધો..." value="${componentName}" required autocomplete="off">
+                <datalist id="${rmOptionsId}">
+                    ${rawMaterials.map(i => `<option value="${i.item_name}" data-id="${i.id}"></option>`).join('')}
+                </datalist>
+            </div>
+            <div class="col-3">
+                <input type="number" step="any" class="form-control form-control-sm form-control-dark component-qty" placeholder="Qty" value="${quantity}" required>
+            </div>
+            <div class="col-2 text-end">
+                <button type="button" class="btn btn-sm btn-danger py-0 px-2" onclick="this.closest('.component-row').remove()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        `;
+        container.appendChild(row);
+    }
+
+    function clearForm() {
+        document.getElementById('bomForm').reset();
+        document.getElementById('componentsContainer').innerHTML = '';
+        currentEditingBomId = null;
+    }
+
+    function editBOM(bom) {
+        clearForm();
+        document.getElementById('finishedGood').value = bom.finished_good_name;
+        currentEditingBomId = bom.bom_id;
+
+        bom.components.forEach(c => {
+            addComponentRow(c);
+        });
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function deleteBOM(bomId) {
+        if (!confirm("શું તમે ખરેખર આ BOM ડિલીટ કરવા માંગો છો?")) return;
+
+        try {
+            const res = await fetch(`${API_URL}/api/boms/delete/${bomId}`, { method: 'DELETE' });
+            const data = await res.json();
+            alert(data.message || data.detail);
+            if (res.ok) {
+                loadBOMs();
+            }
+        } catch (err) {
+            alert("❌ Server Error");
+        }
+    }
+
+    function findOptionId(datalistId, value) {
+        const datalist = document.getElementById(datalistId);
+        for (const option of datalist.options) {
+            if (option.value === value) {
+                return parseInt(option.getAttribute('data-id'));
+            }
+        }
+        return null;
+    }
+
+    async function saveBOM(e) {
+        e.preventDefault();
+
+        const fgInput = document.getElementById('finishedGood');
+        const finishedGoodId = findOptionId('finishedGoodsList', fgInput.value);
+
+        if (!finishedGoodId) {
+            alert("⚠️ કૃપા કરીને 'Finished Good' લિસ્ટમાંથી પસંદ કરો.");
+            return;
+        }
+
+        const components = [];
+        const componentRows = document.querySelectorAll('.component-row');
+        let validationFailed = false;
+
+        componentRows.forEach(row => {
+            const itemNameInput = row.querySelector('.component-item');
+            const qtyInput = row.querySelector('.component-qty');
+            const datalistId = itemNameInput.getAttribute('list');
+            
+            const componentId = findOptionId(datalistId, itemNameInput.value);
+
+            if (!componentId || !qtyInput.value) {
+                validationFailed = true;
+            } else {
+                components.push({
+                    component_item_id: componentId,
+                    quantity: parseFloat(qtyInput.value)
+                });
+            }
+        });
+
+        if (validationFailed) {
+            alert("⚠️ કૃપા કરીને બધા components અને તેમનો જથ્થો બરાબર ભરો.");
+            return;
+        }
+
+        if (components.length === 0) {
+            alert("⚠️ કૃપા કરીને ઓછામાં ઓછો એક component ઉમેરો.");
+            return;
+        }
+
+        const payload = {
+            finished_good_item_id: finishedGoodId,
+            components: components
+        };
+
+        try {
+            const res = await fetch(`${API_URL}/api/boms/save`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            alert(data.message || data.detail);
+
+            if (res.ok) {
+                clearForm();
+                loadBOMs();
+            }
+        } catch (err) {
+            alert("❌ Server Error");
+        }
+    }
+
+    // 🌓 Global Dark / Light Theme Management
+    function applyGlobalTheme() {
+        const theme = localStorage.getItem('theme_preference') || 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        updateThemeBtn(theme);
+    }
+    function toggleGlobalTheme() {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme_preference', next);
+        updateThemeBtn(next);
+    }
+    function updateThemeBtn(theme) {
+        const btn = document.getElementById('globalThemeBtn');
+        const icon = document.getElementById('themeIcon');
+        const text = document.getElementById('themeText');
+        if (!btn || !icon || !text) return;
+        if (theme === 'light') {
+            icon.className = 'bi bi-sun-fill text-warning';
+            text.innerText = 'Light Mode';
+            btn.className = 'btn btn-light text-dark border-secondary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+        } else {
+            icon.className = 'bi bi-moon-stars-fill text-warning';
+            text.innerText = 'Dark Mode';
+            btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+        }
+    }
+
+    applyGlobalTheme();
+</script>
+
+<script>
+// Global Theme Switcher Logic
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('user-theme', newTheme);
+    localStorage.setItem('theme_preference', newTheme);
+    updateThemeBtnUI(newTheme);
+}
+
+function updateThemeBtnUI(theme) {
+    const btn = document.getElementById('globalThemeBtn');
+    const icon = document.getElementById('themeIcon');
+    const text = document.getElementById('themeText');
+    if (!btn) return;
+    
+    if (theme === 'dark') {
+        if (icon) icon.className = 'bi bi-moon-stars-fill text-warning';
+        if (text) text.innerText = 'Dark';
+        btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+    } else {
+        if (icon) icon.className = 'bi bi-sun-fill text-warning';
+        if (text) text.innerText = 'Light';
+        btn.className = 'btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+    }
+}
+
+// Global Theme Auto-Apply Functions
+function toggleGlobalTheme() { toggleTheme(); }
+function applyGlobalTheme() {
+    const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeBtnUI(savedTheme);
+}
+
+// Page Load Auto-Apply Saved Theme
+(function () {
+    const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.addEventListener('DOMContentLoaded', function () {
+        updateThemeBtnUI(savedTheme);
+    });
+})();
+</script>
+
+</body>
+</html>

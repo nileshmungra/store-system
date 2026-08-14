@@ -1,0 +1,123 @@
+/* 🌓 Elegant Modern Theme System */
+
+/* Default Light Mode */
+:root {
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --border-color: #cbd5e1;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --input-bg: #ffffff;
+    --input-text: #0f172a;
+    --input-border: #94a3b8;
+    --shadow-glow: rgba(0, 0, 0, 0.08);
+}
+
+/* Pure Black & Slate Dark Mode */
+[data-theme="dark"] {
+    --bg-main: #0f172a;
+    --bg-card: rgba(30, 41, 59, 0.9);
+    --border-color: rgba(255, 255, 255, 0.12);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --input-bg: #0f172a;
+    --input-text: #f8fafc;
+    --input-border: #334155;
+    --shadow-glow: rgba(0, 0, 0, 0.35);
+}
+
+body {
+    background-color: var(--bg-main) !important;
+    color: var(--text-main) !important;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Typography defaults */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-main);
+}
+
+/* Navbar Brand & Dropdown Styling */
+.navbar-brand {
+    color: var(--text-main) !important;
+}
+
+.dropdown-menu {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .dropdown-menu {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .dropdown-item {
+    color: #0f172a !important;
+}
+
+[data-theme="light"] .dropdown-item:hover {
+    background-color: #f1f5f9 !important;
+    color: #4f46e5 !important;
+}
+
+[data-theme="dark"] .dropdown-menu {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background-color: #334155 !important;
+    color: #818cf8 !important;
+}
+
+/* Forms & Select Inputs */
+.form-control, .form-select, input, select, textarea {
+    background-color: var(--input-bg) !important;
+    color: var(--input-text) !important;
+    border-color: var(--input-border) !important;
+}
+
+select option {
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+}
+
+/* Table Themes */
+.table th, .table td {
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="light"] .table {
+    color: #0f172a !important;
+}
+
+[data-theme="dark"] .table {
+    color: #f8fafc !important;
+}
+
+/* Card Themes */
+[data-theme="light"] .card, 
+[data-theme="light"] .glass-card {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+
+[data-theme="dark"] .card, 
+[data-theme="dark"] .glass-card {
+    background-color: rgba(30, 41, 59, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #f8fafc !important;
+}
+
+/* Welcome banner white text protection */
+.welcome-banner, .welcome-banner * {
+    color: #ffffff !important;
+}

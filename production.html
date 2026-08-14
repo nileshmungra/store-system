@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine Production & TSC Label Sticker Printing</title>
+    <!-- Google Fonts & Bootstrap Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --primary-bg: #f8fafc;
+            --navbar-bg: #0f172a;
+            --accent-color: #6366f1;
+            --card-radius: 16px;
+            --transition-speed: 0.25s ease;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--primary-bg);
+            color: #1e293b;
+        }
+
+        /* Navigation Bar */
+        .navbar-custom {
+            background-color: var(--navbar-bg);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .nav-pill-custom {
+            color: #94a3b8;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all var(--transition-speed);
+        }
+        .nav-pill-custom:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .nav-pill-custom.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+        }
+
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--card-radius);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            transition: all var(--transition-speed);
+        }
+
+        .card-header-primary {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ffffff;
+            border-top-left-radius: var(--card-radius) !important;
+            border-top-right-radius: var(--card-radius) !important;
+            padding: 16px 24px;
+        }
+
+        .form-control-custom, .form-select-custom {
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 11px 16px;
+            font-size: 15px;
+            transition: all var(--transition-speed);
+        }
+        .form-control-custom:focus, .form-select-custom:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+
+        .input-label-custom {
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+
+        .btn-gradient-indigo {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            border: none;
+            color: #ffffff;
+            font-weight: 700;
+            padding: 14px 28px;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+            transition: all var(--transition-speed);
+        }
+        .btn-gradient-indigo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+            color: #ffffff;
+        }
+
+        /* 🖨️ 100x100 MM (4x4 Inch) TSC Label Print CSS */
+        @media print {
+            body * { visibility: hidden !important; }
+            #label-print-area, #label-print-area * { visibility: visible !important; }
+            #label-print-area {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100mm !important;
+                height: 100mm !important;
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            @page {
+                size: 100mm 100mm;
+                margin: 0;
+            }
+            .no-print { display: none !important; }
+        }
+
+        .sticker-box {
+            width: 96mm;
+            height: 96mm;
+            border: 3px solid #000000;
+            padding: 4mm;
+            margin: auto;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Plus Jakarta Sans', sans-serif;
+            color: #000000;
+        }
+        .sticker-header { 
+            text-align: center; 
+            border-bottom: 2.5px solid #000000; 
+            padding-bottom: 3px; 
+        }
+        .company-title { 
+            font-size: 16pt; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            letter-spacing: 0.8px;
+            color: #000000;
+            line-height: 1.1;
+        }
+        .company-sub {
+            font-size: 7.5pt;
+            font-weight: 700;
+            color: #333333;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .sticker-details { 
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 4px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 9.5pt;
+            border-bottom: 1px dashed #aaaaaa;
+            padding-bottom: 2px;
+        }
+        .detail-label {
+            font-weight: 700;
+            color: #222222;
+            text-transform: uppercase;
+        }
+        .detail-value {
+            font-weight: 800;
+            color: #000000;
+        }
+        .detail-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin: 3px 0;
+        }
+        .detail-box {
+            border: 2px solid #000000;
+            border-radius: 4px;
+            padding: 3px;
+            text-align: center;
+            background: #fafafa;
+        }
+        .box-label {
+            display: block;
+            font-size: 7.5pt;
+            font-weight: 800;
+            color: #333333;
+            text-transform: uppercase;
+        }
+        .box-value {
+            display: block;
+            font-size: 13.5pt;
+            font-weight: 900;
+            color: #000000;
+        }
+        .sticker-footer { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            border-top: 2.5px solid #000000; 
+            padding-top: 4px; 
+        }
+        .qr-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .qr-label {
+            font-size: 7.5pt;
+            font-weight: 700;
+            color: #444444;
+        }
+        .qr-code-text {
+            font-size: 11pt;
+            font-weight: 900;
+            color: #000000;
+            letter-spacing: 0.5px;
+            font-family: monospace;
+        }
+        .qr-container {
+            width: 75px;
+            height: 75px;
+        }
+
+        /* 🌓 Global Dark / Light Theme System */
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.9);
+            --border-color: rgba(255, 255, 255, 0.12);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: #0f172a;
+            --input-text: #f8fafc;
+            --input-border: #334155;
+            --shadow-glow: rgba(0, 0, 0, 0.35);
+        }
+
+        [data-theme="light"] {
+            --bg-main: #f1f5f9;
+            --bg-card: #ffffff;
+            --border-color: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --input-bg: #ffffff;
+            --input-text: #0f172a;
+            --input-border: #94a3b8;
+            --shadow-glow: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            background-color: var(--bg-main) !important;
+            color: var(--text-main) !important;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .glass-card, .card {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-main) !important;
+            box-shadow: 0 8px 24px var(--shadow-glow) !important;
+        }
+
+        .table, .table td, .table th {
+            color: var(--text-main) !important;
+        }
+
+        [data-theme="light"] .text-white,
+        [data-theme="light"] .text-slate-300,
+        [data-theme="light"] .text-slate-400 {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .bg-dark,
+        [data-theme="light"] .bg-slate-800,
+        [data-theme="light"] .bg-slate-900 {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        /* 🚀 High-End Pill Navigation Buttons & 4 Clean Dropdowns */
+        .navbar-custom {
+            background-color: rgba(15, 23, 42, 0.95) !important;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .nav-pill-custom {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            padding: 8px 16px !important;
+            border-radius: 12px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            color: #cbd5e1 !important;
+            text-decoration: none !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.2s ease-in-out !important;
+            white-space: nowrap !important;
+        }
+
+        .nav-pill-custom:hover, .nav-pill-custom:focus {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-1.5px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+            text-decoration: none !important;
+        }
+
+        .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+            border-color: #818cf8 !important;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45) !important;
+            font-weight: 700 !important;
+            text-decoration: none !important;
+        }
+
+        .dropdown-menu-custom {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 30px var(--shadow-glow) !important;
+            padding: 8px !important;
+            margin-top: 8px !important;
+        }
+
+        .dropdown-item-custom {
+            color: var(--text-main) !important;
+            border-radius: 8px !important;
+            padding: 9px 14px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .dropdown-item-custom:hover {
+            background-color: rgba(99, 102, 241, 0.15) !important;
+            color: #818cf8 !important;
+            transform: translateX(3px) !important;
+        }
+
+        [data-theme="light"] .navbar-custom {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom {
+            color: #334155 !important;
+            background: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom:hover {
+            color: #0f172a !important;
+            background: #e2e8f0 !important;
+            border-color: #94a3b8 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+            border-color: #4338ca !important;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
+        }
+
+        [data-theme="light"] .dropdown-menu-custom {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .dropdown-item-custom:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        .nav-pill-custom {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            padding: 8px 16px !important;
+            border-radius: 12px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            color: #cbd5e1 !important;
+            text-decoration: none !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.2s ease-in-out !important;
+            white-space: nowrap !important;
+        }
+
+        .nav-pill-custom:hover {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-1.5px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+            text-decoration: none !important;
+        }
+
+        .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+            border-color: #818cf8 !important;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45) !important;
+            font-weight: 700 !important;
+            text-decoration: none !important;
+        }
+
+        [data-theme="light"] .navbar-custom {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom {
+            color: #334155 !important;
+            background: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom:hover {
+            color: #0f172a !important;
+            background: #e2e8f0 !important;
+            border-color: #94a3b8 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+            border-color: #4338ca !important;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
+        }
+    </style>
+
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<!-- Header Navigation Bar -->
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
+            <span class="fs-4 text-warning">📦</span> 
+            <span>STORE MANAGEMENT SYSTEM</span>
+        </a>
+        
+        <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#topNavbarMenu">
+            <i class="bi bi-list fs-2"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="topNavbarMenu">
+            <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+                
+                <!-- 1. Inward & Factory Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-pill-custom dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-box-seam me-1 text-info"></i> આવક અને ઉત્પાદન
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <li><a class="dropdown-item dropdown-item-custom" href="/dashboard"><i class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
+                    </ul>
+                </div>
+
+                <!-- 2. Dispatch & Yard Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-truck me-1 text-success"></i> ડિસ્પેચ અને સ્કેનિંગ
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a></li>
+                    </ul>
+                </div>
+
+                <!-- 3. Master Controls Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-sliders me-1 text-warning"></i> માસ્ટર કંટ્રોલ
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
+                    </ul>
+                </div>
+
+                <!-- 4. Reports & Logs Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bar-chart-line me-1 text-primary"></i> રિપોર્ટ્સ અને લોગ
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
+                    </ul>
+                </div>
+
+                <!-- 🌓 Global Theme Toggle Button -->
+                <button id="globalThemeBtn" onclick="toggleGlobalTheme()" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
+                    <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+                    <span id="themeText">Dark Mode</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container my-4 no-print">
+    <!-- Header Title -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h3 class="fw-extrabold text-slate-800 m-0"><i class="bi bi-cpu-fill text-indigo me-2"></i> Machine Production & TSC Sticker Printing</h3>
+            <p class="text-muted small m-0 mt-1">Extruder મશીન પરથી રેડી થતી કોઇલ/રોલની એન્ટ્રી કરી 100x100 MM નો સ્ટીકર પ્રિન્ટ કરો.</p>
+        </div>
+        <button class="btn btn-outline-dark fw-bold rounded-3" data-bs-toggle="modal" data-bs-target="#addMachineModal">
+            <i class="bi bi-plus-circle me-1"></i> નવું મશીન ઉમેરો (Add Machine)
+        </button>
+    </div>
+
+    <!-- Production Entry Form -->
+    <div class="card glass-card mb-4 overflow-hidden">
+        <div class="card-header-primary d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-file-earmark-diff me-2"></i> મશીન પ્રોડક્શન એન્ટ્રી (Coil Entry Form)</h5>
+            <span class="badge bg-success px-3 py-1 rounded-pill"><i class="bi bi-printer me-1"></i> Auto TSC Print Ready</span>
+        </div>
+        <div class="card-body p-4">
+            <form id="prodForm" onsubmit="submitProduction(event)">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="input-label-custom">Select Machine (મશીન નામ) *</label>
+                        <input type="text" id="machine_name" list="machine_list" class="form-control form-control-custom" placeholder="🔍 મશીન સિલેક્ટ કે ટાઈપ કરો..." required autocomplete="off">
+                        <datalist id="machine_list"></datalist>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="input-label-custom">Pipe Type (પાઈપનો પ્રકાર) *</label>
+                        <select id="pipe_type" class="form-select form-select-custom" onchange="updatePipeSizes()" required>
+                            <option value="Emitting Pipe">Emitting Pipe (Drip)</option>
+                            <option value="HDPE Pipe">HDPE Pipe</option>
+                            <option value="PVC Pipe">PVC Pipe</option>
+                            <option value="Lateral Pipe">Lateral Pipe</option>
+                            <option value="Column Pipe">Column Pipe</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="input-label-custom">Pipe Size / Full Item Name *</label>
+                        <input type="text" id="pipe_size_input" list="pipe_size_datalist" class="form-control form-control-custom" placeholder="🔍 સાઈઝ અથવા આઈટમ સર્ચ / ટાઈપ કરો..." required autocomplete="off">
+                        <datalist id="pipe_size_datalist"></datalist>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="input-label-custom">Coil Length (મીટરમાં) *</label>
+                        <input type="number" id="coil_length_meters" class="form-control form-control-custom" placeholder="ઉદા. 400" min="1" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="input-label-custom">Coil Weight (KG માં) *</label>
+                        <input type="number" step="0.01" id="coil_weight_kg" class="form-control form-control-custom" placeholder="ઉદા. 9.50" min="0.1" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="input-label-custom">Raw Material Used (KG)</label>
+                        <input type="number" step="0.01" id="raw_material_used_kg" class="form-control form-control-custom" placeholder="ઉદા. 9.80">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="input-label-custom">Shift / Operator Name</label>
+                        <input type="text" id="shift_operator" class="form-control form-control-custom" placeholder="ઉદા. Ramesh Bhai (Shift A)">
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button type="submit" id="saveBtn" class="btn btn-gradient-indigo w-100">
+                            <i class="bi bi-printer-fill me-2"></i> 💾 Save & Print Label Sticker (100x100 MM)
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Production Logs Table -->
+    <div class="card glass-card overflow-hidden">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="m-0 fw-bold text-dark"><i class="bi bi-clock-history me-2 text-indigo"></i> તાજેતરનું પ્રોડક્શન લોગ (Production History)</h5>
+            <button onclick="loadProductionLogs()" class="btn btn-outline-secondary btn-sm rounded-3"><i class="bi bi-arrow-clockwise me-1"></i> Refresh</button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 450px;">
+                <table class="table table-hover align-middle m-0 text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Coil QR ID</th>
+                            <th>Machine</th>
+                            <th>Pipe Spec</th>
+                            <th>Length</th>
+                            <th>Weight</th>
+                            <th>Operator</th>
+                            <th>તારીખ</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prodHistoryTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add New Machine -->
+<div class="modal fade no-print" id="addMachineModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold"><i class="bi bi-cpu me-2 text-primary"></i> નવું મશીન ઉમેરો (Add Machine)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addMachineForm" onsubmit="submitNewMachine(event)">
+                    <div class="mb-3">
+                        <label class="input-label-custom">Machine Name / ID *</label>
+                        <input type="text" id="new_machine_name" class="form-control form-control-custom" placeholder="ઉદા. Extruder Machine 04" required>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary fw-bold px-4">Save Machine</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 🏷️ Printable Sticker Area (100x100 MM / 4x4 Inch TSC Printer Format) -->
+<div id="label-print-area" style="display:none; margin-top: 20px;">
+    <div class="sticker-box">
+        <div class="sticker-header">
+            <div class="company-title">BHUMI POLYMERS</div>
+            <div class="company-sub">QUALITY EXTRUSION PIPING SYSTEM</div>
+        </div>
+
+        <div class="sticker-details">
+            <div class="detail-row">
+                <span class="detail-label">Machine No:</span>
+                <span class="detail-value" id="lbl_machine"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Pipe Type:</span>
+                <span class="detail-value" id="lbl_type"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Pipe Size / Spec:</span>
+                <span class="detail-value" id="lbl_size"></span>
+            </div>
+            
+            <div class="detail-grid-2">
+                <div class="detail-box">
+                    <span class="box-label">Length (Meter)</span>
+                    <span class="box-value"><span id="lbl_length"></span> MTR</span>
+                </div>
+                <div class="detail-box">
+                    <span class="box-label">Weight (KG)</span>
+                    <span class="box-value"><span id="lbl_weight"></span> KG</span>
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Operator:</span>
+                <span class="detail-value" id="lbl_operator"></span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date & Time:</span>
+                <span class="detail-value" id="lbl_date"></span>
+            </div>
+        </div>
+
+        <div class="sticker-footer">
+            <div class="qr-info">
+                <span class="qr-label">COIL SERIAL / QR NO:</span>
+                <span class="qr-code-text" id="lbl_qr_text"></span>
+            </div>
+            <div id="qrcode" class="qr-container"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = window.location.origin;
+
+    const PIPE_SPECS = {
+        "Emitting Pipe": [
+            "16x2x30 Cl-2 Round",
+            "16x2x40 Cl-2 Round",
+            "16x2x50 Cl-2 Round",
+            "16x2x20 Cl-2 Round",
+            "12x2x30 Cl-2 Round",
+            "16mm / 30cm / 2 LPH",
+            "16mm / 40cm / 2 LPH",
+            "Other / Custom"
+        ],
+        "HDPE Pipe": [
+            "20mm PN6",
+            "25mm PN6",
+            "32mm PN6",
+            "40mm PN6",
+            "50mm PN6",
+            "63mm PN6",
+            "75mm PN6",
+            "90mm PN6",
+            "110mm PN6",
+            "63mm PN10",
+            "75mm PN10",
+            "90mm PN10",
+            "110mm PN10",
+            "Other / Custom"
+        ],
+        "PVC Pipe": [
+            "40mm x 4 kg/cm²",
+            "50mm x 4 kg/cm²",
+            "63mm x 4 kg/cm²",
+            "75mm x 4 kg/cm²",
+            "90mm x 4 kg/cm²",
+            "90mm x 6 kg/cm²",
+            "90mm x 8 kg/cm²",
+            "90mm x 10 kg/cm²",
+            "110mm x 4 kg/cm²",
+            "110mm x 6 kg/cm²",
+            "110mm x 8 kg/cm²",
+            "110mm x 10 kg/cm²",
+            "140mm x 6 kg/cm²",
+            "160mm x 6 kg/cm²",
+            "Other / Custom"
+        ],
+        "Lateral Pipe": [
+            "12mm Plain Lateral",
+            "16mm Plain Lateral",
+            "20mm Plain Lateral",
+            "25mm Plain Lateral",
+            "32mm Plain Lateral",
+            "Other / Custom"
+        ],
+        "Column Pipe": [
+            "1 inch (32mm) Column",
+            "1.25 inch (40mm) Column",
+            "1.5 inch (50mm) Column",
+            "2 inch (63mm) Column",
+            "2.5 inch (75mm) Column",
+            "3 inch (90mm) Column",
+            "Other / Custom"
+        ]
+    };
+
+    async function updatePipeSizes() {
+        const pipeTypeElem = document.getElementById('pipe_type');
+        const datalist = document.getElementById('pipe_size_datalist');
+        const pipeInput = document.getElementById('pipe_size_input');
+        if (!pipeTypeElem || !datalist) return;
+
+        const pipeType = pipeTypeElem.value;
+        datalist.innerHTML = '';
+        if (pipeInput) pipeInput.value = '';
+
+        if (pipeType) {
+            try {
+                const searchPrefix = pipeType.split(' ')[0]; // e.g. "Emitting", "HDPE", "PVC", "Lateral", "Column"
+                const res = await fetch(`${API_URL}/api/items/list?search=${encodeURIComponent(searchPrefix)}&limit=1000`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+                const data = await res.json();
+                if (data.items && data.items.length > 0) {
+                    const addedNames = new Set();
+                    data.items.forEach(item => {
+                        if (!addedNames.has(item.item_name)) {
+                            addedNames.add(item.item_name);
+                            datalist.innerHTML += `<option value="${item.item_name}">`;
+                        }
+                    });
+                }
+            } catch(e) { console.error("Error fetching items for pipe specs:", e); }
+        }
+
+        const specs = PIPE_SPECS[pipeType] || [];
+        specs.forEach(spec => {
+            if (spec !== "Other / Custom") {
+                datalist.innerHTML += `<option value="${spec}">`;
+            }
+        });
+    }
+
+    async function loadMachines() {
+        try {
+            const res = await fetch(`${API_URL}/api/machines/list`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+            const data = await res.json();
+            const datalist = document.getElementById('machine_list');
+            if (datalist) {
+                datalist.innerHTML = '';
+                if (data.machines && data.machines.length > 0) {
+                    data.machines.forEach(m => {
+                        datalist.innerHTML += `<option value="${m.machine_name}">`;
+                    });
+                }
+            }
+            updatePipeSizes();
+        } catch (err) {
+            console.error("Error loading machines:", err);
+        }
+    }
+
+    async function submitNewMachine(e) {
+        e.preventDefault();
+        const machineName = document.getElementById('new_machine_name').value.trim();
+        if (!machineName) return;
+
+        const formData = new FormData();
+        formData.append('machine_name', machineName);
+
+        try {
+            const res = await fetch(`${API_URL}/api/machines/add`, {
+                method: 'POST',
+                headers: { 'Bypass-Tunnel-Reminder': 'true' },
+                body: formData
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                alert("✅ " + data.message);
+                document.getElementById('addMachineForm').reset();
+                bootstrap.Modal.getInstance(document.getElementById('addMachineModal')).hide();
+                loadMachines();
+            } else {
+                alert("❌ " + (data.detail || "Error adding machine"));
+            }
+        } catch (err) {
+            alert("❌ Server સાથે કનેક્શન થઈ શક્યું નથી.");
+        }
+    }
+
+    async function submitProduction(e) {
+        e.preventDefault();
+        
+        const selectedSize = document.getElementById('pipe_size_input').value.trim();
+        if (!selectedSize) {
+            alert("⚠️ કૃપા કરીને Pipe Size / Spec સિલેક્ટ અથવા ટાઈપ કરો!");
+            return;
+        }
+
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.disabled = true;
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Saving & Preparing Print...`;
+        saveBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Saving & Preparing Print...`;
+
+        const data = {
+            machine_name: document.getElementById('machine_name').value,
+            pipe_type: document.getElementById('pipe_type').value,
+            pipe_size: selectedSize,
+            coil_length_meters: parseFloat(document.getElementById('coil_length_meters').value),
+            coil_weight_kg: parseFloat(document.getElementById('coil_weight_kg').value),
+            raw_material_used_kg: parseFloat(document.getElementById('raw_material_used_kg').value || 0),
+            shift_operator: document.getElementById('shift_operator').value || "Operator"
+        };
+
+        try {
+            const res = await fetch(`${API_URL}/api/production/add`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Bypass-Tunnel-Reminder': 'true' 
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await res.json();
+            if (res.ok) {
+                triggerLabelPrint(data, result.qr_code);
+                document.getElementById('prodForm').reset();
+                loadProductionLogs();
+            } else {
+                alert("❌ Error: " + (result.detail || "પ્રોડક્શન એન્ટ્રી સેવ થઈ નથી."));
+            }
+        } catch (err) {
+            console.error("Production save error:", err);
+            alert("❌ Network/Server Error: " + (err.message || "Server સાથે કનેક્શન થઈ શક્યું નથી."));
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalText;
+        }
+    }
+
+    function triggerLabelPrint(data, qrCodeText) {
+        document.getElementById('lbl_type').innerText = data.pipe_type || '';
+        document.getElementById('lbl_machine').innerText = data.machine_name || '';
+        document.getElementById('lbl_size').innerText = data.pipe_size || '';
+        document.getElementById('lbl_operator').innerText = data.shift_operator || '';
+        document.getElementById('lbl_length').innerText = data.coil_length_meters || '0';
+        document.getElementById('lbl_weight').innerText = data.coil_weight_kg || '0';
+        document.getElementById('lbl_qr_text').innerText = qrCodeText || '';
+        
+        const now = new Date();
+        const formattedDate = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('lbl_date').innerText = formattedDate;
+
+        document.getElementById('qrcode').innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), {
+            text: qrCodeText,
+            width: 75,
+            height: 75,
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        const printArea = document.getElementById('label-print-area');
+        printArea.style.display = "block";
+
+        setTimeout(() => {
+            window.print();
+        }, 400);
+    }
+
+    async function loadProductionLogs() {
+        try {
+            const res = await fetch(`${API_URL}/api/production/logs`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+            const data = await res.json();
+            const tbody = document.getElementById('prodHistoryTable');
+
+            if (!data.logs || data.logs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-muted py-4">હજી સુધી કોઈ પ્રોડક્શન લોગ મળ્યા નથી.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.logs.map(log => `
+                <tr>
+                    <td><span class="badge bg-dark font-monospace">${log.qr_code}</span></td>
+                    <td><span class="fw-bold">${log.machine_name}</span></td>
+                    <td>${log.pipe_type} (${log.pipe_size})</td>
+                    <td><span class="badge bg-success">${log.coil_length_meters} Mtr</span></td>
+                    <td><span class="badge bg-info text-dark">${log.coil_weight_kg} KG</span></td>
+                    <td><small class="text-muted">${log.shift_operator || 'N/A'}</small></td>
+                    <td><small class="text-muted">${new Date(log.created_at).toLocaleString()}</small></td>
+                    <td>
+                        <button onclick='reprintLogLabel(${JSON.stringify(log)})' class="btn btn-sm btn-outline-primary fw-bold">
+                            <i class="bi bi-printer me-1"></i> Print
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            console.error("Error loading production logs:", err);
+        }
+    }
+
+    function reprintLogLabel(log) {
+        triggerLabelPrint({
+            pipe_type: log.pipe_type,
+            machine_name: log.machine_name,
+            pipe_size: log.pipe_size,
+            shift_operator: log.shift_operator,
+            coil_length_meters: log.coil_length_meters,
+            coil_weight_kg: log.coil_weight_kg
+        }, log.qr_code);
+    }
+
+    // 🌓 Global Dark / Light Theme Management
+    function applyGlobalTheme() {
+        const theme = localStorage.getItem('theme_preference') || 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        updateThemeBtn(theme);
+    }
+    function toggleGlobalTheme() {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme_preference', next);
+        updateThemeBtn(next);
+    }
+    function updateThemeBtn(theme) {
+        const btn = document.getElementById('globalThemeBtn');
+        const icon = document.getElementById('themeIcon');
+        const text = document.getElementById('themeText');
+        if (!btn || !icon || !text) return;
+        if (theme === 'light') {
+            icon.className = 'bi bi-sun-fill text-warning';
+            text.innerText = 'Light Mode';
+            btn.className = 'btn btn-light text-dark border-secondary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+        } else {
+            icon.className = 'bi bi-moon-stars-fill text-warning';
+            text.innerText = 'Dark Mode';
+            btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+        }
+    }
+
+    applyGlobalTheme();
+    loadMachines();
+    loadProductionLogs();
+</script>
+
+<script>
+// Global Theme Switcher Logic
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('user-theme', newTheme);
+    localStorage.setItem('theme_preference', newTheme);
+    updateThemeBtnUI(newTheme);
+}
+
+function updateThemeBtnUI(theme) {
+    const btn = document.getElementById('globalThemeBtn');
+    const icon = document.getElementById('themeIcon');
+    const text = document.getElementById('themeText');
+    if (!btn) return;
+    
+    if (theme === 'dark') {
+        if (icon) icon.className = 'bi bi-moon-stars-fill text-warning';
+        if (text) text.innerText = 'Dark';
+        btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+    } else {
+        if (icon) icon.className = 'bi bi-sun-fill text-warning';
+        if (text) text.innerText = 'Light';
+        btn.className = 'btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+    }
+}
+
+// Global Theme Auto-Apply Functions
+function toggleGlobalTheme() { toggleTheme(); }
+function applyGlobalTheme() {
+    const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeBtnUI(savedTheme);
+}
+
+// Page Load Auto-Apply Saved Theme
+(function () {
+    const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.addEventListener('DOMContentLoaded', function () {
+        updateThemeBtnUI(savedTheme);
+    });
+})();
+</script>
+
+</body>
+</html>

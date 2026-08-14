@@ -1,0 +1,20 @@
+PROJECT TITLE: Bhumi Polymers - Irrigation Systems SO & DP Outward ERP
+
+1. CORE ARCHITECTURE:
+- Dual File Input: Pending Sales Order (Excel) + Total Dispatch PDF / Farmer Wise PDF.
+- 1-Line Connection Logic: Single stream connecting Direct Dispatch Items (Pipes, Filters) with Store Kit Items (Fittings, Valves).
+
+2. KEY MODULES & DATABASE TABLES:
+- Master SO Table: pending_sales_orders (Stores SO No, Farmer, Dealer, Items, Pending Qty).
+- DP Target Table: dp_plan_targets (Stores DP Plan No, Target Dispatched Qty).
+- Master Dispatch Verification Table: dispatch_verification 
+  (Columns: dp_number, so_number, item_type ['DIRECT_DISPATCH', 'STORE_KIT'], item_name, required_qty, scanned_qty, status).
+
+3. WORKFLOW & FEATURE RULES:
+- Direct Dispatch Items: Scanned individually from Pipe Yard / Open Store via DP Plan PDF targets.
+- Store Kit Bag Concept: 29+ small fittings packed in 1 bag with combined QR: `KIT-SO-{SO_NO}-FITTINGS`. Single scan completes all fitting items.
+- Non-DP Outward Mode: Scanner toggle for Internal Outward (Lab Testing, Samples, Scrap, Internal Use) without requiring DP Plan.
+- UI Theme: Global Dark Mode (Pure Solid Black #000000 background, Pure White #FFFFFF text) & Light Mode switcher saved via localStorage.
+- End-to-End Reports: Live progress graph, Inward vs Outward comparison, and Delivery Challan printing.
+
+4. CURRENT STATUS: System architecture, testing workflow, DB scripts, and UI themes are finalized.

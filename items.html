@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Master & Admin Controls</title>
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --success-color: #10b981;
+            --success-hover: #059669;
+            --danger-color: #ef4444;
+            --danger-hover: #dc2626;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* Header Bar */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            background: var(--card-bg);
+            padding: 20px 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .page-header h2 {
+            font-size: 1.5rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 🔒 Login Box */
+        .login-card {
+            max-width: 420px;
+            margin: 80px auto;
+            background: var(--card-bg);
+            padding: 35px 30px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-card .icon-box {
+            width: 70px;
+            height: 70px;
+            background: #eef2ff;
+            color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 20px;
+        }
+
+        /* Dashboard Cards Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 18px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Form Layout */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 576px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 576px) {
+            .form-group.full-width { grid-column: span 1; }
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        .btn-success:hover { background-color: var(--success-hover); }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        .btn-danger:hover { background-color: var(--danger-hover); }
+
+        /* Responsive Table */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background-color: #f9fafb;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #f9fafb; }
+
+        /* 🌓 Global Dark / Light Theme System */
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border-color: #cbd5e1;
+            --input-bg: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-color) !important;
+            color: var(--text-main) !important;
+            padding: 30px 15px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .card, .page-header, .login-card {
+            background-color: var(--card-bg) !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+
+        input, select, textarea {
+            background-color: var(--input-bg) !important;
+            color: var(--text-main) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        .table th, .table td {
+            color: var(--text-main) !important;
+            border-color: var(--border-color) !important;
+        }
+
+        /* 🚀 High-End Pill Navigation Buttons & 4 Clean Dropdowns */
+        .navbar-custom {
+            background-color: rgba(15, 23, 42, 0.95) !important;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .nav-pill-custom {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            padding: 8px 16px !important;
+            border-radius: 12px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            color: #cbd5e1 !important;
+            text-decoration: none !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.2s ease-in-out !important;
+            white-space: nowrap !important;
+        }
+
+        .nav-pill-custom:hover, .nav-pill-custom:focus {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-1.5px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+            text-decoration: none !important;
+        }
+
+        .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+            border-color: #818cf8 !important;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45) !important;
+            font-weight: 700 !important;
+            text-decoration: none !important;
+        }
+
+        .dropdown-menu-custom {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 30px var(--shadow-glow) !important;
+            padding: 8px !important;
+            margin-top: 8px !important;
+        }
+
+        .dropdown-item-custom {
+            color: var(--text-main) !important;
+            border-radius: 8px !important;
+            padding: 9px 14px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .dropdown-item-custom:hover {
+            background-color: rgba(99, 102, 241, 0.15) !important;
+            color: #818cf8 !important;
+            transform: translateX(3px) !important;
+        }
+
+        [data-theme="light"] .navbar-custom {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom {
+            color: #334155 !important;
+            background: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom:hover {
+            color: #0f172a !important;
+            background: #e2e8f0 !important;
+            border-color: #94a3b8 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+            border-color: #4338ca !important;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
+        }
+
+        [data-theme="light"] .dropdown-menu-custom {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .dropdown-item-custom:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        .nav-pill-custom {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            padding: 8px 16px !important;
+            border-radius: 12px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            color: #cbd5e1 !important;
+            text-decoration: none !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.2s ease-in-out !important;
+            white-space: nowrap !important;
+        }
+
+        .nav-pill-custom:hover {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-1.5px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+            text-decoration: none !important;
+        }
+
+        .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+            border-color: #818cf8 !important;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45) !important;
+            font-weight: 700 !important;
+            text-decoration: none !important;
+        }
+
+        [data-theme="light"] .navbar-custom {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom {
+            color: #334155 !important;
+            background: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom:hover {
+            color: #0f172a !important;
+            background: #e2e8f0 !important;
+            border-color: #94a3b8 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+            border-color: #4338ca !important;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
+        }
+
+        /* 🔒 Hide Protected Content Until Password Login */
+        #protected-content {
+            display: none;
+        }
+    </style>
+
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- 🔒 LOGIN CARD (PASSWORD SECURITY) -->
+    <div id="login-box" class="login-card">
+        <div class="icon-box">
+            <i class="fa-solid fa-lock"></i>
+        </div>
+        <h3 style="margin-bottom: 8px;">Admin Security</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">આ પેજ ઓપન કરવા માટે પાસવર્ડ દાખલ કરો</p>
+        
+        <div class="form-group" style="margin-bottom: 15px;">
+            <input type="password" id="admin-pass" placeholder="••••••••" style="text-align: center;" onkeypress="if(event.key === 'Enter') checkPassword()">
+        </div>
+        
+        <button class="btn btn-primary" style="width: 100%;" onclick="checkPassword()">
+            <i class="fa-solid fa-key"></i> વેરીફાય કરો
+        </button>
+
+        <div style="margin-top: 15px;">
+            <a href="/dashboard" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">
+                <i class="fa-solid fa-arrow-left me-1"></i> ડેશબોર્ડ પર પાછા ફરો
+            </a>
+        </div>
+        
+        <p id="error-msg" style="color: var(--danger-color); display: none; font-size: 0.85rem; margin-top: 12px;">
+            <i class="fa-solid fa-circle-exclamation"></i> ખોટો પાસવર્ડ! ફરી પ્રયાસ કરો.
+        </p>
+    </div>
+
+    <!-- 📦 MAIN DASHBOARD CONTENT (PROTECTED BEHIND PASSWORD) -->
+    <div id="protected-content" class="container-fluid px-0">
+
+        <!-- Standard Top Navbar -->
+        <!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
+            <span class="fs-4 text-warning">📦</span> 
+            <span>STORE MANAGEMENT SYSTEM</span>
+        </a>
+        
+        <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#topNavbarMenu">
+            <i class="bi bi-list fs-2"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="topNavbarMenu">
+            <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+                
+                <!-- 1. Inward & Factory Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-box-seam me-1 text-info"></i> આવક અને ઉત્પાદન
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <li><a class="dropdown-item dropdown-item-custom" href="/dashboard"><i class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
+                    </ul>
+                </div>
+
+                <!-- 2. Dispatch & Yard Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-truck me-1 text-success"></i> ડિસ્પેચ અને સ્કેનિંગ
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a></li>
+                    </ul>
+                </div>
+
+                <!-- 3. Master Controls Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-pill-custom dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-sliders me-1 text-warning"></i> માસ્ટર કંટ્રોલ
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
+                    </ul>
+                </div>
+
+                <!-- 4. Reports & Logs Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bar-chart-line me-1 text-primary"></i> રિપોર્ટ્સ અને લોગ
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a></li>
+                        <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
+                    </ul>
+                </div>
+
+                <!-- 🌓 Global Theme Toggle Button -->
+                <button id="globalThemeBtn" onclick="toggleGlobalTheme()" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
+                    <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+                    <span id="themeText">Dark Mode</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+        <div class="container">
+            <!-- Top Page Header -->
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2><i class="fa-solid fa-boxes-stacked" style="color: var(--primary-color);"></i> Item Master & Admin Panel</h2>
+            </div>
+
+        <div class="grid-2">
+            <!-- A. Manual Item Entry Card -->
+            <div class="card">
+                <div class="card-title">
+                    <i class="fa-solid fa-square-plus" style="color: var(--primary-color);"></i> નવી આઈટમ ઉમેરો
+                </div>
+                <form id="addItemForm" onsubmit="saveItem(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Item Code *</label>
+                            <input type="text" id="item_code" placeholder="e.g. ITM-001" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Item Name *</label>
+                            <input type="text" id="item_name" placeholder="e.g. Wheat Bags" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Item Group</label>
+                            <input type="text" id="item_group" placeholder="e.g. Raw Material">
+                        </div>
+                        <div class="form-group">
+                            <label>HSN Code</label>
+                            <input type="text" id="hsn_code" placeholder="e.g. 1001">
+                        </div>
+                        <div class="form-group">
+                            <label>Unit</label>
+                            <select id="unit">
+                                <option value="PCS">PCS</option>
+                                <option value="KG">KG</option>
+                                <option value="BOX">BOX</option>
+                                <option value="BTL">BTL</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Rate (₹)</label>
+                            <input type="number" step="0.01" id="rate" placeholder="0.00">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Item Image</label>
+                            <input type="file" id="image">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 18px; width: 100%;">
+                        <i class="fa-solid fa-floppy-disk"></i> આઈટમ સેવ કરો
+                    </button>
+                </form>
+            </div>
+
+            <!-- B. Excel Upload & Erase Controls Card -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <!-- Excel Upload -->
+                <div class="card">
+                    <div class="card-title">
+                        <i class="fa-solid fa-file-excel" style="color: var(--success-color);"></i> Excel બલ્ક ઈમ્પોર્ટ
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <input type="file" id="excelFile" accept=".xlsx, .xls">
+                    </div>
+                    <button onclick="uploadExcel()" class="btn btn-success" style="width: 100%;">
+                        <i class="fa-solid fa-upload"></i> Excel Upload કરો
+                    </button>
+                </div>
+
+                <!-- System Erase -->
+                <div class="card" style="border-color: #fecaca; background: #fff5f5;">
+                    <div class="card-title" style="color: var(--danger-color);">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Danger Zone
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                        સ્ટોક અને તમામ ટ્રાન્ઝેક્શન હિસ્ટ્રી ડેટા ડીલીટ કરવા માટે
+                    </p>
+                    <button class="btn btn-danger" onclick="eraseAllData()" style="width: 100%;">
+                        <i class="fa-solid fa-trash-can"></i> બધો ડેટા ઈરેઝ (Reset) કરો
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Machine Management Section -->
+        <div class="card" style="margin-bottom: 25px;">
+            <div class="card-title">
+                <i class="fa-solid fa-gears" style="color: var(--primary-color);"></i> મશીન મેનેજમેન્ટ (Machine Management)
+            </div>
+            <div class="grid-2">
+                <!-- Add Machine Form -->
+                <div>
+                    <form id="addMachineForm" onsubmit="addMachine(event)">
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label>નવા મશીનનું નામ *</label>
+                            <input type="text" id="new_machine_name" placeholder="e.g. Extruder Machine 04" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fa-solid fa-plus"></i> મશીન ઉમેરો
+                        </button>
+                    </form>
+                </div>
+                <!-- Machine List Table -->
+                <div>
+                     <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Machine Name</th>
+                                    <th style="text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="machinesTableBody">
+                                <!-- Dynamic JS Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- D. Transaction Edit Section -->
+        <div class="card" style="margin-bottom: 25px;">
+            <div class="card-title">
+                <i class="fa-solid fa-pen-to-square" style="color: var(--primary-color);"></i> ટ્રાન્ઝેક્શનમાં સુધારો (Edit Transactions)
+            </div>
+            <div class="grid-2">
+                <!-- Edit Inward Entry -->
+                <div>
+                    <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Inward Batch Edit</h4>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <input type="number" id="search_batch_id" placeholder="Inward Batch ID નાખો..." style="flex-grow: 1;">
+                        <button class="btn btn-primary" onclick="searchInwardBatch()">
+                            <i class="fa-solid fa-search"></i> શોધો
+                        </button>
+                    </div>
+                    <form id="editInwardForm" class="hidden-form" onsubmit="updateInwardBatch(event)">
+                        <input type="hidden" id="edit_batch_id">
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label>Item Name (સર્ચ અથવા ટાઈપ કરો) *</label>
+                            <input type="text" id="edit_inward_item_name" list="edit_items_datalist" class="form-control" placeholder="🔍 સર્ચ અથવા ટાઈપ કરો..." required autocomplete="off">
+                            <datalist id="edit_items_datalist"></datalist>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label>Supplier / Party Name</label>
+                            <input type="text" id="edit_inward_supplier" placeholder="e.g. ABC Traders">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label>Remark</label>
+                            <input type="text" id="edit_inward_remark" placeholder="e.g. Bill No. 123">
+                        </div>
+                        <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 15px;">
+                            <i class="fa-solid fa-save"></i> ફેરફાર સેવ કરો
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Edit Production Entry -->
+                <div>
+                    <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">Production Coil Edit</h4>
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <input type="text" id="search_qr_code" placeholder="Coil QR Code નાખો..." style="flex-grow: 1;">
+                        <button class="btn btn-primary" onclick="searchProductionLog()">
+                            <i class="fa-solid fa-search"></i> શોધો
+                        </button>
+                    </div>
+                    <form id="editProdForm" class="hidden-form" onsubmit="updateProductionLog(event)">
+                        <input type="hidden" id="edit_prod_log_id">
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                            <div class="form-group"><label>Machine Name</label><input type="text" id="edit_prod_machine_name" list="edit_machines_datalist" class="form-control" placeholder="🔍 સર્ચ કરો..." required autocomplete="off"><datalist id="edit_machines_datalist"></datalist></div>
+                            <div class="form-group"><label>Pipe Type</label><select id="edit_prod_pipe_type" required><option value="Emitting Pipe">Emitting Pipe (Drip)</option><option value="HDPE Pipe">HDPE Pipe</option><option value="PVC Pipe">PVC Pipe</option><option value="Lateral Pipe">Lateral Pipe</option><option value="Column Pipe">Column Pipe</option></select></div>
+                            <div class="form-group"><label>Pipe Size / Spec</label><input type="text" id="edit_prod_pipe_size" required></div>
+                            <div class="form-group"><label>Coil Length (Mtr)</label><input type="number" id="edit_prod_coil_length" required></div>
+                            <div class="form-group"><label>Coil Weight (KG)</label><input type="number" step="0.01" id="edit_prod_coil_weight" required></div>
+                            <div class="form-group"><label>Raw Material Used (KG)</label><input type="number" step="0.01" id="edit_prod_raw_material"></div>
+                            <div class="form-group full-width"><label>Operator</label><input type="text" id="edit_prod_operator"></div>
+                        </div>
+                        <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 15px;"><i class="fa-solid fa-save"></i> ફેરફાર સેવ કરો</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- C. Items Data Table -->
+        <div class="card">
+            <div class="card-title" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <span><i class="fa-solid fa-list-check" style="color: var(--primary-color);"></i> ઉપલબ્ધ આઈટમ્સ ની યાદી (Item Master List)</span>
+                <button onclick="downloadTemplate()" class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: #e0e7ff; color: var(--primary-color);">
+                    <i class="fa-solid fa-download"></i> Template ડાઉનલોડ કરો
+                </button>
+            </div>
+
+            <!-- Search & Group Filters Bar -->
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border-color);">
+                <div style="flex: 2; min-width: 200px;">
+                    <input type="text" id="itemSearchInput" placeholder="🔍 નામ, કોડ અથવા ગૃપ શોધો..." onkeyup="loadItems(1)">
+                </div>
+                <div style="flex: 1; min-width: 160px;">
+                    <select id="groupFilterSelect" onchange="loadItems(1)">
+                        <option value="">તમામ Item Groups (All)</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 170px;">
+                    <select id="ownFilterSelect" onchange="loadItems(1)">
+                        <option value="">તમામ (All Items)</option>
+                        <option value="only_own">માત્ર Own Production [Yes]</option>
+                        <option value="exclude_own">માત્ર Supplier / General [No]</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 140px;">
+                    <select id="pageSizeSelect" onchange="changePageSize()">
+                        <option value="25">25 per page</option>
+                        <option value="50" selected>50 per page</option>
+                        <option value="100">100 per page</option>
+                        <option value="0">All Items (અનલિમિટેડ)</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="bulkSetGroupOwnProduction()" style="font-size: 0.8rem; padding: 6px 12px;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Filtered Group -> Own Production [Yes]
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Item Name</th>
+                            <th>Group</th>
+                            <th>HSN</th>
+                            <th>Unit</th>
+                            <th>Rate (₹)</th>
+                            <th style="text-align: center;">Own Production?</th>
+                            <th style="text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTableBody">
+                        <!-- Dynamic JavaScript Rows -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="pagination-controls" style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color);">
+                <button id="prev-btn" class="btn btn-primary" style="background: #eef2ff; color: var(--primary-color);"><i class="fa-solid fa-arrow-left"></i> પાછળ</button>
+                <span id="page-info" style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted);"></span>
+                <button id="next-btn" class="btn btn-primary" style="background: #eef2ff; color: var(--primary-color);">આગળ <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const SECRET_PASS = "admin123";
+
+        let currentPage = 1;
+        let limit = 50; // Items per page
+
+        function changePageSize() {
+            const val = document.getElementById("pageSizeSelect").value;
+            limit = parseInt(val, 10);
+            currentPage = 1;
+            loadItems(1);
+        }
+
+        function checkPassword() {
+            const pass = document.getElementById("admin-pass").value;
+            if(pass === SECRET_PASS) {
+                document.getElementById("login-box").style.setProperty("display", "none", "important");
+                const protContent = document.getElementById("protected-content");
+                protContent.style.setProperty("display", "block", "important");
+                document.getElementById("error-msg").style.display = "none";
+                loadItems();
+                loadMachines();
+            } else {
+                document.getElementById("error-msg").style.display = "block";
+            }
+        }
+
+        async function loadItems(page = 1) {
+            const search = document.getElementById("itemSearchInput") ? document.getElementById("itemSearchInput").value.trim() : "";
+            const group = document.getElementById("groupFilterSelect") ? document.getElementById("groupFilterSelect").value : "";
+            const ownFilter = document.getElementById("ownFilterSelect") ? document.getElementById("ownFilterSelect").value : "";
+
+            let url = `/api/items/list?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&group=${encodeURIComponent(group)}`;
+            if (ownFilter === "only_own") url += "&only_own=true";
+            if (ownFilter === "exclude_own") url += "&exclude_own=true";
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                const tbody = document.getElementById("itemsTableBody");
+                tbody.innerHTML = "";
+
+                if (data.groups && document.getElementById("groupFilterSelect")) {
+                    const groupSel = document.getElementById("groupFilterSelect");
+                    const currVal = groupSel.value;
+                    let opts = '<option value="">તમામ Item Groups (All)</option>';
+                    data.groups.forEach(g => {
+                        opts += `<option value="${g}" ${g === currVal ? 'selected' : ''}>${g}</option>`;
+                    });
+                    groupSel.innerHTML = opts;
+                }
+
+                if(data.items && data.items.length > 0) {
+                    data.items.forEach(item => {
+                        const isOwn = (item.is_own_production || item.item_group === 'Own Production');
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><span class="badge">${item.item_code}</span></td>
+                                <td style="font-weight: 500;">${item.item_name}</td>
+                                <td>${item.item_group || '-'}</td>
+                                <td>${item.hsn_code || '-'}</td>
+                                <td>${item.unit}</td>
+                                <td>₹${parseFloat(item.rate || 0).toFixed(2)}</td>
+                                <td style="text-align: center;">
+                                    <button onclick="toggleOwnProd(${item.id})" class="btn" style="padding: 3px 8px; font-size: 0.75rem; background: ${isOwn ? '#dcfce7' : '#f1f5f9'}; color: ${isOwn ? '#15803d' : '#64748b'}; border: 1px solid ${isOwn ? '#bbf7d0' : '#cbd5e1'}; font-weight: 600;">
+                                        ${isOwn ? '🟢 Yes (Own Prod)' : '⚪ No (Supplier)'}
+                                    </button>
+                                </td>
+                                <td style="text-align: center; white-space: nowrap;">
+                                    <button onclick="deleteItem(${item.id})" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;">
+                                        <i class="fa-solid fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">કોઈ આઈટમ્સ ઉપલબ્ધ નથી</td></tr>`;
+                }
+
+                // Update pagination controls
+                currentPage = data.page;
+                const totalPages = Math.ceil((data.total_items || 0) / limit);
+                const pageInfo = document.getElementById('page-info');
+                const prevBtn = document.getElementById('prev-btn');
+                const nextBtn = document.getElementById('next-btn');
+
+                if (totalPages > 0) {
+                    pageInfo.innerText = `Page ${currentPage} of ${totalPages} (${data.total_items} items)`;
+                    prevBtn.disabled = currentPage === 1;
+                    nextBtn.disabled = currentPage >= totalPages;
+                } else {
+                    pageInfo.innerText = "No items";
+                    prevBtn.disabled = true;
+                    nextBtn.disabled = true;
+                }
+            } catch (err) {
+                console.error("Error loading items:", err);
+            }
+        }
+
+        async function toggleOwnProd(itemId) {
+            try {
+                const res = await fetch(`/api/items/toggle-own/${itemId}`, { method: 'POST' });
+                if (res.ok) {
+                    loadItems(currentPage);
+                } else {
+                    alert("❌ Status update error");
+                }
+            } catch (err) {
+                alert("❌ Connection error");
+            }
+        }
+
+        async function bulkSetGroupOwnProduction() {
+            const grp = document.getElementById("groupFilterSelect").value;
+            if (!grp) {
+                alert("⚠️ કૃપા કરીને પહેલા 'Item Group' ફિલ્ટર સિલેક્ટ કરો જેને Own Production [Yes] કરવું હોય!");
+                return;
+            }
+            if (!confirm(`શું તમે Group '${grp}' ની તમામ આઈટમ્સને Own Production [Yes] સેટ કરવા માંગો છો?`)) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("group_name", grp);
+            formData.append("is_own", "true");
+
+            try {
+                const res = await fetch('/api/items/bulk-own-by-group', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(`✅ Group '${grp}' ની કુલ ${data.affected_items} આઈટમ્સ સફળતાપૂર્વક Own Production [Yes] તરીકે સેટ થઈ ગઈ!`);
+                    loadItems(currentPage);
+                }
+            } catch (err) {
+                alert("❌ Connection error");
+            }
+        }
+
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentPage > 1) loadItems(currentPage - 1);
+        });
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            loadItems(currentPage + 1);
+        });
+
+        async function populateItemsDropdown(datalistId) {
+            try {
+                const res = await fetch(`/api/items/list?limit=2000`);
+                const data = await res.json();
+                const datalist = document.getElementById(datalistId);
+                if (datalist) {
+                    datalist.innerHTML = '';
+                    if (data.items) {
+                        data.items.forEach(item => {
+                            datalist.innerHTML += `<option value="${item.item_name}">`;
+                        });
+                    }
+                }
+            } catch (err) { console.error("Error populating items dropdown:", err); }
+        }
+
+        async function populateMachinesDropdown(datalistId) {
+            try {
+                const res = await fetch('/api/machines');
+                const data = await res.json();
+                const datalist = document.getElementById(datalistId);
+                if (datalist) {
+                    datalist.innerHTML = '';
+                    if (data.machines) {
+                        data.machines.forEach(m => {
+                            datalist.innerHTML += `<option value="${m.machine_name}">`;
+                        });
+                    }
+                }
+            } catch (err) { console.error("Error populating machines dropdown:", err); }
+        }
+
+        async function loadMachines() {
+            try {
+                const res = await fetch('/api/machines');
+                const data = await res.json();
+                const tbody = document.getElementById("machinesTableBody");
+                tbody.innerHTML = "";
+
+                if(data.machines && data.machines.length > 0) {
+                    data.machines.forEach(m => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>#${m.id}</td>
+                                <td style="font-weight: 500;">${m.machine_name}</td>
+                                <td style="text-align: center; white-space: nowrap;">
+                                    <button onclick='editMachine(${m.id}, ${JSON.stringify(m.machine_name)})' class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: #dbeafe; color: #2563eb; margin-right: 5px;">
+                                        <i class="fa-solid fa-pencil"></i> Edit
+                                    </button>
+                                    <button onclick="deleteMachine(${m.id})" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;">
+                                        <i class="fa-solid fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">કોઈ મશીન ઉપલબ્ધ નથી</td></tr>`;
+                }
+            } catch (err) {
+                console.error("Error loading machines:", err);
+            }
+        }
+
+        async function addMachine(e) {
+            e.preventDefault();
+            const machineName = document.getElementById('new_machine_name').value.trim();
+            if (!machineName) return;
+
+            const formData = new FormData();
+            formData.append('machine_name', machineName);
+
+            const res = await fetch('/api/machines/add', { method: 'POST', body: formData });
+            const result = await res.json();
+            alert(result.message || result.detail);
+            if (res.ok) {
+                document.getElementById('addMachineForm').reset();
+                loadMachines();
+            }
+        }
+
+        async function editMachine(id, currentName) {
+            const newName = prompt("મશીનનું નવું નામ દાખલ કરો:", currentName);
+            if (newName && newName.trim() !== "" && newName.trim() !== currentName) {
+                const formData = new FormData();
+                formData.append('machine_name', newName.trim());
+
+                const res = await fetch(`/api/machines/update/${id}`, { method: 'PUT', body: formData });
+                const result = await res.json();
+                alert(result.message || result.detail);
+                if (res.ok) {
+                    loadMachines();
+                }
+            }
+        }
+
+        // --- Transaction Edit Functions ---
+
+        async function searchInwardBatch() {
+            const batchId = document.getElementById('search_batch_id').value;
+            if (!batchId) return alert("કૃપા કરીને Inward Batch ID નાખો.");
+
+            await populateItemsDropdown('edit_items_datalist');
+
+            const res = await fetch(`/api/inward/batch/${batchId}`);
+            const result = await res.json();
+
+            if (!res.ok) {
+                alert(result.detail);
+                document.getElementById('editInwardForm').style.display = 'none';
+            } else {
+                const batch = result.batch;
+                document.getElementById('edit_batch_id').value = batch.id;
+                document.getElementById('edit_inward_item_name').value = batch.item_name;
+                document.getElementById('edit_inward_supplier').value = batch.supplier_or_party;
+                document.getElementById('edit_inward_remark').value = batch.remark;
+                document.getElementById('editInwardForm').style.display = 'block';
+            }
+        }
+
+        async function updateInwardBatch(e) {
+            e.preventDefault();
+            const batchId = document.getElementById('edit_batch_id').value;
+            const data = {
+                item_name: document.getElementById('edit_inward_item_name').value,
+                supplier_or_party: document.getElementById('edit_inward_supplier').value,
+                remark: document.getElementById('edit_inward_remark').value,
+            };
+
+            const res = await fetch(`/api/inward/update/${batchId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            alert(result.message || result.detail);
+            if (res.ok) {
+                document.getElementById('editInwardForm').style.display = 'none';
+                document.getElementById('search_batch_id').value = '';
+            }
+        }
+
+        async function searchProductionLog() {
+            const qrCode = document.getElementById('search_qr_code').value;
+            if (!qrCode) return alert("કૃપા કરીને Coil QR Code નાખો.");
+
+            await populateMachinesDropdown('edit_machines_datalist');
+
+            const res = await fetch(`/api/production/log/${qrCode}`);
+            const result = await res.json();
+
+            if (!res.ok) {
+                alert(result.detail);
+                document.getElementById('editProdForm').style.display = 'none';
+            } else {
+                const log = result.log;
+                document.getElementById('edit_prod_log_id').value = log.id;
+                document.getElementById('edit_prod_machine_name').value = log.machine_name;
+                document.getElementById('edit_prod_pipe_type').value = log.pipe_type;
+                document.getElementById('edit_prod_pipe_size').value = log.pipe_size;
+                document.getElementById('edit_prod_coil_length').value = log.coil_length_meters;
+                document.getElementById('edit_prod_coil_weight').value = log.coil_weight_kg;
+                document.getElementById('edit_prod_raw_material').value = log.raw_material_used_kg;
+                document.getElementById('edit_prod_operator').value = log.shift_operator;
+                document.getElementById('editProdForm').style.display = 'block';
+            }
+        }
+
+        async function updateProductionLog(e) {
+            e.preventDefault();
+            const logId = document.getElementById('edit_prod_log_id').value;
+            const data = {
+                machine_name: document.getElementById('edit_prod_machine_name').value,
+                pipe_type: document.getElementById('edit_prod_pipe_type').value,
+                pipe_size: document.getElementById('edit_prod_pipe_size').value,
+                coil_length_meters: parseFloat(document.getElementById('edit_prod_coil_length').value),
+                coil_weight_kg: parseFloat(document.getElementById('edit_prod_coil_weight').value),
+                raw_material_used_kg: parseFloat(document.getElementById('edit_prod_raw_material').value || 0),
+                shift_operator: document.getElementById('edit_prod_operator').value,
+            };
+
+            const res = await fetch(`/api/production/update/${logId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            alert(result.message || result.detail);
+            if (res.ok) {
+                document.getElementById('editProdForm').style.display = 'none';
+                document.getElementById('search_qr_code').value = '';
+            }
+        }
+
+        async function saveItem(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('item_code', document.getElementById('item_code').value);
+            formData.append('item_name', document.getElementById('item_name').value);
+            formData.append('item_group', document.getElementById('item_group').value);
+            formData.append('hsn_code', document.getElementById('hsn_code').value);
+            formData.append('unit', document.getElementById('unit').value);
+            formData.append('rate', document.getElementById('rate').value || 0);
+
+            const fileInput = document.getElementById('image');
+            if(fileInput.files[0]) formData.append('image', fileInput.files[0]);
+
+            const res = await fetch('/api/items/add', { method: 'POST', body: formData });
+            const result = await res.json();
+            alert(result.message || result.detail);
+            if(res.ok) {
+                document.getElementById('addItemForm').reset();
+                loadItems();
+            }
+        }
+
+        async function uploadExcel() {
+            const fileInput = document.getElementById('excelFile');
+            if(!fileInput.files[0]) return alert("કૃપા કરીને Excel ફાઈલ પસંદ કરો!");
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const res = await fetch('/api/items/upload-excel', { method: 'POST', body: formData });
+            const result = await res.json();
+            alert(result.message || result.detail);
+            if(res.ok) loadItems();
+        }
+
+        async function deleteItem(id) {
+            if(confirm("શું તમે ખરેખર આ આઈટમ ડીલીટ કરવા માંગો છો?")) {
+                const res = await fetch(`/api/items/delete/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                alert(result.message || result.detail);
+                loadItems();
+            }
+        }
+
+        async function deleteMachine(id) {
+            if(confirm("શું તમે ખરેખર આ મશીન ડીલીટ કરવા માંગો છો?")) {
+                const res = await fetch(`/api/machines/delete/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                alert(result.message || result.detail);
+                loadMachines();
+            }
+        }
+
+        async function eraseAllData() {
+            const confirmPass = prompt("ડેટા ઈરેઝ કરવા માટે ફરીથી પાસવર્ડ નાખો:");
+                if(confirmPass === SECRET_PASS) {
+                if(confirm("⚠️ ચેતવણી: બધો જ સ્ટોક ડેટા અને હિસ્ટ્રી કાયમ માટે ડીલીટ થઈ જશે. આગળ વધવું છે?")) {
+                    const res = await fetch('/api/reset-all-data', { method: 'DELETE' });
+                    const result = await res.json();
+                    alert(result.message);
+                }
+            } else {
+                alert("ખોટો પાસવર્ડ!");
+            }
+        }
+
+        function downloadTemplate() {
+            const headers = ['item_code', 'item_name', 'item_group', 'hsn_code', 'unit', 'rate'];
+            const example_row1 = ['ITM-101', 'HDPE Pipe 50mm', 'Pipes', '3917', 'MTR', '45.50'];
+            const example_row2 = ['ITM-102', 'PVC Glue 100ml', 'Fittings', '3506', 'PCS', '25.00'];
+
+            let csvContent = "data:text/csv;charset=utf-8," 
+                + headers.join(",") + "\n"
+                + example_row1.join(",") + "\n"
+                + example_row2.join(",");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "item_master_template.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 🌓 Global Dark / Light Theme Management
+        function applyGlobalTheme() {
+            const theme = localStorage.getItem('theme_preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeBtn(theme);
+        }
+        function toggleGlobalTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme_preference', next);
+            updateThemeBtn(next);
+        }
+        function updateThemeBtn(theme) {
+            const btn = document.getElementById('globalThemeBtn');
+            const text = document.getElementById('themeText');
+            if (!btn || !text) return;
+            if (theme === 'light') {
+                text.innerText = '☀️ Light Mode';
+                btn.style.background = '#e2e8f0';
+                btn.style.color = '#0f172a';
+            } else {
+                text.innerText = '🌙 Dark Mode';
+                btn.style.background = '#f59e0b';
+                btn.style.color = '#000';
+            }
+        }
+
+        applyGlobalTheme();
+    </script>
+
+<script>
+// Global Theme Switcher Logic
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('user-theme', newTheme);
+    localStorage.setItem('theme_preference', newTheme);
+    updateThemeBtnUI(newTheme);
+}
+
+function updateThemeBtnUI(theme) {
+    const btn = document.getElementById('globalThemeBtn');
+    const icon = document.getElementById('themeIcon');
+    const text = document.getElementById('themeText');
+    if (!btn) return;
+    
+    if (theme === 'dark') {
+        if (icon) icon.className = 'bi bi-moon-stars-fill text-warning';
+        if (text) text.innerText = 'Dark';
+        btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+    } else {
+        if (icon) icon.className = 'bi bi-sun-fill text-warning';
+        if (text) text.innerText = 'Light';
+        btn.className = 'btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+    }
+}
+
+// Global Theme Auto-Apply Functions
+function toggleGlobalTheme() { toggleTheme(); }
+function applyGlobalTheme() {
+    const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeBtnUI(savedTheme);
+}
+
+// Page Load Auto-Apply Saved Theme
+(function () {
+    const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.addEventListener('DOMContentLoaded', function () {
+        updateThemeBtnUI(savedTheme);
+    });
+})();
+</script>
+
+</body>
+</html>

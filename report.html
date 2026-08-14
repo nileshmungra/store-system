@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="gu">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Stock In/Out Report</title>
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* 🌓 Global Dark / Light Theme System */
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.9);
+            --border-color: rgba(255, 255, 255, 0.12);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: #0f172a;
+            --input-text: #f8fafc;
+            --input-border: #334155;
+            --shadow-glow: rgba(0, 0, 0, 0.35);
+        }
+
+        [data-theme="light"] {
+            --bg-main: #f1f5f9;
+            --bg-card: #ffffff;
+            --border-color: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --input-bg: #ffffff;
+            --input-text: #0f172a;
+            --input-border: #94a3b8;
+            --shadow-glow: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            background-color: var(--bg-main) !important;
+            color: var(--text-main) !important;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .glass-card,
+        .card {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-main) !important;
+            box-shadow: 0 8px 24px var(--shadow-glow) !important;
+        }
+
+        .table,
+        .table td,
+        .table th {
+            color: var(--text-main) !important;
+        }
+
+        [data-theme="light"] .text-white,
+        [data-theme="light"] .text-slate-300,
+        [data-theme="light"] .text-slate-400,
+        [data-theme="light"] .text-slate-800 {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .bg-dark,
+        [data-theme="light"] .bg-slate-800,
+        [data-theme="light"] .bg-slate-900 {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        /* 🚀 High-End Pill Navigation Buttons & 4 Clean Dropdowns */
+        .navbar-custom {
+            background-color: rgba(15, 23, 42, 0.95) !important;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .nav-pill-custom {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            padding: 8px 16px !important;
+            border-radius: 12px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            color: #cbd5e1 !important;
+            text-decoration: none !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.2s ease-in-out !important;
+            white-space: nowrap !important;
+        }
+
+        .nav-pill-custom:hover,
+        .nav-pill-custom:focus {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-1.5px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+            text-decoration: none !important;
+        }
+
+        .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+            border-color: #818cf8 !important;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45) !important;
+            font-weight: 700 !important;
+            text-decoration: none !important;
+        }
+
+        .dropdown-menu-custom {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 30px var(--shadow-glow) !important;
+            padding: 8px !important;
+            margin-top: 8px !important;
+        }
+
+        .dropdown-item-custom {
+            color: var(--text-main) !important;
+            border-radius: 8px !important;
+            padding: 9px 14px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .dropdown-item-custom:hover {
+            background-color: rgba(99, 102, 241, 0.15) !important;
+            color: #818cf8 !important;
+            transform: translateX(3px) !important;
+        }
+
+        [data-theme="light"] .navbar-custom {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom {
+            color: #334155 !important;
+            background: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom:hover {
+            color: #0f172a !important;
+            background: #e2e8f0 !important;
+            border-color: #94a3b8 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+            border-color: #4338ca !important;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
+        }
+
+        [data-theme="light"] .dropdown-menu-custom {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .dropdown-item-custom:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        .nav-pill-custom {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            padding: 8px 16px !important;
+            border-radius: 12px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            color: #cbd5e1 !important;
+            text-decoration: none !important;
+            background: rgba(255, 255, 255, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.2s ease-in-out !important;
+            white-space: nowrap !important;
+        }
+
+        .nav-pill-custom:hover {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-1.5px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+            text-decoration: none !important;
+        }
+
+        .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+            border-color: #818cf8 !important;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45) !important;
+            font-weight: 700 !important;
+            text-decoration: none !important;
+        }
+
+        [data-theme="light"] .navbar-custom {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom {
+            color: #334155 !important;
+            background: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom:hover {
+            color: #0f172a !important;
+            background: #e2e8f0 !important;
+            border-color: #94a3b8 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+            border-color: #4338ca !important;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
+        }
+    </style>
+
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+
+    <!-- Header Navigation Bar -->
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
+                <span class="fs-4 text-warning">📦</span>
+                <span>STORE MANAGEMENT SYSTEM</span>
+            </a>
+
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse"
+                data-bs-target="#topNavbarMenu">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="topNavbarMenu">
+                <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+
+                    <!-- 1. Inward & Factory Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-box-seam me-1 text-info"></i> આવક અને ઉત્પાદન
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/dashboard"><i
+                                        class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i
+                                        class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 2. Dispatch & Yard Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-truck me-1 text-success"></i> ડિસ્પેચ અને સ્કેનિંગ
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i
+                                        class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i
+                                        class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i
+                                        class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 3. Master Controls Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-sliders me-1 text-warning"></i> માસ્ટર કંટ્રોલ
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i
+                                        class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i
+                                        class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 4. Reports & Logs Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle active" href="#" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bar-chart-line me-1 text-primary"></i> રિપોર્ટ્સ અને લોગ
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i
+                                        class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a>
+                            </li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i
+                                        class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 🌓 Global Theme Toggle Button -->
+                    <button id="globalThemeBtn" onclick="toggleGlobalTheme()"
+                        class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
+                        <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+                        <span id="themeText">Dark Mode</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 mb-5">
+
+        <!-- Title & Navigation Action Buttons -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h3 class="fw-extrabold text-slate-800 m-0"><i class="bi bi-graph-up-arrow text-indigo me-2"></i> સ્ટોક
+                    ઇન/આઉટ અને લેજર રિપોર્ટ</h3>
+                <p class="text-muted small m-0 mt-1">દૈનિક સ્ટોક ઓપનિંગ, ક્લોઝિંગ અને હિસ્ટ્રી રિપોર્ટ્સ ચકાસો.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="/dashboard" class="btn btn-outline-dark fw-bold rounded-3 px-3"><i
+                        class="bi bi-house-door me-1"></i> Dashboard</a>
+                <a href="/scanner" class="btn btn-warning fw-bold rounded-3 px-3"><i
+                        class="bi bi-qr-code-scan me-1"></i> Mobile Scanner</a>
+            </div>
+        </div>
+
+        <!-- Active Filter Alert Badge -->
+        <div id="filterAlert"
+            class="alert alert-indigo bg-indigo-50 border-indigo-200 d-flex justify-content-between align-items-center d-none mb-3 shadow-sm rounded-3"
+            role="alert">
+            <div>
+                <i class="bi bi-funnel-fill text-indigo me-2"></i> <strong>ફિલ્ટર લાગુ છે:</strong> આઈટમ <span
+                    id="selectedItemBadge" class="badge bg-dark fs-6 font-monospace"></span> નો ડેટા દર્શાવાય રહ્યો છે.
+            </div>
+            <button onclick="clearItemFilter()" class="btn btn-dark btn-sm fw-bold rounded-pill px-3">❌ Filter દૂર કરો
+                (Show All)</button>
+        </div>
+
+        <!-- 🧪 END-TO-END TESTING & SYSTEM SUMMARY SECTION -->
+        <div class="card glass-card mb-4 border-start border-4 border-warning overflow-hidden">
+            <div
+                class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom">
+                <h5 class="m-0 fw-bold text-warning-emphasis"><i class="bi bi-shield-check me-2 text-warning"></i>
+                    End-to-End System Summary & Fulfillment Analytics</h5>
+                <button onclick="loadEndToEndSummary()"
+                    class="btn btn-outline-warning btn-sm fw-bold rounded-pill px-3">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh Summary
+                </button>
+            </div>
+            <div class="card-body p-4">
+
+                <!-- 1. Stock Variance KPI & Fulfillment Rate Bars -->
+                <div class="row g-4 mb-4">
+                    <!-- Stock Variance Box -->
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-4 bg-primary bg-opacity-10 border border-primary text-center">
+                            <small class="text-muted fw-bold d-block mb-1">📦 Inward Stock vs Scanned Outward
+                                Variance</small>
+                            <h3 class="fw-extrabold text-primary m-0" id="e2e-variance-qty">0.00</h3>
+                            <div class="d-flex justify-content-between mt-2 extra-small text-muted px-2">
+                                <span>Inward: <strong id="e2e-inward-qty">0</strong></span>
+                                <span>Outward: <strong id="e2e-dp-out-qty">0</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Direct Pipe Fulfillment Meter -->
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-4 bg-success bg-opacity-10 border border-success">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted fw-bold">🏭 Direct Pipe Fulfillment Rate</small>
+                                <span class="badge bg-success fw-bold" id="e2e-direct-pct">0%</span>
+                            </div>
+                            <div class="progress my-2" style="height: 10px;">
+                                <div id="e2e-direct-bar"
+                                    class="progress-bar bg-success progress-bar-striped progress-bar-animated"
+                                    role="progressbar" style="width: 0%;"></div>
+                            </div>
+                            <small class="text-muted d-block text-end extra-small" id="e2e-direct-text">0 / 0 Meters
+                                Dispatched</small>
+                        </div>
+                    </div>
+
+                    <!-- Store Kit Fulfillment Meter -->
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-4 bg-info bg-opacity-10 border border-info">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted fw-bold">🎁 Store Kit Fulfillment Rate</small>
+                                <span class="badge bg-info text-dark fw-bold" id="e2e-kit-pct">0%</span>
+                            </div>
+                            <div class="progress my-2" style="height: 10px;">
+                                <div id="e2e-kit-bar"
+                                    class="progress-bar bg-info progress-bar-striped progress-bar-animated"
+                                    role="progressbar" style="width: 0%;"></div>
+                            </div>
+                            <small class="text-muted d-block text-end extra-small" id="e2e-kit-text">0 / 0 Store Kits
+                                Completed</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Non-DP Outward (Testing, Sample, Damage) Graph & History -->
+                <div class="row g-4 align-items-center">
+                    <div class="col-lg-5">
+                        <div class="p-3 rounded-4 border border-secondary">
+                            <h6 class="fw-bold mb-3 text-info"><i class="bi bi-pie-chart-fill me-1"></i> Non-DP Outward
+                                Breakdown (આઉટવર્ડના કારણો)</h6>
+                            <div style="height: 220px; position: relative;">
+                                <canvas id="nondpChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <h6 class="fw-bold mb-2 text-warning"><i class="bi bi-journal-text me-1"></i> Non-DP Outward
+                            History Log (Testing, Sample, Damage)</h6>
+                        <div class="table-responsive-custom" style="max-height: 220px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle m-0 extra-small">
+                                <thead class="sticky-top bg-secondary text-white">
+                                    <tr>
+                                        <th>Box ID</th>
+                                        <th>Item</th>
+                                        <th>Qty</th>
+                                        <th>આઉટવર્ડનું કારણ (Reason)</th>
+                                        <th>તારીખ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="nondpTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">કોઈ રેકોર્ડ ઉપલબ્ધ નથી</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 1. Daily Stock Ledger Table Card -->
+        <div class="card glass-card mb-4 border-start border-4 border-indigo overflow-hidden">
+            <div
+                class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom">
+                <h5 class="m-0 fw-bold text-dark"><i class="bi bi-calendar-event me-2 text-indigo"></i> તારીખ મુજબ સ્ટોક
+                    લેજર (Daily Stock Ledger)</h5>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="date" id="ledgerDate" class="form-control form-control-sm rounded-2"
+                        onchange="loadDateWiseStock()">
+                    <button onclick="loadDateWiseStock()"
+                        class="btn btn-indigo btn-primary btn-sm fw-bold px-3">શોધો</button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive-custom">
+                    <table class="table table-hover align-middle text-center m-0">
+                        <thead>
+                            <tr>
+                                <th class="text-start ps-4">Item નું નામ (ક્લિક કરીને શોધો)</th>
+                                <th class="bg-secondary-subtle">ઓપનિંગ (Opening)</th>
+                                <th class="bg-success-subtle text-success-emphasis">આવેલો માલ (+) IN</th>
+                                <th class="bg-danger-subtle text-danger-emphasis">ગયેલો માલ (-) OUT</th>
+                                <th class="bg-primary-subtle text-primary-emphasis">બાકી રહેલો સ્ટોક (=) Closing</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledgerTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Filter Bar -->
+        <div class="card glass-card p-3.5 mb-4 bg-white">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-2 mb-md-0">
+                    <label class="form-label fw-bold text-slate-600 small mb-1"><i class="bi bi-search me-1"></i> ક્વિક
+                        સર્ચ (Box ID, Item નામ કે વ્યક્તિનું નામ):</label>
+                    <input type="text" id="searchInput" onkeyup="filterBySearchText()" class="form-control rounded-3"
+                        placeholder="ટાઈપ કરીને હિસ્ટ્રી ફિલ્ટર કરો...">
+                </div>
+                <div class="col-md-6 text-md-end text-muted small">
+                    💡 <strong>ટિપ:</strong> કોઈપણ ટેબલમાં આઈટમ પર ક્લિક કરવાથી પણ સંપૂર્ણ હિસ્ટ્રી ફિલ્ટર થશે.
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 2. Outward History Table -->
+            <div class="col-lg-6 mb-4">
+                <div class="card glass-card border-start border-4 border-danger h-100 overflow-hidden">
+                    <div
+                        class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                        <h5 class="m-0 fw-bold text-danger"><i class="bi bi-box-arrow-up-right me-2"></i> બહાર ગયેલ માલ
+                            (Outward History)</h5>
+                        <span id="outwardCount" class="badge bg-danger px-3 py-1.5 fs-6 rounded-pill">0 Records</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive-custom">
+                            <table class="table table-hover align-middle m-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-3">Box ID</th>
+                                        <th>Item નું નામ</th>
+                                        <th>Qty</th>
+                                        <th>Issued To</th>
+                                        <th>સ્કેનર</th>
+                                        <th>તારીખ & સમય</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="outwardTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Inward History Table -->
+            <div class="col-lg-6 mb-4">
+                <div class="card glass-card border-start border-4 border-success h-100 overflow-hidden">
+                    <div
+                        class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                        <h5 class="m-0 fw-bold text-success"><i class="bi bi-box-arrow-in-down-left me-2"></i> સ્ટોરમાં
+                            આવેલ માલ (Inward History)</h5>
+                        <span id="inwardCount" class="badge bg-success px-3 py-1.5 fs-6 rounded-pill">0 Records</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive-custom">
+                            <table class="table table-hover align-middle m-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-3">Box ID</th>
+                                        <th>Item નું નામ</th>
+                                        <th class="text-success-emphasis bg-success-subtle">આવેલો મૂળ Qty</th>
+                                        <th class="text-primary-emphasis bg-primary-subtle">હાલ બાકી Qty</th>
+                                        <th>Supplier / Party</th>
+                                        <th>Remark</th>
+                                        <th>સ્ટેટસ</th>
+                                        <th>Inward તારીખ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inwardTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let globalInwardData = [];
+        let globalOutwardData = [];
+        let selectedItemFilter = null;
+
+        document.getElementById('ledgerDate').valueAsDate = new Date();
+
+        async function loadDateWiseStock() {
+            const selectedDate = document.getElementById('ledgerDate').value;
+            if (!selectedDate) return;
+
+            try {
+                const response = await fetch(`/api/date-wise-stock?report_date=${selectedDate}`, {
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                });
+                const data = await response.json();
+
+                const tbody = document.getElementById('ledgerTable');
+                if (!data.stock_ledger || data.stock_ledger.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-muted py-4">આ તારીખે કોઈ સ્ટોકની હિલચાલ થઈ નથી.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = data.stock_ledger.map(row => {
+                    const u = row.unit || 'MTR';
+                    return `
+                <tr>
+                    <td class="text-start ps-4">
+                        <span class="clickable-item" onclick="filterByItem('${row.item_name}')"><i class="bi bi-search me-1"></i> ${row.item_name}</span>
+                    </td>
+                    <td><span class="fw-bold text-secondary">${row.opening_qty} ${u}</span></td>
+                    <td><span class="badge bg-success-subtle text-success fs-6">+${row.in_qty} ${u}</span></td>
+                    <td><span class="badge bg-danger-subtle text-danger fs-6">-${row.out_qty} ${u}</span></td>
+                    <td><span class="badge bg-primary fs-6 fw-bold px-3 py-1">${row.opening_qty + row.in_qty - row.out_qty} ${u}</span></td>
+                </tr>
+            `}).join('');
+            } catch (err) {
+                console.error("Error fetching ledger:", err);
+            }
+        }
+
+        async function loadReports() {
+            try {
+                const response = await fetch('/api/reports', {
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                });
+                const data = await response.json();
+
+                globalInwardData = data.inward_history || [];
+                globalOutwardData = data.outward_history || [];
+
+                renderTables();
+            } catch (err) {
+                console.error("Error loading reports:", err);
+            }
+        }
+
+        function renderTables(filteredIn = null, filteredOut = null) {
+            let inwardList = filteredIn || globalInwardData;
+            let outwardList = filteredOut || globalOutwardData;
+
+            if (selectedItemFilter && !filteredIn) {
+                inwardList = globalInwardData.filter(row => row.item_name === selectedItemFilter);
+                outwardList = globalOutwardData.filter(row => row.item_name === selectedItemFilter);
+            }
+
+            document.getElementById('inwardCount').innerText = `${inwardList.length} Entries`;
+            document.getElementById('outwardCount').innerText = `${outwardList.length} Entries`;
+
+            // Render Outward Table
+            const outwardTbody = document.getElementById('outwardTable');
+            if (outwardList.length === 0) {
+                outwardTbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">કોઈ Outward રેકોર્ડ મળ્યો નથી.</td></tr>`;
+            } else {
+                outwardTbody.innerHTML = outwardList.map(row => {
+                    const u = row.unit || (row.box_id.startsWith('COIL-') ? 'MTR' : 'Pcs');
+                    return `
+                <tr>
+                    <td class="ps-3"><span class="badge bg-slate-800 bg-dark font-monospace">${row.box_id}</span></td>
+                    <td class="fw-bold text-slate-800">${row.item_name}</td>
+                    <td><span class="badge bg-danger fs-6">-${row.qty_issued} ${u}</span></td>
+                    <td><span class="text-indigo fw-bold">${row.issued_to}</span></td>
+                    <td><small class="text-muted">${row.scanned_by || 'Store Keeper'}</small></td>
+                    <td><small class="text-muted">${new Date(row.outward_date).toLocaleString()}</small></td>
+                </tr>
+            `}).join('');
+            }
+
+            // Render Inward Table
+            const inwardTbody = document.getElementById('inwardTable');
+            if (inwardList.length === 0) {
+                inwardTbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">કોઈ Inward રેકોર્ડ મળ્યો નથી.</td></tr>`;
+            } else {
+                inwardTbody.innerHTML = inwardList.map(row => {
+                    const u = row.unit || (row.box_id.startsWith('COIL-') ? 'MTR' : 'Pcs');
+                    return `
+                <tr>
+                    <td class="ps-3"><span class="badge bg-slate-800 bg-dark font-monospace">${row.box_id}</span></td>
+                    <td class="fw-bold text-slate-800">${row.item_name}</td>
+                    <td><span class="badge bg-success-subtle text-success border border-success-subtle fw-bold fs-6">${row.initial_qty || row.qty_in_box} ${u}</span></td>
+                    <td><span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-bold fs-6">${row.qty_in_box} ${u}</span></td>
+                    <td><span class="text-secondary fw-semibold">${row.supplier_or_party || 'N/A'}</span></td>
+                    <td><small class="text-muted">${row.remark || 'N/A'}</small></td>
+                    <td>
+                        <span class="badge ${row.status === 'IN_STORE' ? 'bg-success' : 'bg-secondary'}">
+                            ${row.status === 'IN_STORE' ? 'IN STORE' : 'OUT'}
+                        </span>
+                    </td>
+                    <td><small class="text-muted">${new Date(row.created_at).toLocaleString()}</small></td>
+                </tr>
+            `}).join('');
+            }
+        }
+
+        function filterBySearchText() {
+            const text = document.getElementById('searchInput').value.toLowerCase();
+
+            const filteredIn = globalInwardData.filter(row =>
+                row.box_id.toLowerCase().includes(text) ||
+                row.item_name.toLowerCase().includes(text) ||
+                (row.supplier_or_party && row.supplier_or_party.toLowerCase().includes(text))
+            );
+
+            const filteredOut = globalOutwardData.filter(row =>
+                row.box_id.toLowerCase().includes(text) ||
+                row.item_name.toLowerCase().includes(text) ||
+                (row.issued_to && row.issued_to.toLowerCase().includes(text))
+            );
+
+            renderTables(filteredIn, filteredOut);
+        }
+
+        function filterByItem(itemName) {
+            selectedItemFilter = itemName;
+            document.getElementById('selectedItemBadge').innerText = itemName;
+            document.getElementById('filterAlert').classList.remove('d-none');
+            renderTables();
+        }
+
+        function clearItemFilter() {
+            selectedItemFilter = null;
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterAlert').classList.add('d-none');
+            renderTables();
+        }
+
+        // 🌓 Global Dark / Light Theme Management
+        function applyGlobalTheme() {
+            const theme = localStorage.getItem('theme_preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeBtn(theme);
+        }
+        function toggleGlobalTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme_preference', next);
+            updateThemeBtn(next);
+        }
+        function updateThemeBtn(theme) {
+            const btn = document.getElementById('globalThemeBtn');
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (!btn || !icon || !text) return;
+            if (theme === 'light') {
+                icon.className = 'bi bi-sun-fill text-warning';
+                text.innerText = 'Light Mode';
+                btn.className = 'btn btn-light text-dark border-secondary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+            } else {
+                icon.className = 'bi bi-moon-stars-fill text-warning';
+                text.innerText = 'Dark Mode';
+                btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+            }
+        }
+
+        let nondpChartObj = null;
+
+        async function loadEndToEndSummary() {
+            try {
+                const res = await fetch('/api/reports/end-to-end-summary');
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    // 1. Update Stock Variance
+                    document.getElementById('e2e-variance-qty').innerText = data.stock_summary.variance_qty.toLocaleString();
+                    document.getElementById('e2e-inward-qty').innerText = data.stock_summary.total_inward_qty.toLocaleString();
+                    document.getElementById('e2e-dp-out-qty').innerText = data.stock_summary.total_dp_outward_qty.toLocaleString();
+
+                    // 2. Update Direct Pipe Fulfillment Meter
+                    const directPct = data.fulfillment_summary.direct_pipes.fulfillment_rate_pct;
+                    document.getElementById('e2e-direct-pct').innerText = directPct + '%';
+                    document.getElementById('e2e-direct-bar').style.width = Math.min(100, Math.max(0, directPct)) + '%';
+                    document.getElementById('e2e-direct-text').innerText = `${data.fulfillment_summary.direct_pipes.dispatched_qty} / ${data.fulfillment_summary.direct_pipes.planned_qty} Dispatched`;
+
+                    // Update Store Kit Fulfillment Meter
+                    const kitPct = data.fulfillment_summary.store_kits.fulfillment_rate_pct;
+                    document.getElementById('e2e-kit-pct').innerText = kitPct + '%';
+                    document.getElementById('e2e-kit-bar').style.width = Math.min(100, Math.max(0, kitPct)) + '%';
+                    document.getElementById('e2e-kit-text').innerText = `${data.fulfillment_summary.store_kits.completed_kits} / ${data.fulfillment_summary.store_kits.total_kits} Kits Completed`;
+
+                    // 3. Render Non-DP Chart
+                    renderNonDpChart(data.non_dp_summary.reason_labels, data.non_dp_summary.reason_qtys);
+
+                    // 4. Render Non-DP History Table
+                    const tbody = document.getElementById('nondpTableBody');
+                    if (data.non_dp_summary.history && data.non_dp_summary.history.length > 0) {
+                        tbody.innerHTML = data.non_dp_summary.history.map(row => `
+                        <tr>
+                            <td><span class="badge bg-secondary font-monospace">${row.box_id}</span></td>
+                            <td>${row.item_name || 'Item'}</td>
+                            <td><strong class="text-info">${row.qty_issued}</strong></td>
+                            <td><span class="badge bg-info text-dark">${row.issued_to}</span></td>
+                            <td class="text-muted">${row.formatted_date}</td>
+                        </tr>
+                    `).join('');
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">કોઈ Non-DP આઉટવર્ડ હિસ્ટ્રી રેકોર્ડ ઉપલબ્ધ નથી</td></tr>`;
+                    }
+                }
+            } catch (err) {
+                console.error("End-to-End Summary Error:", err);
+            }
+        }
+
+        function renderNonDpChart(labels, qtys) {
+            const ctx = document.getElementById('nondpChart');
+            if (!ctx) return;
+            if (nondpChartObj) nondpChartObj.destroy();
+
+            const chartLabels = labels && labels.length > 0 ? labels : ['Testing', 'Sample', 'Scrap/Damage', 'Internal Use'];
+            const chartQtys = qtys && qtys.length > 0 ? qtys : [0, 0, 0, 0];
+
+            nondpChartObj = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        data: chartQtys,
+                        backgroundColor: ['#06b6d4', '#f59e0b', '#ef4444', '#10b981', '#a855f7'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { size: 11 }, color: 'gray' } }
+                    }
+                }
+            });
+        }
+
+        function autoRefreshReports() {
+            // This function will refresh data that is not dependent on user input like date.
+            loadReports();
+            loadEndToEndSummary();
+        }
+
+        applyGlobalTheme();
+        loadDateWiseStock();
+        loadReports();
+        loadEndToEndSummary();
+
+        // દર 7 સેકન્ડે રિપોર્ટ્સનો ડેટા ઓટો-અપડેટ થશે
+        setInterval(autoRefreshReports, 7000);
+    </script>
+
+
+    <script>
+        // Global Theme Switcher Logic
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('user-theme', newTheme);
+            localStorage.setItem('theme_preference', newTheme);
+            updateThemeBtnUI(newTheme);
+        }
+
+        function updateThemeBtnUI(theme) {
+            const btn = document.getElementById('globalThemeBtn');
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (!btn) return;
+
+            if (theme === 'dark') {
+                if (icon) icon.className = 'bi bi-moon-stars-fill text-warning';
+                if (text) text.innerText = 'Dark';
+                btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+            } else {
+                if (icon) icon.className = 'bi bi-sun-fill text-warning';
+                if (text) text.innerText = 'Light';
+                btn.className = 'btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+            }
+        }
+
+        // Global Theme Auto-Apply Functions
+        function toggleGlobalTheme() { toggleTheme(); }
+        function applyGlobalTheme() {
+            const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeBtnUI(savedTheme);
+        }
+
+        // Page Load Auto-Apply Saved Theme
+        (function () {
+            const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.addEventListener('DOMContentLoaded', function () {
+                updateThemeBtnUI(savedTheme);
+            });
+        })();
+    </script>
+
+</body>
+
+</html>
