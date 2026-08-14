@@ -103,6 +103,73 @@
         }
     </style>
     <style>
+        /* NEW: Bulk QR Print Styling */
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+
+            /* Target the container for search results */
+            #search-results-area,
+            #search-results-area * {
+                visibility: visible !important;
+            }
+
+            #search-results-area {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                padding: 15px !important;
+                /* Add some padding for print margins */
+            }
+
+            /* Target the row inside search-results-area */
+            #search-results-area .row {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                gap: 15px !important;
+                /* Bootstrap's g-3 is 1rem, so 15px is fine */
+                margin: 0 !important;
+                /* Remove default row margins */
+            }
+
+            /* Target the column wrapper */
+            #search-results-area .row .col-md-4 {
+                flex: 0 0 45% !important;
+                /* Make it 45% width */
+                max-width: 45% !important;
+                width: 45% !important;
+                padding: 0 !important;
+                /* Remove column padding */
+                margin: 0 !important;
+                /* Remove column margin */
+            }
+
+            /* This is the inner card */
+            .qr-card-printable {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                border: 1px solid #000 !important;
+                padding: 10px !important;
+                color: #000 !important;
+                background: #fff !important;
+                box-shadow: none !important;
+                height: auto !important;
+                /* Allow height to adjust */
+                width: 100% !important;
+                /* Fill its parent col-md-4 */
+            }
+
+            .qr-card-printable .font-monospace,
+            .qr-card-printable .text-indigo,
+            .qr-card-printable .text-muted,
+            .qr-card-printable .text-slate-800 {
+                color: #000 !important;
+            }
+        }
+    </style>
+    <style>
         /* 🌓 Global Dark / Light Theme System */
         :root {
             --bg-main: #0f172a;
@@ -610,12 +677,25 @@
                             placeholder="ઉદા. HDPE Pipe અથવા PVC">
                     </div>
                     <div class="col-md-3">
+                        <button onclick="searchOldQrs(true)" class="btn btn-gradient-indigo w-100">
+                            <i class="bi bi-search me-1"></i> શોધો (Search)
+                        </button>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="m-0 text-white"><i class="bi bi-qr-code me-2"></i> સર્ચ પરિણામો</h5>
+                    <div class="col-md-3">
                         <button onclick="searchOldQrs()" class="btn btn-gradient-indigo w-100">
                             <i class="bi bi-search me-1"></i> શોધો (Search)
                         </button>
                     </div>
                 </div>
                 <div id="search-results-area" class="mt-3"></div>
+                <div class="d-flex justify-content-end align-items-center mt-3">
+                    <button type="button" class="btn btn-warning fw-bold" onclick="printAllQRCodes()">
+                        🖨️ બ્રાઉઝરમાં દેખાતા બધા QR એકસાથે પ્રિન્ટ કરો (Print All)
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -884,7 +964,7 @@
                 ${boxes.map(box => {
                 const isProduction = box.box_id.startsWith('COIL-') || box.machine_name;
                 return `
-                        <div class="col-md-4">
+                        <div class="col-md-4 qr-card-printable">
                             <div class="p-3 border rounded-3 glass-card text-center h-100 d-flex flex-column justify-content-between">
                                 <div>
                                     <span class="badge ${isProduction ? 'bg-primary' : 'bg-success'} mb-2">
@@ -982,6 +1062,18 @@
             }
         }
 
+        function printAllQRCodes() {
+            // 1. ચેક કરો કે સ્ક્રીન પર QR કાર્ડ્સ છે કે નહીં
+            const qrCards = document.querySelectorAll('.qr-card-printable'); // અથવા તમારો QR નો class name
+
+            if (qrCards.length === 0) {
+                alert("⚠️ પ્રિન્ટ કરવા માટે કોઈ QR કોડ મળ્યા નથી! પહેલા સર્ચ કરો.");
+                return;
+            }
+
+            // 2. બ્રાઉઝરની પ્રિન્ટ વિન્ડો ઓપન કરો
+            window.print();
+        }
         async function loadDashboardDpPlans() {
             const container = document.getElementById('dp-plans-container');
             const loadingDiv = document.getElementById('dp-plans-loading');
