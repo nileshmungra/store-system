@@ -835,8 +835,28 @@
         loadReports();
         loadEndToEndSummary();
 
-        // દર 7 સેકન્ડે રિપોર્ટ્સનો ડેટા ઓટો-અપડેટ થશે
-        setInterval(autoRefreshReports, 7000);
+        // --- WebSocket for Real-Time Updates ---
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            ws.onopen = function () {
+                console.log("Reports WebSocket: Connected for live updates.");
+            };
+
+            ws.onmessage = function (event) {
+                if (event.data === "STOCK_UPDATED") {
+                    console.log("Reports WebSocket: Received STOCK_UPDATED signal. Refreshing reports...");
+                    if (typeof autoRefreshReports === 'function') autoRefreshReports();
+                }
+            };
+
+            ws.onclose = function () {
+                console.log("Reports WebSocket: Disconnected. Reconnecting in 5 seconds...");
+                setTimeout(connectWebSocket, 5000);
+            }
+        }
+        connectWebSocket();
     </script>
 
 

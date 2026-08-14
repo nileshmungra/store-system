@@ -535,8 +535,30 @@
         applyGlobalTheme();
         loadDashboardStats();
 
-        // દર ૫ સેકન્ડે ડેશબોર્ડનો ડેટા ઓટો-અપડેટ થશે
-        setInterval(loadDashboardStats, 5000);
+        // --- WebSocket for Real-Time Updates ---
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            ws.onopen = function () {
+                console.log("Dashboard WebSocket: Connected for live updates.");
+            };
+
+            ws.onmessage = function (event) {
+                if (event.data === "STOCK_UPDATED") {
+                    console.log("Dashboard WebSocket: Received STOCK_UPDATED signal. Refreshing stats...");
+                    if (typeof loadDashboardStats === 'function') {
+                        loadDashboardStats();
+                    }
+                }
+            };
+
+            ws.onclose = function () {
+                console.log("Dashboard WebSocket: Disconnected. Reconnecting in 5 seconds...");
+                setTimeout(connectWebSocket, 5000);
+            }
+        }
+        connectWebSocket();
     </script>
 
 

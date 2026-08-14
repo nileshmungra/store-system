@@ -683,8 +683,8 @@ def update_inward_batch(batch_id: int, data: InwardBatchUpdateRequest):
 
 # ૧. Material IN (Inward + Auto Log)
 @app.post("/api/inward")
-def material_inward(data: InwardRequest):
-    with get_db_ctx(commit=True) as (conn, cursor):
+async def material_inward(data: InwardRequest):
+    with get_db_ctx(commit=True) as (conn, cursor): # Note: DB operations are sync, but the endpoint is now async
         total_qty = data.total_boxes * data.qty_per_box
         
         cursor.execute(
@@ -736,9 +736,9 @@ def is_item_match(scanned_name: str, plan_item_name: str) -> bool:
 
 # ૨. Material OUT / DISPATCH (Outward + Auto Log)
 @app.post("/api/outward")
-def process_outward(req: OutwardRequest):
+async def process_outward(req: OutwardRequest):
     # Store Kit Outward Processing (1-Click Completion of all Fittings)
-    if req.box_id.startswith("KIT-") or "KIT-" in req.box_id:
+    if req.box_id.startswith("KIT-") or "KIT-" in req.box_id: # This part is async
         with get_db_ctx(commit=True) as (conn, cursor):
             cursor.execute("SELECT * FROM store_kits WHERE kit_code = %s", (req.box_id,))
             kit = cursor.fetchone()
@@ -801,7 +801,7 @@ def process_outward(req: OutwardRequest):
             "completed_items": k_items
         }
 
-    with get_db_ctx(commit=True) as (conn, cursor):
+    with get_db_ctx(commit=True) as (conn, cursor): # This part is sync
         cursor.execute("SELECT * FROM boxes WHERE box_id = %s", (req.box_id,))
         box = cursor.fetchone()
         
@@ -958,8 +958,8 @@ def process_outward(req: OutwardRequest):
 
 # 🏭 Non-DP Outward API (Testing, Sample, Scrap, Internal Use)
 @app.post("/api/inventory/outward-non-dp")
-def process_non_dp_outward(req: NonDpOutwardRequest):
-    qty = req.qty_issued if req.qty_issued and req.qty_issued > 0 else 1
+async def process_non_dp_outward(req: NonDpOutwardRequest):
+    qty = req.qty_issued if req.qty_issued and req.qty_issued > 0 else 1 # This part is sync
     reason_text = (req.reason or "Internal Use").strip()
     issued_to_text = (req.issued_to or "Internal Dept").strip()
 
@@ -1477,9 +1477,9 @@ def delete_machine(machine_id: int):
 
 # 3. Save Production Entry & Generate Coil QR
 @app.post("/api/production/add")
-def add_production(req: ProductionEntryRequest):
+async def add_production(req: ProductionEntryRequest):
     """નવી Production Entry સેવ કરે છે અને QR Code જનરેટ કરે છે."""
-    with get_db_ctx(commit=True) as (conn, cursor):
+    with get_db_ctx(commit=True) as (conn, cursor): # This part is sync
         try:
             # Generate Unique Box/Coil QR safely
             prefix = req.pipe_type[:3].upper().replace(" ", "")

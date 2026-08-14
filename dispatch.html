@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="gu">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,20 +40,23 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        .glass-card, .card {
+        .glass-card,
+        .card {
             background-color: var(--bg-card) !important;
             border: 1px solid var(--border-color) !important;
             color: var(--text-main) !important;
             box-shadow: 0 10px 25px var(--shadow-glow) !important;
         }
 
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             background-color: var(--input-bg) !important;
             color: var(--input-text) !important;
             border-color: var(--border-color) !important;
         }
 
-        .table-custom, .table-custom td {
+        .table-custom,
+        .table-custom td {
             color: var(--text-main) !important;
             border-bottom-color: var(--border-color) !important;
         }
@@ -86,7 +90,8 @@
             white-space: nowrap !important;
         }
 
-        .nav-pill-custom:hover, .nav-pill-custom:focus {
+        .nav-pill-custom:hover,
+        .nav-pill-custom:focus {
             color: #ffffff !important;
             background: rgba(255, 255, 255, 0.16) !important;
             border-color: rgba(255, 255, 255, 0.25) !important;
@@ -169,404 +174,463 @@
 
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
-            <span class="fs-4 text-warning">📦</span> 
-            <span>STORE MANAGEMENT SYSTEM</span>
-        </a>
-        
-        <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#topNavbarMenu">
-            <i class="bi bi-list fs-2"></i>
-        </button>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
+                <span class="fs-4 text-warning">📦</span>
+                <span>STORE MANAGEMENT SYSTEM</span>
+            </a>
 
-        <div class="collapse navbar-collapse" id="topNavbarMenu">
-            <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
-                
-                <!-- 1. Inward & Factory Dropdown -->
-                <div class="nav-item dropdown">
-                    <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-box-seam me-1 text-info"></i> આવક અને ઉત્પાદન
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                        <li><a class="dropdown-item dropdown-item-custom" href="/dashboard"><i class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
-                    </ul>
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse"
+                data-bs-target="#topNavbarMenu">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="topNavbarMenu">
+                <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+
+                    <!-- 1. Inward & Factory Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-box-seam me-1 text-info"></i> આવક અને ઉત્પાદન
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/dashboard"><i
+                                        class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i
+                                        class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 2. Dispatch & Yard Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle active" href="#" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-truck me-1 text-success"></i> ડિસ્પેચ અને સ્કેનિંગ
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i
+                                        class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i
+                                        class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i
+                                        class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 3. Master Controls Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-sliders me-1 text-warning"></i> માસ્ટર કંટ્રોલ
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i
+                                        class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i
+                                        class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 4. Reports & Logs Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-bar-chart-line me-1 text-primary"></i> રિપોર્ટ્સ અને લોગ
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i
+                                        class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a>
+                            </li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i
+                                        class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 🌓 Global Theme Toggle Button -->
+                    <button id="globalThemeBtn" onclick="toggleGlobalTheme()"
+                        class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
+                        <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+                        <span id="themeText">Dark Mode</span>
+                    </button>
                 </div>
+            </div>
+        </div>
+    </nav>
 
-                <!-- 2. Dispatch & Yard Dropdown -->
-                <div class="nav-item dropdown">
-                    <a class="nav-pill-custom dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-truck me-1 text-success"></i> ડિસ્પેચ અને સ્કેનિંગ
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                        <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a></li>
-                    </ul>
-                </div>
-
-                <!-- 3. Master Controls Dropdown -->
-                <div class="nav-item dropdown">
-                    <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-sliders me-1 text-warning"></i> માસ્ટર કંટ્રોલ
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                        <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
-                    </ul>
-                </div>
-
-                <!-- 4. Reports & Logs Dropdown -->
-                <div class="nav-item dropdown">
-                    <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-bar-chart-line me-1 text-primary"></i> રિપોર્ટ્સ અને લોગ
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                        <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
-                    </ul>
-                </div>
-
-                <!-- 🌓 Global Theme Toggle Button -->
-                <button id="globalThemeBtn" onclick="toggleGlobalTheme()" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
-                    <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
-                    <span id="themeText">Dark Mode</span>
+    <div class="container my-4">
+        <!-- Header Title -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h3 class="fw-bold text-white m-0"><i class="bi bi-truck text-warning me-2"></i> ડિસ્પેચ પ્લાન
+                    મેનેજમેન્ટ (Dispatch Plan Control)</h3>
+                <p class="text-muted small m-0 mt-1">PDF / Excel Dispatch Plan અપલોડ કરી લાઈન-વાઈઝ માલ આઉટ કંટ્રોલ કરો.
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-warning text-dark fw-bold rounded-pill px-4" data-bs-toggle="modal"
+                    data-bs-target="#autoConnectModal">
+                    <i class="bi bi-link-45deg me-1"></i> 🔗 Auto-Connect SO & DP Plan
+                </button>
+                <button class="btn btn-primary fw-bold rounded-pill px-4" data-bs-toggle="modal"
+                    data-bs-target="#uploadPlanModal">
+                    <i class="bi bi-file-earmark-arrow-up-fill me-1"></i> નવો Dispatch Plan Upload કરો
                 </button>
             </div>
         </div>
-    </div>
-</nav>
 
-<div class="container my-4">
-    <!-- Header Title -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <h3 class="fw-bold text-white m-0"><i class="bi bi-truck text-warning me-2"></i> ડિસ્પેચ પ્લાન મેનેજમેન્ટ (Dispatch Plan Control)</h3>
-            <p class="text-muted small m-0 mt-1">PDF / Excel Dispatch Plan અપલોડ કરી લાઈન-વાઈઝ માલ આઉટ કંટ્રોલ કરો.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-warning text-dark fw-bold rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#autoConnectModal">
-                <i class="bi bi-link-45deg me-1"></i> 🔗 Auto-Connect SO & DP Plan
-            </button>
-            <button class="btn btn-primary fw-bold rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#uploadPlanModal">
-                <i class="bi bi-file-earmark-arrow-up-fill me-1"></i> નવો Dispatch Plan Upload કરો
-            </button>
-        </div>
-    </div>
-
-    <!-- Active Plans Cards -->
-    <div id="plansListArea">
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="text-muted mt-2">Dispatch Plans લોડ થઈ રહ્યા છે...</p>
-        </div>
-    </div>
-</div>
-
-<!-- Upload Modal -->
-<div class="modal fade" id="uploadPlanModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-card text-white">
-            <div class="modal-header border-secondary py-3">
-                <h5 class="modal-title fw-bold text-warning"><i class="bi bi-upload me-2"></i> Dispatch Plan PDF / Excel Upload</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body py-4">
-                <form id="uploadPlanForm" onsubmit="submitDispatchPlan(event)">
-                    <div class="dropzone" id="dropzone" onclick="document.getElementById('planFile').click()">
-                        <i class="bi bi-cloud-arrow-up-fill text-primary display-4 mb-2 d-block"></i>
-                        <h6 class="fw-bold">અહીં Dispatch Plan PDF અથવા Excel ફાઈલ ડ્રેગ / સિલેક્ટ કરો</h6>
-                        <small class="text-muted">Bhumi Polymers Dispatch PDF અથવા Order Excel (.pdf, .xlsx, .xls)</small>
-                        <input type="file" id="planFile" accept=".pdf,.xlsx,.xls" class="d-none" onchange="fileSelected(this)">
-                        <div id="fileNameDisplay" class="mt-3 text-warning fw-bold small"></div>
-                    </div>
-                    <div class="mt-3 text-end">
-                        <button type="button" class="btn btn-outline-light btn-sm me-2" data-bs-dismiss="modal">કન્સલ</button>
-                        <button type="submit" class="btn btn-success fw-bold px-4" id="uploadSubmitBtn">
-                            <i class="bi bi-check-circle-fill me-1"></i> Upload & Process
-                        </button>
-                    </div>
-                </form>
+        <!-- Active Plans Cards -->
+        <div id="plansListArea">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="text-muted mt-2">Dispatch Plans લોડ થઈ રહ્યા છે...</p>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Auto-Connect SO & DP Plan Modal -->
-<div class="modal fade" id="autoConnectModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content glass-card text-white">
-            <div class="modal-header border-secondary py-3">
-                <h5 class="modal-title fw-bold text-warning">
-                    <i class="bi bi-link-45deg me-2"></i> Auto-Connect DP Plan PDF & Pending SO Excel
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body py-4">
-                <form id="autoConnectForm" onsubmit="submitAutoConnect(event)">
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-warning">1. DP Plan PDF File (Direct Items: Pipes, Filters)</label>
-                            <input type="file" id="connectDpPdf" accept=".pdf" class="form-control bg-dark text-white border-secondary">
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadPlanModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card text-white">
+                <div class="modal-header border-secondary py-3">
+                    <h5 class="modal-title fw-bold text-warning"><i class="bi bi-upload me-2"></i> Dispatch Plan PDF /
+                        Excel Upload</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <form id="uploadPlanForm" onsubmit="submitDispatchPlan(event)">
+                        <div class="dropzone" id="dropzone" onclick="document.getElementById('planFile').click()">
+                            <i class="bi bi-cloud-arrow-up-fill text-primary display-4 mb-2 d-block"></i>
+                            <h6 class="fw-bold">અહીં Dispatch Plan PDF અથવા Excel ફાઈલ ડ્રેગ / સિલેક્ટ કરો</h6>
+                            <small class="text-muted">Bhumi Polymers Dispatch PDF અથવા Order Excel (.pdf, .xlsx,
+                                .xls)</small>
+                            <input type="file" id="planFile" accept=".pdf,.xlsx,.xls" class="d-none"
+                                onchange="fileSelected(this)">
+                            <div id="fileNameDisplay" class="mt-3 text-warning fw-bold small"></div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-warning">2. Pending SO Excel File (Store Kit Items: Fittings, Valves)</label>
-                            <input type="file" id="connectSoExcel" accept=".xlsx,.xls,.csv" class="form-control bg-dark text-white border-secondary">
+                        <div class="mt-3 text-end">
+                            <button type="button" class="btn btn-outline-light btn-sm me-2"
+                                data-bs-dismiss="modal">કન્સલ</button>
+                            <button type="submit" class="btn btn-success fw-bold px-4" id="uploadSubmitBtn">
+                                <i class="bi bi-check-circle-fill me-1"></i> Upload & Process
+                            </button>
                         </div>
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted">DP Plan No. (Optional override)</label>
-                            <input type="text" id="connectDpNumber" class="form-control bg-dark text-white border-secondary" placeholder="ઉદા. RJT/DP/1296/26-27">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted">Sales Order SO No. (Optional override)</label>
-                            <input type="text" id="connectSoNumber" class="form-control bg-dark text-white border-secondary" placeholder="ઉદા. SO-4501">
-                        </div>
-                    </div>
-                    <div class="mt-4 text-end">
-                        <button type="button" class="btn btn-outline-light btn-sm me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-warning text-dark fw-bold px-4" id="connectSubmitBtn">
-                            <i class="bi bi-link-45deg me-1"></i> Connect & Map Verification Items
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Edit Plan Modal -->
-<div class="modal fade" id="editPlanModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-card text-white">
-            <div class="modal-header border-secondary py-3">
-                <h5 class="modal-title fw-bold text-warning"><i class="bi bi-pencil-square me-2"></i> Edit Plan Details</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body py-4">
-                <form id="editPlanForm" onsubmit="submitPlanUpdate(event)">
-                    <input type="hidden" id="editPlanId">
-                    <div class="mb-3">
-                        <label for="editPlanNo" class="form-label small text-muted">Plan No.</label>
-                        <input type="text" class="form-control bg-dark text-white border-secondary" id="editPlanNo" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editSoNo" class="form-label small text-muted">SO No.</label>
-                        <input type="text" class="form-control bg-dark text-white border-secondary" id="editSoNo" required>
-                    </div>
-                    <div class="mt-3 text-end">
-                        <button type="button" class="btn btn-outline-light btn-sm me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success fw-bold px-4">
-                            <i class="bi bi-check-circle-fill me-1"></i> Save Changes
-                        </button>
-                    </div>
-                </form>
+    <!-- Auto-Connect SO & DP Plan Modal -->
+    <div class="modal fade" id="autoConnectModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content glass-card text-white">
+                <div class="modal-header border-secondary py-3">
+                    <h5 class="modal-title fw-bold text-warning">
+                        <i class="bi bi-link-45deg me-2"></i> Auto-Connect DP Plan PDF & Pending SO Excel
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <form id="autoConnectForm" onsubmit="submitAutoConnect(event)">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-warning">1. DP Plan PDF File (Direct Items:
+                                    Pipes, Filters)</label>
+                                <input type="file" id="connectDpPdf" accept=".pdf"
+                                    class="form-control bg-dark text-white border-secondary">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-warning">2. Pending SO Excel File (Store Kit
+                                    Items: Fittings, Valves)</label>
+                                <input type="file" id="connectSoExcel" accept=".xlsx,.xls,.csv"
+                                    class="form-control bg-dark text-white border-secondary">
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted">DP Plan No. (Optional override)</label>
+                                <input type="text" id="connectDpNumber"
+                                    class="form-control bg-dark text-white border-secondary"
+                                    placeholder="ઉદા. RJT/DP/1296/26-27">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted">Sales Order SO No. (Optional
+                                    override)</label>
+                                <input type="text" id="connectSoNumber"
+                                    class="form-control bg-dark text-white border-secondary" placeholder="ઉદા. SO-4501">
+                            </div>
+                        </div>
+                        <div class="mt-4 text-end">
+                            <button type="button" class="btn btn-outline-light btn-sm me-2"
+                                data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning text-dark fw-bold px-4" id="connectSubmitBtn">
+                                <i class="bi bi-link-45deg me-1"></i> Connect & Map Verification Items
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Edit Item Modal -->
-<div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-card text-white">
-            <div class="modal-header border-secondary py-3">
-                <h5 class="modal-title fw-bold text-warning"><i class="bi bi-pencil-square me-2"></i> Edit Dispatch Item</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body py-4">
-                <form id="editItemForm" onsubmit="submitItemUpdate(event)">
-                    <input type="hidden" id="editItemId">
-                    <div class="mb-3">
-                        <label for="editItemName" class="form-label small text-muted">Item Name (આઈટમનું નામ)</label>
-                        <input type="text" class="form-control bg-dark text-white border-secondary" id="editItemName" list="itemsDatalist" required autocomplete="off" placeholder="આઇટમનું નામ શોધો અથવા ટાઇપ કરો...">
-                        <datalist id="itemsDatalist"></datalist>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="editPlannedQty" class="form-label small text-muted">Planned Qty (જથ્થો)</label>
-                            <input type="number" step="any" class="form-control bg-dark text-white border-secondary" id="editPlannedQty" required>
+    <!-- Edit Plan Modal -->
+    <div class="modal fade" id="editPlanModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card text-white">
+                <div class="modal-header border-secondary py-3">
+                    <h5 class="modal-title fw-bold text-warning"><i class="bi bi-pencil-square me-2"></i> Edit Plan
+                        Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <form id="editPlanForm" onsubmit="submitPlanUpdate(event)">
+                        <input type="hidden" id="editPlanId">
+                        <div class="mb-3">
+                            <label for="editPlanNo" class="form-label small text-muted">Plan No.</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="editPlanNo"
+                                required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="editUnit" class="form-label small text-muted">Unit (એકમ)</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" id="editUnit" required>
+                        <div class="mb-3">
+                            <label for="editSoNo" class="form-label small text-muted">SO No.</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="editSoNo"
+                                required>
                         </div>
-                    </div>
-                    <div class="mt-3 text-end">
-                        <button type="button" class="btn btn-outline-light btn-sm me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success fw-bold px-4">
-                            <i class="bi bi-check-circle-fill me-1"></i> Save Changes
-                        </button>
-                    </div>
-                </form>
+                        <div class="mt-3 text-end">
+                            <button type="button" class="btn btn-outline-light btn-sm me-2"
+                                data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success fw-bold px-4">
+                                <i class="bi bi-check-circle-fill me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Add Item to Plan Modal -->
-<div class="modal fade" id="addItemModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-card text-white">
-            <div class="modal-header border-secondary py-3">
-                <h5 class="modal-title fw-bold text-warning"><i class="bi bi-plus-circle-fill me-2"></i> Add New Item to Plan</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body py-4">
-                <form id="addItemForm" onsubmit="submitNewItem(event)">
-                    <input type="hidden" id="addItemPlanId">
-                    <div class="mb-3">
-                        <label for="newItemName" class="form-label small text-muted">Item Name (આઈટમનું નામ)</label>
-                        <input type="text" class="form-control bg-dark text-white border-secondary" id="newItemName" list="itemsDatalist" required autocomplete="off" placeholder="આઇટમનું નામ શોધો અથવા ટાઇપ કરો...">
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="newPlannedQty" class="form-label small text-muted">Planned Qty (જથ્થો)</label>
-                            <input type="number" step="any" class="form-control bg-dark text-white border-secondary" id="newPlannedQty" required>
+    <!-- Edit Item Modal -->
+    <div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card text-white">
+                <div class="modal-header border-secondary py-3">
+                    <h5 class="modal-title fw-bold text-warning"><i class="bi bi-pencil-square me-2"></i> Edit Dispatch
+                        Item</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <form id="editItemForm" onsubmit="submitItemUpdate(event)">
+                        <input type="hidden" id="editItemId">
+                        <div class="mb-3">
+                            <label for="editItemName" class="form-label small text-muted">Item Name (આઈટમનું
+                                નામ)</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary"
+                                id="editItemName" list="itemsDatalist" required autocomplete="off"
+                                placeholder="આઇટમનું નામ શોધો અથવા ટાઇપ કરો...">
+                            <datalist id="itemsDatalist"></datalist>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="newUnit" class="form-label small text-muted">Unit (એકમ)</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" id="newUnit" value="Pcs" required>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editPlannedQty" class="form-label small text-muted">Planned Qty
+                                    (જથ્થો)</label>
+                                <input type="number" step="any" class="form-control bg-dark text-white border-secondary"
+                                    id="editPlannedQty" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editUnit" class="form-label small text-muted">Unit (એકમ)</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary"
+                                    id="editUnit" required>
+                            </div>
                         </div>
-                    </div>
-                    <div class="mt-3 text-end">
-                        <button type="button" class="btn btn-outline-light btn-sm me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success fw-bold px-4">
-                            <i class="bi bi-plus-lg"></i> Add Item
-                        </button>
-                    </div>
-                </form>
+                        <div class="mt-3 text-end">
+                            <button type="button" class="btn btn-outline-light btn-sm me-2"
+                                data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success fw-bold px-4">
+                                <i class="bi bi-check-circle-fill me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Hidden Print Area -->
-<div id="print-area" class="d-none"></div>
+    <!-- Add Item to Plan Modal -->
+    <div class="modal fade" id="addItemModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card text-white">
+                <div class="modal-header border-secondary py-3">
+                    <h5 class="modal-title fw-bold text-warning"><i class="bi bi-plus-circle-fill me-2"></i> Add New
+                        Item to Plan</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <form id="addItemForm" onsubmit="submitNewItem(event)">
+                        <input type="hidden" id="addItemPlanId">
+                        <div class="mb-3">
+                            <label for="newItemName" class="form-label small text-muted">Item Name (આઈટમનું નામ)</label>
+                            <input type="text" class="form-control bg-dark text-white border-secondary" id="newItemName"
+                                list="itemsDatalist" required autocomplete="off"
+                                placeholder="આઇટમનું નામ શોધો અથવા ટાઇપ કરો...">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="newPlannedQty" class="form-label small text-muted">Planned Qty
+                                    (જથ્થો)</label>
+                                <input type="number" step="any" class="form-control bg-dark text-white border-secondary"
+                                    id="newPlannedQty" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="newUnit" class="form-label small text-muted">Unit (એકમ)</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary" id="newUnit"
+                                    value="Pcs" required>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-end">
+                            <button type="button" class="btn btn-outline-light btn-sm me-2"
+                                data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success fw-bold px-4">
+                                <i class="bi bi-plus-lg"></i> Add Item
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    const API_URL = "";
-    let allPlansData = []; // To store all plan data for printing
+    <!-- Hidden Print Area -->
+    <div id="print-area" class="d-none"></div>
 
-    document.addEventListener("DOMContentLoaded", () => {
-        loadDispatchPlans();
-        setupDropzone();
-    });
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = "";
+        let allPlansData = []; // To store all plan data for printing
 
-    function setupDropzone() {
-        const dropzone = document.getElementById('dropzone');
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropzone.addEventListener(eventName, preventDefaults, false);
+        document.addEventListener("DOMContentLoaded", () => {
+            loadDispatchPlans();
+            setupDropzone();
         });
 
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
-        });
-
-        dropzone.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            if (files.length > 0) {
-                document.getElementById('planFile').files = files;
-                fileSelected(document.getElementById('planFile'));
-            }
-        });
-    }
-
-    function fileSelected(input) {
-        const display = document.getElementById('fileNameDisplay');
-        if (input.files && input.files[0]) {
-            display.innerText = `📄 પસંદ થયેલ ફાઈલ: ${input.files[0].name}`;
-        } else {
-            display.innerText = '';
-        }
-    }
-
-    async function submitDispatchPlan(e) {
-        e.preventDefault();
-        const fileInput = document.getElementById('planFile');
-        if (!fileInput.files || !fileInput.files[0]) {
-            alert("⚠️ કૃપા કરીને PDF અથવા Excel ફાઈલ પસંદ કરો!");
-            return;
-        }
-
-        const btn = document.getElementById('uploadSubmitBtn');
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Processing...`;
-
-        const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
-
-        try {
-            const res = await fetch(`${API_URL}/api/dispatch-plan/upload`, {
-                method: 'POST',
-                headers: { 'Bypass-Tunnel-Reminder': 'true' },
-                body: formData
+        function setupDropzone() {
+            const dropzone = document.getElementById('dropzone');
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, preventDefaults, false);
             });
 
-            const data = await res.json();
-            if (res.ok) {
-                alert(data.message);
-                bootstrap.Modal.getInstance(document.getElementById('uploadPlanModal')).hide();
-                document.getElementById('uploadPlanForm').reset();
-                document.getElementById('fileNameDisplay').innerText = '';
-                editItemModal = new bootstrap.Modal(document.getElementById('editItemModal'));
-                editPlanModal = new bootstrap.Modal(document.getElementById('editPlanModal'));
-                addItemModal = new bootstrap.Modal(document.getElementById('addItemModal'));
-                loadDispatchPlans();
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length > 0) {
+                    document.getElementById('planFile').files = files;
+                    fileSelected(document.getElementById('planFile'));
+                }
+            });
+        }
+
+        function fileSelected(input) {
+            const display = document.getElementById('fileNameDisplay');
+            if (input.files && input.files[0]) {
+                display.innerText = `📄 પસંદ થયેલ ફાઈલ: ${input.files[0].name}`;
             } else {
-                alert("❌ " + (data.detail || "Error uploading plan"));
+                display.innerText = '';
             }
-        } catch (err) {
-            alert("❌ Server સાથે કનેક્શન થઈ શક્યું નથી.");
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Upload & Process`;
         }
-    }
 
-    async function loadDispatchPlans() {
-        if (!editItemModal) editItemModal = new bootstrap.Modal(document.getElementById('editItemModal'));
-        if (!editPlanModal) editPlanModal = new bootstrap.Modal(document.getElementById('editPlanModal'));
-        if (!addItemModal) addItemModal = new bootstrap.Modal(document.getElementById('addItemModal'));
-        populateItemsDatalist();
-        const container = document.getElementById('plansListArea');
-        try {
-            const res = await fetch(`${API_URL}/api/dispatch-plans/list`, {
-                headers: { 'Bypass-Tunnel-Reminder': 'true' }
-            });
-            const data = await res.json();
-            allPlansData = data.plans || []; // Store for printing
+        async function submitDispatchPlan(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('planFile');
+            if (!fileInput.files || !fileInput.files[0]) {
+                alert("⚠️ કૃપા કરીને PDF અથવા Excel ફાઈલ પસંદ કરો!");
+                return;
+            }
 
-            if (!data.plans || data.plans.length === 0) {
-                container.innerHTML = `
+            const btn = document.getElementById('uploadSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Processing...`;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const res = await fetch(`${API_URL}/api/dispatch-plan/upload`, {
+                    method: 'POST',
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' },
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message);
+                    bootstrap.Modal.getInstance(document.getElementById('uploadPlanModal')).hide();
+                    document.getElementById('uploadPlanForm').reset();
+                    document.getElementById('fileNameDisplay').innerText = '';
+                    editItemModal = new bootstrap.Modal(document.getElementById('editItemModal'));
+                    editPlanModal = new bootstrap.Modal(document.getElementById('editPlanModal'));
+                    addItemModal = new bootstrap.Modal(document.getElementById('addItemModal'));
+                    loadDispatchPlans();
+                } else {
+                    alert("❌ " + (data.detail || "Error uploading plan"));
+                }
+            } catch (err) {
+                alert("❌ Server સાથે કનેક્શન થઈ શક્યું નથી.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Upload & Process`;
+            }
+        }
+
+        async function loadDispatchPlans() {
+            if (!editItemModal) editItemModal = new bootstrap.Modal(document.getElementById('editItemModal'));
+            if (!editPlanModal) editPlanModal = new bootstrap.Modal(document.getElementById('editPlanModal'));
+            if (!addItemModal) addItemModal = new bootstrap.Modal(document.getElementById('addItemModal'));
+            populateItemsDatalist();
+            const container = document.getElementById('plansListArea');
+            try {
+                const res = await fetch(`${API_URL}/api/dispatch-plans/list`, {
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                });
+                const data = await res.json();
+                allPlansData = data.plans || []; // Store for printing
+
+                if (!data.plans || data.plans.length === 0) {
+                    container.innerHTML = `
                     <div class="glass-card p-5 text-center text-muted">
                         <i class="bi bi-truck display-1 text-slate-600 mb-3 d-block"></i>
                         <h5>કોઈપણ Dispatch Plan ઉપલબ્ધ નથી.</h5>
                         <p class="small">નવો ડિસ્પેચ પ્લાન PDF અથવા Excel માંથી અપલોડ કરવા ઉપર 'Upload' બટન પર ક્લિક કરો.</p>
                     </div>
                 `;
-                return;
-            }
+                    return;
+                }
 
-            container.innerHTML = data.plans.map(plan => {
-                const isCompleted = plan.status === 'COMPLETED';
-                return `
+                container.innerHTML = data.plans.map(plan => {
+                    const isCompleted = plan.status === 'COMPLETED';
+                    return `
                     <div class="glass-card mb-4 overflow-hidden">
                         <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: #1e293b;">
                             <div>
@@ -621,9 +685,9 @@
                                     </thead>
                                     <tbody>
                                         ${(plan.items || []).map((item, idx) => {
-                                            const done = item.dispatched_qty >= item.planned_qty;
-                                            const rem = Math.max(0, item.planned_qty - item.dispatched_qty);
-                                            return `
+                        const done = item.dispatched_qty >= item.planned_qty;
+                        const rem = Math.max(0, item.planned_qty - item.dispatched_qty);
+                        return `
                                                 <tr>
                                                     <td>${idx + 1}</td>
                                                     <td class="fw-bold text-slate-200">
@@ -645,28 +709,28 @@
                                                     </td>
                                                 </tr>
                                             `;
-                                        }).join('')}
+                    }).join('')}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
                 `;
-            }).join('');
-        } catch (err) {
-            console.error("Error loading plans:", err);
-            container.innerHTML = `<div class="alert alert-danger text-center">❌ Dispatch Plans લોડ કરવામાં એરર આવી છે.</div>`;
-        }
-    }
-
-    function printPlan(planId) {
-        const plan = allPlansData.find(p => p.id === planId);
-        if (!plan) {
-            alert("Could not find plan data to print.");
-            return;
+                }).join('');
+            } catch (err) {
+                console.error("Error loading plans:", err);
+                container.innerHTML = `<div class="alert alert-danger text-center">❌ Dispatch Plans લોડ કરવામાં એરર આવી છે.</div>`;
+            }
         }
 
-        const printContent = `
+        function printPlan(planId) {
+            const plan = allPlansData.find(p => p.id === planId);
+            if (!plan) {
+                alert("Could not find plan data to print.");
+                return;
+            }
+
+            const printContent = `
             <div style="font-family: sans-serif; padding: 20px; color: #000;">
                 <h2 style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">Dispatch Plan</h2>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 25px; font-size: 1.1rem;">
@@ -701,267 +765,291 @@
                 </div>
             </div>
         `;
-        
-        const printArea = document.getElementById('print-area');
-        printArea.innerHTML = printContent;
-        printArea.classList.remove('d-none');
-        window.print();
-        printArea.classList.add('d-none');
-    }
 
-    async function deletePlan(id, planNo) {
-        if (!confirm(`શું તમે Dispatch Plan '${planNo}' ખરેખર ડીલીટ કરવા માંગો છો?`)) return;
-
-        try {
-            const res = await fetch(`${API_URL}/api/dispatch-plan/${id}`, { method: 'DELETE' });
-            const data = await res.json();
-            alert(data.message || data.detail);
-            if (res.ok) loadDispatchPlans();
-        } catch(err) {
-            alert("❌ Server Error");
+            const printArea = document.getElementById('print-area');
+            printArea.innerHTML = printContent;
+            printArea.classList.remove('d-none');
+            window.print();
+            printArea.classList.add('d-none');
         }
-    }
 
-    async function populateItemsDatalist() {
-        try {
-            const res = await fetch(`${API_URL}/api/items/list?limit=0`); // limit=0 for all items
-            const data = await res.json();
-            const datalist = document.getElementById('itemsDatalist');
-            if (!datalist) return;
-            datalist.innerHTML = '';
-            if (data.items) {
-                data.items.forEach(item => {
-                    datalist.innerHTML += `<option value="${item.item_name}">`;
+        async function deletePlan(id, planNo) {
+            if (!confirm(`શું તમે Dispatch Plan '${planNo}' ખરેખર ડીલીટ કરવા માંગો છો?`)) return;
+
+            try {
+                const res = await fetch(`${API_URL}/api/dispatch-plan/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                alert(data.message || data.detail);
+                if (res.ok) loadDispatchPlans();
+            } catch (err) {
+                alert("❌ Server Error");
+            }
+        }
+
+        async function populateItemsDatalist() {
+            try {
+                const res = await fetch(`${API_URL}/api/items/list?limit=0`); // limit=0 for all items
+                const data = await res.json();
+                const datalist = document.getElementById('itemsDatalist');
+                if (!datalist) return;
+                datalist.innerHTML = '';
+                if (data.items) {
+                    data.items.forEach(item => {
+                        datalist.innerHTML += `<option value="${item.item_name}">`;
+                    });
+                }
+            } catch (err) {
+                console.error("Error populating items datalist:", err);
+            }
+        }
+
+        function openEditPlanModal(planId, planNo, soNo) {
+            document.getElementById('editPlanId').value = planId;
+            document.getElementById('editPlanNo').value = planNo;
+            document.getElementById('editSoNo').value = soNo;
+            editPlanModal.show();
+        }
+
+        async function submitPlanUpdate(e) {
+            e.preventDefault();
+            const planId = document.getElementById('editPlanId').value;
+            const planData = {
+                plan_no: document.getElementById('editPlanNo').value,
+                so_no: document.getElementById('editSoNo').value,
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/api/dispatch-plan/${planId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(planData)
                 });
+                const result = await res.json();
+                alert(result.message || result.detail);
+                if (res.ok) {
+                    editPlanModal.hide();
+                    loadDispatchPlans();
+                }
+            } catch (err) {
+                alert("❌ Server Error");
             }
-        } catch (err) {
-            console.error("Error populating items datalist:", err);
         }
-    }
 
-    function openEditPlanModal(planId, planNo, soNo) {
-        document.getElementById('editPlanId').value = planId;
-        document.getElementById('editPlanNo').value = planNo;
-        document.getElementById('editSoNo').value = soNo;
-        editPlanModal.show();
-    }
+        function openEditItemModal(itemId, itemName, plannedQty, unit) {
+            document.getElementById('editItemId').value = itemId;
+            document.getElementById('editItemName').value = itemName;
+            document.getElementById('editPlannedQty').value = plannedQty;
+            document.getElementById('editUnit').value = unit;
+            editItemModal.show();
+        }
 
-    async function submitPlanUpdate(e) {
-        e.preventDefault();
-        const planId = document.getElementById('editPlanId').value;
-        const planData = {
-            plan_no: document.getElementById('editPlanNo').value,
-            so_no: document.getElementById('editSoNo').value,
-        };
+        async function submitItemUpdate(e) {
+            e.preventDefault();
+            const itemId = document.getElementById('editItemId').value;
+            const itemData = {
+                item_name: document.getElementById('editItemName').value,
+                planned_qty: parseFloat(document.getElementById('editPlannedQty').value),
+                unit: document.getElementById('editUnit').value,
+            };
 
-        try {
-            const res = await fetch(`${API_URL}/api/dispatch-plan/${planId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(planData)
-            });
-            const result = await res.json();
-            alert(result.message || result.detail);
-            if (res.ok) {
-                editPlanModal.hide();
-                loadDispatchPlans();
+            try {
+                const res = await fetch(`${API_URL}/api/dispatch-plan/item/${itemId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(itemData)
+                });
+                const result = await res.json();
+                alert(result.message || result.detail);
+                if (res.ok) {
+                    editItemModal.hide();
+                    loadDispatchPlans();
+                }
+            } catch (err) {
+                alert("❌ Server Error");
             }
-        } catch (err) {
-            alert("❌ Server Error");
         }
-    }
 
-    function openEditItemModal(itemId, itemName, plannedQty, unit) {
-        document.getElementById('editItemId').value = itemId;
-        document.getElementById('editItemName').value = itemName;
-        document.getElementById('editPlannedQty').value = plannedQty;
-        document.getElementById('editUnit').value = unit;
-        editItemModal.show();
-    }
+        function openAddItemModal(planId) {
+            document.getElementById('addItemPlanId').value = planId;
+            document.getElementById('addItemForm').reset();
+            addItemModal.show();
+        }
 
-    async function submitItemUpdate(e) {
-        e.preventDefault();
-        const itemId = document.getElementById('editItemId').value;
-        const itemData = {
-            item_name: document.getElementById('editItemName').value,
-            planned_qty: parseFloat(document.getElementById('editPlannedQty').value),
-            unit: document.getElementById('editUnit').value,
-        };
+        async function submitNewItem(e) {
+            e.preventDefault();
+            const planId = document.getElementById('addItemPlanId').value;
+            const itemData = {
+                item_name: document.getElementById('newItemName').value,
+                planned_qty: parseFloat(document.getElementById('newPlannedQty').value),
+                unit: document.getElementById('newUnit').value,
+            };
 
-        try {
-            const res = await fetch(`${API_URL}/api/dispatch-plan/item/${itemId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(itemData)
-            });
-            const result = await res.json();
-            alert(result.message || result.detail);
-            if (res.ok) {
-                editItemModal.hide();
-                loadDispatchPlans();
+            try {
+                const res = await fetch(`${API_URL}/api/dispatch-plan/${planId}/add-item`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(itemData)
+                });
+                const result = await res.json();
+                alert(result.message || result.detail);
+                if (res.ok) {
+                    addItemModal.hide();
+                    loadDispatchPlans();
+                }
+            } catch (err) {
+                alert("❌ Server Error");
             }
-        } catch (err) {
-            alert("❌ Server Error");
         }
-    }
 
-    function openAddItemModal(planId) {
-        document.getElementById('addItemPlanId').value = planId;
-        document.getElementById('addItemForm').reset();
-        addItemModal.show();
-    }
+        async function submitAutoConnect(e) {
+            e.preventDefault();
+            const pdfFile = document.getElementById('connectDpPdf').files[0];
+            const excelFile = document.getElementById('connectSoExcel').files[0];
+            const dpNum = document.getElementById('connectDpNumber').value.trim();
+            const soNum = document.getElementById('connectSoNumber').value.trim();
 
-    async function submitNewItem(e) {
-        e.preventDefault();
-        const planId = document.getElementById('addItemPlanId').value;
-        const itemData = {
-            item_name: document.getElementById('newItemName').value,
-            planned_qty: parseFloat(document.getElementById('newPlannedQty').value),
-            unit: document.getElementById('newUnit').value,
-        };
-
-        try {
-            const res = await fetch(`${API_URL}/api/dispatch-plan/${planId}/add-item`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(itemData)
-            });
-            const result = await res.json();
-            alert(result.message || result.detail);
-            if (res.ok) {
-                addItemModal.hide();
-                loadDispatchPlans();
+            if (!pdfFile && !excelFile && !dpNum) {
+                alert("⚠️ કૃપા કરીને ઓછામાં ઓછી ૧ DP Plan PDF ફાઈલ અથવા SO Excel ફાઈલ પસંદ કરો!");
+                return;
             }
-        } catch (err) {
-            alert("❌ Server Error");
+
+            const formData = new FormData();
+            if (pdfFile) formData.append('dp_pdf', pdfFile);
+            if (excelFile) formData.append('so_excel', excelFile);
+            if (dpNum) formData.append('dp_number', dpNum);
+            if (soNum) formData.append('so_number', soNum);
+
+            const submitBtn = document.getElementById('connectSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Connecting & Mapping...`;
+
+            try {
+                const res = await fetch(`${API_URL}/api/dispatch/auto-connect-so-dp`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(`✅ ${data.message}\n\n• Direct Dispatch Items: ${data.direct_dispatch_count}\n• Store Kit Items: ${data.store_kit_count}\n• Total Mapped Verification Items: ${data.total_mapped_items}`);
+                    const modalEl = document.getElementById('autoConnectModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                    loadDispatchPlans();
+                } else {
+                    alert("❌ Error: " + (data.detail || "Connect થઈ શક્યું નથી"));
+                }
+            } catch (err) {
+                alert("❌ Connection Error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="bi bi-link-45deg me-1"></i> Connect & Map Verification Items`;
+            }
+            add_log_client("Auto-Connect Process Failed: " + (err.message || err));
         }
-    }
 
-    async function submitAutoConnect(e) {
-        e.preventDefault();
-        const pdfFile = document.getElementById('connectDpPdf').files[0];
-        const excelFile = document.getElementById('connectSoExcel').files[0];
-        const dpNum = document.getElementById('connectDpNumber').value.trim();
-        const soNum = document.getElementById('connectSoNumber').value.trim();
-
-        if (!pdfFile && !excelFile && !dpNum) {
-            alert("⚠️ કૃપા કરીને ઓછામાં ઓછી ૧ DP Plan PDF ફાઈલ અથવા SO Excel ફાઈલ પસંદ કરો!");
-            return;
+        // 🌓 Global Dark / Light Theme Management
+        function applyGlobalTheme() {
+            const theme = localStorage.getItem('theme_preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeBtn(theme);
         }
-
-        const formData = new FormData();
-        if (pdfFile) formData.append('dp_pdf', pdfFile);
-        if (excelFile) formData.append('so_excel', excelFile);
-        if (dpNum) formData.append('dp_number', dpNum);
-        if (soNum) formData.append('so_number', soNum);
-
-        const submitBtn = document.getElementById('connectSubmitBtn');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Connecting & Mapping...`;
-
-        try {
-            const res = await fetch(`${API_URL}/api/dispatch/auto-connect-so-dp`, {
-                method: 'POST',
-                body: formData,
-                headers: { 'Bypass-Tunnel-Reminder': 'true' }
-            });
-            const data = await res.json();
-            if (res.ok) {
-                alert(`✅ ${data.message}\n\n• Direct Dispatch Items: ${data.direct_dispatch_count}\n• Store Kit Items: ${data.store_kit_count}\n• Total Mapped Verification Items: ${data.total_mapped_items}`);
-                const modalEl = document.getElementById('autoConnectModal');
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                if (modal) modal.hide();
-                loadDispatchPlans();
+        function toggleGlobalTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme_preference', next);
+            updateThemeBtn(next);
+        }
+        function updateThemeBtn(theme) {
+            const btn = document.getElementById('globalThemeBtn');
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (!btn || !icon || !text) return;
+            if (theme === 'light') {
+                icon.className = 'bi bi-sun-fill text-warning';
+                text.innerText = 'Light Mode';
+                btn.className = 'btn btn-light text-dark border-secondary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
             } else {
-                alert("❌ Error: " + (data.detail || "Connect થઈ શક્યું નથી"));
+                icon.className = 'bi bi-moon-stars-fill text-warning';
+                text.innerText = 'Dark Mode';
+                btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
             }
-        } catch (err) {
-            alert("❌ Connection Error");
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = `<i class="bi bi-link-45deg me-1"></i> Connect & Map Verification Items`;
         }
-        add_log_client("Auto-Connect Process Failed: " + (err.message || err));
-    }
 
-    // 🌓 Global Dark / Light Theme Management
-    function applyGlobalTheme() {
-        const theme = localStorage.getItem('theme_preference') || 'dark';
-        document.documentElement.setAttribute('data-theme', theme);
-        updateThemeBtn(theme);
-    }
-    function toggleGlobalTheme() {
-        const current = document.documentElement.getAttribute('data-theme') || 'dark';
-        const next = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('theme_preference', next);
-        updateThemeBtn(next);
-    }
-    function updateThemeBtn(theme) {
-        const btn = document.getElementById('globalThemeBtn');
-        const icon = document.getElementById('themeIcon');
-        const text = document.getElementById('themeText');
-        if (!btn || !icon || !text) return;
-        if (theme === 'light') {
-            icon.className = 'bi bi-sun-fill text-warning';
-            text.innerText = 'Light Mode';
-            btn.className = 'btn btn-light text-dark border-secondary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-        } else {
-            icon.className = 'bi bi-moon-stars-fill text-warning';
-            text.innerText = 'Dark Mode';
-            btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+        applyGlobalTheme();
+
+        // --- WebSocket for Real-Time Updates ---
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            ws.onopen = function () {
+                console.log("Dispatch WebSocket: Connected for live updates.");
+            };
+
+            ws.onmessage = function (event) {
+                if (event.data === "STOCK_UPDATED") {
+                    console.log("Dispatch WebSocket: Received STOCK_UPDATED signal. Refreshing plans...");
+                    if (typeof loadDispatchPlans === 'function') loadDispatchPlans();
+                }
+            };
+
+            ws.onclose = function () {
+                console.log("Dispatch WebSocket: Disconnected. Reconnecting in 5 seconds...");
+                setTimeout(connectWebSocket, 5000);
+            }
         }
-    }
+        connectWebSocket();
+    </script>
 
-    applyGlobalTheme();
-</script>
+    <script>
+        // Global Theme Switcher Logic
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
-<script>
-// Global Theme Switcher Logic
-function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('user-theme', newTheme);
-    localStorage.setItem('theme_preference', newTheme);
-    updateThemeBtnUI(newTheme);
-}
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('user-theme', newTheme);
+            localStorage.setItem('theme_preference', newTheme);
+            updateThemeBtnUI(newTheme);
+        }
 
-function updateThemeBtnUI(theme) {
-    const btn = document.getElementById('globalThemeBtn');
-    const icon = document.getElementById('themeIcon');
-    const text = document.getElementById('themeText');
-    if (!btn) return;
-    
-    if (theme === 'dark') {
-        if (icon) icon.className = 'bi bi-moon-stars-fill text-warning';
-        if (text) text.innerText = 'Dark';
-        btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-    } else {
-        if (icon) icon.className = 'bi bi-sun-fill text-warning';
-        if (text) text.innerText = 'Light';
-        btn.className = 'btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-    }
-}
+        function updateThemeBtnUI(theme) {
+            const btn = document.getElementById('globalThemeBtn');
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (!btn) return;
 
-// Global Theme Auto-Apply Functions
-function toggleGlobalTheme() { toggleTheme(); }
-function applyGlobalTheme() {
-    const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeBtnUI(savedTheme);
-}
+            if (theme === 'dark') {
+                if (icon) icon.className = 'bi bi-moon-stars-fill text-warning';
+                if (text) text.innerText = 'Dark';
+                btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+            } else {
+                if (icon) icon.className = 'bi bi-sun-fill text-warning';
+                if (text) text.innerText = 'Light';
+                btn.className = 'btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+            }
+        }
 
-// Page Load Auto-Apply Saved Theme
-(function () {
-    const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    document.addEventListener('DOMContentLoaded', function () {
-        updateThemeBtnUI(savedTheme);
-    });
-})();
-</script>
+        // Global Theme Auto-Apply Functions
+        function toggleGlobalTheme() { toggleTheme(); }
+        function applyGlobalTheme() {
+            const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeBtnUI(savedTheme);
+        }
+
+        // Page Load Auto-Apply Saved Theme
+        (function () {
+            const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.addEventListener('DOMContentLoaded', function () {
+                updateThemeBtnUI(savedTheme);
+            });
+        })();
+    </script>
 
 </body>
+
 </html>

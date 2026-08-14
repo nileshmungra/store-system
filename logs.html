@@ -446,8 +446,28 @@
         applyGlobalTheme();
         loadLogs();
 
-        // દર 10 સેકન્ડે લોગ બુક ઓટો-અપડેટ થશે
-        setInterval(loadLogs, 10000);
+        // --- WebSocket for Real-Time Updates ---
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            ws.onopen = function () {
+                console.log("Logs WebSocket: Connected for live updates.");
+            };
+
+            ws.onmessage = function (event) {
+                if (event.data === "STOCK_UPDATED") {
+                    console.log("Logs WebSocket: Received STOCK_UPDATED signal. Refreshing logs...");
+                    if (typeof loadLogs === 'function') loadLogs();
+                }
+            };
+
+            ws.onclose = function () {
+                console.log("Logs WebSocket: Disconnected. Reconnecting in 5 seconds...");
+                setTimeout(connectWebSocket, 5000);
+            }
+        }
+        connectWebSocket();
     </script>
 
 

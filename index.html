@@ -1260,9 +1260,29 @@
         loadStoreKitSoList();
         searchOldQrs(true); // Initial load of search results
 
-        // દર ૫ સેકન્ડે DP Plan પ્રોગ્રેસ ઓટો-અપડેટ થશે
-        setInterval(loadDashboardDpPlans, 5000);
-        setInterval(autoRefreshSearchResults, 7000); // QR Search Results Live Update
+        // --- WebSocket for Real-Time Updates ---
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+            ws.onopen = function () {
+                console.log("Inward/Prod WebSocket: Connected for live updates.");
+            };
+
+            ws.onmessage = function (event) {
+                if (event.data === "STOCK_UPDATED") {
+                    console.log("Inward/Prod WebSocket: Received STOCK_UPDATED signal. Refreshing data...");
+                    if (typeof loadDashboardDpPlans === 'function') loadDashboardDpPlans();
+                    if (typeof autoRefreshSearchResults === 'function') autoRefreshSearchResults();
+                }
+            };
+
+            ws.onclose = function () {
+                console.log("Inward/Prod WebSocket: Disconnected. Reconnecting in 5 seconds...");
+                setTimeout(connectWebSocket, 5000);
+            }
+        }
+        connectWebSocket();
     </script>
 
     <!-- Printable Single QR Area -->
