@@ -9,8 +9,7 @@ import pdfplumber
 import mysql.connector
 from typing import Optional, Union
 import pandas as pd
-
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, Response
@@ -38,6 +37,35 @@ app.add_middleware(
 )
 # Enable GZip Compression for fast network transfers (<10ms payload times)
 app.add_middleware(GZipMiddleware, minimum_size=500)
+
+# ===============================================
+#  WebSocket Connection Manager for Live Updates
+# ===============================================
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+manager = ConnectionManager()
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text() # Keep connection alive
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
 
 # -----------------------------------------------
 # Helper Function for Log Book
@@ -683,6 +711,9 @@ def material_inward(data: InwardRequest):
         # 📌 Log Entry
         add_log(conn, "INWARD", f"માલ ઉમેરાયો: {data.item_name} | {data.total_boxes} બોક્સ (કુલ Qty: {total_qty}) | Batch #{batch_id}")
 
+        # 📢 Broadcast update to all connected clients
+        await manager.broadcast("STOCK_UPDATED")
+
     return {
         "status": "Success",
         "batch_id": batch_id,
@@ -758,6 +789,9 @@ def process_outward(req: OutwardRequest):
                 sq_conn.close()
             except Exception as e:
                 print(f"[WARNING] SQLite Store Kit Outward Sync Error: {e}")
+
+        # 📢 Broadcast update to all connected clients
+        await manager.broadcast("STOCK_UPDATED")
 
         return {
             "status": "Success",
@@ -910,6 +944,9 @@ def process_outward(req: OutwardRequest):
         except Exception as e:
             print(f"[WARNING] SQLite sync error in outward: {e}")
 
+    # 📢 Broadcast update to all connected clients
+    await manager.broadcast("STOCK_UPDATED")
+
     status_msg = "બોક્સ/કોઇલ સફળતાપૂર્વક DISPATCHED થઈ ગયું!" if new_status == 'DISPATCHED' else f"બોક્સમાં હવે {new_qty} {unit} બાકી રહ્યા."
     return {
         "status": "Success", 
@@ -966,6 +1003,9 @@ def process_non_dp_outward(req: NonDpOutwardRequest):
             sq_conn.close()
         except Exception as e:
             print(f"[WARNING] SQLite non-DP outward sync error: {e}")
+
+    # 📢 Broadcast update to all connected clients
+    await manager.broadcast("STOCK_UPDATED")
 
     return {
         "status": "Success",
@@ -1562,6 +1602,9 @@ def add_production(req: ProductionEntryRequest):
                     sq_conn.close()
                 except Exception as e:
                     print(f"[WARNING] SQLite sync error in add_production: {e}")
+
+            # 📢 Broadcast update to all connected clients
+            await manager.broadcast("STOCK_UPDATED")
 
         except mysql.connector.Error as err:
             raise HTTPException(status_code=500, detail=f"Database error: {err}")
