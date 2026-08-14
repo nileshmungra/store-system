@@ -120,51 +120,59 @@
                 left: 0 !important;
                 top: 0 !important;
                 width: 100% !important;
-                padding: 15px !important;
-                /* Add some padding for print margins */
+                padding: 10mm !important;
+                /* A4 Margin */
+                background: #fff !important;
             }
 
             /* Target the row inside search-results-area */
-            #qr-container .row {
+            #search-results-area .row {
                 display: flex !important;
                 flex-wrap: wrap !important;
                 justify-content: flex-start !important;
-                gap: 10px 0 !important;
+                gap: 10mm 5mm !important;
+                /* Row and column gap */
                 margin: 0 !important;
             }
 
             /* Target the column wrapper */
-            #qr-container .col-md-3 {
-                page-break-inside: avoid;
-                break-inside: avoid;
+            #search-results-area .qr-card-printable {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
                 flex: 0 0 48% !important;
+                /* Two columns per row */
                 max-width: 48% !important;
                 width: 48% !important;
                 padding: 0 !important;
-                margin: 0 1% !important;
+                margin: 0 !important;
             }
 
             /* This is the inner card */
-            .qr-card {
+            #search-results-area .glass-card {
                 border: 1px solid #000 !important;
                 padding: 8px !important;
                 color: #000 !important;
                 background: #fff !important;
                 box-shadow: none !important;
-                height: auto !important;
-                width: 100% !important;
+                height: 100% !important;
             }
 
-            .qr-card .font-monospace,
-            .qr-card .text-indigo,
-            .qr-card .text-muted,
-            .qr-card .text-slate-800 {
+            #search-results-area .text-indigo,
+            #search-results-area .text-muted,
+            #search-results-area .text-slate-800,
+            #search-results-area .fw-bold {
                 color: #000 !important;
             }
 
-            .qr-card .badge {
+            #search-results-area .badge {
                 background-color: #ccc !important;
                 color: #000 !important;
+                border: 1px solid #999 !important;
+            }
+
+            #search-results-area .btn {
+                display: none !important;
+                /* Hide buttons in print */
             }
         }
     </style>
@@ -1363,7 +1371,7 @@
             ws.onclose = function () {
                 console.log("Inward/Prod WebSocket: Disconnected. Reconnecting in 5 seconds...");
                 setTimeout(connectWebSocket, 5000);
-            }
+            };
         }
         connectWebSocket();
     </script>

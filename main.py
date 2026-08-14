@@ -30,8 +30,8 @@ def startup_event():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Fallback for simple requests
-    allow_origin_regex='https?://.*',  # Allow all http/https origins
+    allow_origins=["*"], # Allow all origins
+    allow_origin_regex='.*', # Allow all origins via regex for ws/wss
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -738,6 +738,13 @@ def is_item_match(scanned_name: str, plan_item_name: str) -> bool:
 # ૨. Material OUT / DISPATCH (Outward + Auto Log)
 @app.post("/api/outward")
 async def process_outward(req: OutwardRequest):
+    # જો DP Plan ID આવે અને issued_to ખાલી હોય, તો DP Plan ની વિગતો issued_to માં ભરો
+    if req.dispatch_plan_id and not req.issued_to:
+        with get_db_ctx() as (conn, cursor):
+            cursor.execute("SELECT plan_no, so_no FROM dispatch_plans WHERE id = %s", (req.dispatch_plan_id,))
+            plan = cursor.fetchone()
+            if plan:
+                req.issued_to = f"DP: {plan['plan_no']} (SO: {plan['so_no']})"
     # Store Kit Outward Processing (1-Click Completion of all Fittings)
     if req.box_id.startswith("KIT-") or "KIT-" in req.box_id: # This part is async
         with get_db_ctx(commit=True) as (conn, cursor):
