@@ -11,17 +11,17 @@ from contextlib import contextmanager
 # MySQL connection configuration
 MYSQL_CONFIG = {
     'host': 'localhost',
-    'port': 3307, # MySQL પોર્ટ નંબર (ડિફોલ્ટ: 3306)
-    'user': 'root', # તમારા MySQL યુઝરનેમથી બદલો (ડિફોલ્ટ: root)
-    'password': '', # તમારા MySQL પાસવર્ડથી બદલો (ડિફોલ્ટ: ખાલી)
-    'database': 'inventory_db' # તમારા ડેટાબેઝના નામથી બદલો
+    'port': 3307, # MySQL port number (default: 3306)
+    'user': 'root', # MySQL username (default: root)
+    'password': '', # MySQL password (default: empty)
+    'database': 'inventory_db' # Database name
 }
 
 # Global connection pool object
 db_pool = None
 
 def ensure_mysql_running(host='127.0.0.1', port=3307):
-    """ચકાસે છે કે MySQL 3307 પોર્ટ પર ચાલુ છે કે નહીં. જો બંધ હોય તો XAMPP MySQL ઓટો-સ્ટાર્ટ કરે છે."""
+    """Checks if MySQL server is running. Auto-starts XAMPP MySQL if stopped."""
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(1.2)
@@ -136,7 +136,7 @@ def get_db_ctx(commit=False, dictionary=True):
 
 def init_db():
     ensure_mysql_running(host=MYSQL_CONFIG.get('host', '127.0.0.1'), port=MYSQL_CONFIG.get('port', 3307))
-    # ડેટાબેઝ અસ્તિત્વમાં ન હોય તો તેને બનાવવા માટે સર્વર સાથે કનેક્ટ કરો
+    # Connect to server to create database if not exists
     try:
         # Create a connection config without the 'database' key to check/create the DB
         server_config = MYSQL_CONFIG.copy()
@@ -168,11 +168,16 @@ def init_db():
             unit VARCHAR(50),
             rate DECIMAL(10, 2),
             image_url VARCHAR(255),
-            is_own_production TINYINT DEFAULT 0
+            is_own_production TINYINT DEFAULT 0,
+            is_outsource TINYINT DEFAULT 0
         );
     ''')
     try:
         cursor.execute("ALTER TABLE items ADD COLUMN is_own_production TINYINT DEFAULT 0")
+    except Exception:
+        pass
+    try:
+        cursor.execute("ALTER TABLE items ADD COLUMN is_outsource TINYINT DEFAULT 0")
     except Exception:
         pass
     
@@ -198,10 +203,15 @@ def init_db():
             qty_in_box INT,
             supplier_or_party VARCHAR(255),
             location VARCHAR(255) DEFAULT NULL,
+            dp_number VARCHAR(255) DEFAULT NULL,
             status VARCHAR(50) DEFAULT 'IN_STORE',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
     """)
+    try:
+        cursor.execute("ALTER TABLE boxes ADD COLUMN dp_number VARCHAR(255) DEFAULT NULL")
+    except Exception:
+        pass
     
     # 2. Outward Logs Table
     cursor.execute("""
@@ -216,7 +226,7 @@ def init_db():
         );
     """)
 
-    # 3. 📑 Audit Logs / Log Book Table (નવું ટેબલ)
+    # 3. Audit Logs / Log Book Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS audit_logs (
             id INT PRIMARY KEY AUTO_INCREMENT,
@@ -249,17 +259,40 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS production_logs (
             id INT PRIMARY KEY AUTO_INCREMENT,
+            production_date DATE,
             machine_name VARCHAR(255) NOT NULL,
             pipe_type VARCHAR(255) NOT NULL,
             pipe_size VARCHAR(255) NOT NULL,
+            planned_qty DECIMAL(10, 2) DEFAULT 0,
+            actual_qty DECIMAL(10, 2) DEFAULT 0,
+            bundle_unit VARCHAR(50) DEFAULT 'MTR',
             coil_length_meters DECIMAL(10, 2),
             coil_weight_kg DECIMAL(10, 2),
             raw_material_used_kg DECIMAL(10, 2),
             shift_operator VARCHAR(255),
             qr_code VARCHAR(255) UNIQUE,
+            status VARCHAR(50) DEFAULT 'APPROVED',
+            approved_by VARCHAR(255) DEFAULT NULL,
+            approved_at DATETIME DEFAULT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
     ''')
+
+    # Safe column additions for existing production_logs tables
+    prod_cols = [
+        ("production_date", "DATE DEFAULT NULL AFTER id"),
+        ("planned_qty", "DECIMAL(10, 2) DEFAULT 0"),
+        ("actual_qty", "DECIMAL(10, 2) DEFAULT 0"),
+        ("bundle_unit", "VARCHAR(50) DEFAULT 'MTR'"),
+        ("status", "VARCHAR(50) DEFAULT 'APPROVED'"),
+        ("approved_by", "VARCHAR(255) DEFAULT NULL"),
+        ("approved_at", "DATETIME DEFAULT NULL")
+    ]
+    for col_name, col_def in prod_cols:
+        try:
+            cursor.execute(f"ALTER TABLE production_logs ADD COLUMN {col_name} {col_def};")
+        except Exception:
+            pass
 
     # Dispatch Plans Table
     cursor.execute('''
@@ -295,6 +328,11 @@ def init_db():
             FOREIGN KEY (dispatch_plan_id) REFERENCES dispatch_plans(id) ON DELETE CASCADE
         );
     ''')
+    try:
+        cursor.execute("ALTER TABLE dispatch_plan_items ADD COLUMN item_type VARCHAR(50) DEFAULT 'DIRECT_DISPATCH'")
+    except Exception:
+        pass # Column already exists
+
 
     # Bill of Materials (BOM) Tables
     cursor.execute('''
@@ -359,7 +397,6 @@ def init_db():
     ''')
 
 
-
     # 🚀 HIGH-PERFORMANCE INDEXING (<10ms query execution)
     indexes = [
         "CREATE INDEX IF NOT EXISTS idx_boxes_item ON boxes(item_name);",
@@ -388,9 +425,61 @@ def init_db():
         "CREATE INDEX IF NOT EXISTS idx_bom_components_bom ON bom_components(bom_id);",
         "CREATE INDEX IF NOT EXISTS idx_dv_dp_number ON dispatch_verification(dp_number);",
         "CREATE INDEX IF NOT EXISTS idx_dv_status ON dispatch_verification(status);",
-        "CREATE INDEX IF NOT EXISTS idx_dv_item_type ON dispatch_verification(item_type);"
+        "CREATE INDEX IF NOT EXISTS idx_dv_item_type ON dispatch_verification(item_type);",
     ]
     for idx_sql in indexes:
+        try:
+            cursor.execute(idx_sql)
+        except Exception:
+            pass
+
+    # Pending Loading Entry Table (from Excel)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS pending_loading_entries (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            disp_plan_no VARCHAR(255) NOT NULL,
+            disp_plan_date DATE,
+            so_no VARCHAR(255) NOT NULL,
+            so_date DATE,
+            customer_location VARCHAR(255),
+            dealer VARCHAR(255),
+            village VARCHAR(255),
+            district VARCHAR(255),
+            item_name VARCHAR(255) NOT NULL,
+            item_code VARCHAR(255) NOT NULL,
+            pending_qty DECIMAL(10, 3) NOT NULL,
+            unit VARCHAR(50),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY idx_unique_loading_entry (disp_plan_no, so_no, item_code)
+        );
+    ''')
+
+    # QC Approvals Table (for future outsourced item QC workflow)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS qc_approvals (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            item_name VARCHAR(255) NOT NULL,
+            item_code VARCHAR(255),
+            batch_id INT,
+            qty DECIMAL(10, 2) NOT NULL,
+            supplier_or_party VARCHAR(255),
+            remark TEXT,
+            status VARCHAR(50) DEFAULT 'PENDING_QC',
+            approved_by VARCHAR(255) DEFAULT NULL,
+            approved_at DATETIME DEFAULT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        );
+    ''')
+
+    # Indexes for the new table
+    ple_indexes = [
+        "CREATE INDEX IF NOT EXISTS idx_ple_disp_plan_no ON pending_loading_entries(disp_plan_no);",
+        "CREATE INDEX IF NOT EXISTS idx_ple_so_no ON pending_loading_entries(so_no);",
+        "CREATE INDEX IF NOT EXISTS idx_ple_item_code ON pending_loading_entries(item_code);"
+    ]
+    for idx_sql in ple_indexes:
         try:
             cursor.execute(idx_sql)
         except Exception:
@@ -405,6 +494,19 @@ def init_db():
             import sqlite3
             sq_conn = sqlite3.connect("inventory.db")
             sq_cursor = sq_conn.cursor()
+            sq_cursor.execute('''
+                CREATE TABLE IF NOT EXISTS boxes (
+                    box_id TEXT PRIMARY KEY,
+                    batch_id INTEGER,
+                    item_name TEXT,
+                    qty_in_box INTEGER,
+                    supplier_or_party TEXT,
+                    location TEXT,
+                    dp_number TEXT,
+                    status TEXT DEFAULT 'IN_STORE',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            ''')
             sq_cursor.execute('''
                 CREATE TABLE IF NOT EXISTS dispatch_verification (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -438,10 +540,26 @@ def init_db():
                     unit TEXT DEFAULT 'Pcs'
                 );
             ''')
+            sq_cursor.execute('''
+                CREATE TABLE IF NOT EXISTS qc_approvals (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    item_name TEXT NOT NULL,
+                    item_code TEXT,
+                    batch_id INTEGER,
+                    qty REAL NOT NULL,
+                    supplier_or_party TEXT,
+                    remark TEXT,
+                    status TEXT DEFAULT 'PENDING_QC',
+                    approved_by TEXT,
+                    approved_at TIMESTAMP DEFAULT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            ''')
             sq_conn.commit()
             sq_conn.close()
         except Exception as e:
-            print(f"[WARNING] SQLite dispatch_verification init warning: {e}")
+            print(f"[WARNING] SQLite init warning: {e}")
 
 if __name__ == "__main__":
     try:
@@ -449,4 +567,3 @@ if __name__ == "__main__":
         print("[SUCCESS] MySQL & SQLite Databases Initialized with Complete High-Performance Indexes!")
     except Error as e:
         print(f"[ERROR] Database initialization failed: {e}")
-

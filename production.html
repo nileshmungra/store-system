@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="gu">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,9 @@
     <!-- Google Fonts & Bootstrap Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -22,6 +25,7 @@
             --transition-speed: 0.25s ease;
         }
 
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--primary-bg);
@@ -33,6 +37,7 @@
             background-color: var(--navbar-bg);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         .nav-pill-custom {
             color: #94a3b8;
             padding: 8px 16px;
@@ -42,10 +47,12 @@
             text-decoration: none;
             transition: all var(--transition-speed);
         }
+
         .nav-pill-custom:hover {
             color: #ffffff;
             background: rgba(255, 255, 255, 0.08);
         }
+
         .nav-pill-custom.active {
             color: #ffffff;
             background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
@@ -68,14 +75,17 @@
             padding: 16px 24px;
         }
 
-        .form-control-custom, .form-select-custom {
+        .form-control-custom,
+        .form-select-custom {
             border: 1.5px solid #cbd5e1;
             border-radius: 10px;
             padding: 11px 16px;
             font-size: 15px;
             transition: all var(--transition-speed);
         }
-        .form-control-custom:focus, .form-select-custom:focus {
+
+        .form-control-custom:focus,
+        .form-select-custom:focus {
             border-color: var(--accent-color);
             box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
         }
@@ -99,39 +109,102 @@
             box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
             transition: all var(--transition-speed);
         }
+
         .btn-gradient-indigo:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
             color: #ffffff;
         }
 
-        /* 🖨️ 100x100 MM (4x4 Inch) TSC Label Print CSS */
+        /* 100x150 MM (4x6 Inch) TSC Label Print CSS */
         @media print {
-            body * { visibility: hidden !important; }
-            #label-print-area, #label-print-area * { visibility: visible !important; }
-            #label-print-area {
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
+
+            html,
+            body {
                 width: 100mm !important;
-                height: 100mm !important;
+                height: 150mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+
+            body * {
+                visibility: hidden !important;
+            }
+
+            #label-print-area,
+            #label-print-area * {
+                visibility: visible !important;
+            }
+
+            #label-print-area {
+                position: fixed !important;
+                /* Keep the outer border inside the printer's non-printable edge. */
+                left: 3mm !important;
+                top: 3mm !important;
+                width: 94mm !important;
+                height: 144mm !important;
                 display: block !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
+
             @page {
-                size: 100mm 100mm;
+                size: 100mm 150mm;
                 margin: 0;
             }
-            .no-print { display: none !important; }
+
+            .no-print {
+                display: none !important;
+            }
+
+            /* Reserve a dedicated footer for the QR so it cannot spill to page two. */
+            .sticker-box {
+                display: grid !important;
+                grid-template-rows: auto minmax(0, 1fr) 34mm !important;
+                height: 144mm !important;
+            }
+
+            .sticker-details {
+                min-height: 0 !important;
+                margin: 1.5mm 0 !important;
+                gap: 1mm !important;
+                overflow: hidden !important;
+            }
+
+            .sticker-footer {
+                height: 34mm !important;
+                min-height: 34mm !important;
+                padding-top: 1mm !important;
+                box-sizing: border-box !important;
+                overflow: hidden !important;
+            }
+
+            .qr-container {
+                width: 32mm !important;
+                height: 32mm !important;
+                flex: 0 0 32mm !important;
+                padding: 1mm !important;
+                box-sizing: border-box !important;
+            }
+
+            .qr-container canvas,
+            .qr-container img {
+                width: 30mm !important;
+                height: 30mm !important;
+            }
         }
 
         .sticker-box {
-            width: 96mm;
-            height: 96mm;
+            width: 100%;
+            height: 100%;
             border: 3px solid #000000;
-            padding: 4mm;
-            margin: auto;
+            padding: 3.5mm;
+            margin: 0;
             background: #ffffff;
             display: flex;
             flex-direction: column;
@@ -139,102 +212,131 @@
             box-sizing: border-box;
             font-family: 'Poppins', 'Plus Jakarta Sans', sans-serif;
             color: #000000;
+            overflow: hidden;
         }
-        .sticker-header { 
-            text-align: center; 
-            border-bottom: 2.5px solid #000000; 
-            padding-bottom: 3px; 
+
+        .sticker-header {
+            text-align: center;
+            border-bottom: 3px solid #000000;
+            padding-bottom: 2.5mm;
         }
-        .company-title { 
-            font-size: 16pt; 
-            font-weight: 900; 
-            text-transform: uppercase; 
+
+        .company-title {
+            font-size: 18pt;
+            font-weight: 900;
+            text-transform: uppercase;
             letter-spacing: 0.8px;
             color: #000000;
             line-height: 1.1;
         }
+
         .company-sub {
-            font-size: 7.5pt;
+            font-size: 8pt;
             font-weight: 700;
             color: #333333;
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
-        .sticker-details { 
+
+        .sticker-details {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            margin: 4px 0;
+            gap: 1.5mm;
+            margin: 2.5mm 0;
+            flex-grow: 1;
         }
+
         .detail-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 9.5pt;
-            border-bottom: 1px dashed #aaaaaa;
-            padding-bottom: 2px;
+            font-size: 10pt;
+            border-bottom: 1.5px dashed #999999;
+            padding-bottom: 1.5mm;
         }
+
         .detail-label {
             font-weight: 700;
             color: #222222;
             text-transform: uppercase;
+            flex-shrink: 0;
+            margin-right: 10px;
         }
+
         .detail-value {
             font-weight: 800;
             color: #000000;
+            text-align: right;
         }
+
         .detail-grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            margin: 3px 0;
+            gap: 2.5mm;
+            margin: 2.5mm 0;
         }
+
         .detail-box {
             border: 2px solid #000000;
-            border-radius: 4px;
-            padding: 3px;
+            border-radius: 6px;
+            padding: 1.5mm;
             text-align: center;
-            background: #fafafa;
         }
+
         .box-label {
             display: block;
-            font-size: 7.5pt;
+            font-size: 8pt;
             font-weight: 800;
             color: #333333;
             text-transform: uppercase;
         }
+
         .box-value {
             display: block;
-            font-size: 13.5pt;
+            font-size: 16pt;
             font-weight: 900;
             color: #000000;
         }
-        .sticker-footer { 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            border-top: 2.5px solid #000000; 
-            padding-top: 4px; 
+
+        .sticker-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 3px solid #000000;
+            padding-top: 2.5mm;
         }
+
         .qr-info {
             display: flex;
             flex-direction: column;
         }
+
         .qr-label {
             font-size: 7.5pt;
-            font-weight: 700;
+            font-weight: 800;
             color: #444444;
         }
+
         .qr-code-text {
-            font-size: 11pt;
+            font-size: 12pt;
             font-weight: 900;
             color: #000000;
             letter-spacing: 0.5px;
             font-family: monospace;
         }
+
         .qr-container {
-            width: 75px;
-            height: 75px;
+            width: 22mm;
+            height: 22mm;
+            box-sizing: border-box;
+            flex: 0 0 22mm;
+        }
+
+        .qr-container canvas,
+        .qr-container img {
+            display: block;
+            width: 20mm !important;
+            height: 20mm !important;
         }
 
         /* 🌓 Global Dark / Light Theme System */
@@ -268,14 +370,17 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        .glass-card, .card {
+        .glass-card,
+        .card {
             background-color: var(--bg-card) !important;
             border-color: var(--border-color) !important;
             color: var(--text-main) !important;
             box-shadow: 0 8px 24px var(--shadow-glow) !important;
         }
 
-        .table, .table td, .table th {
+        .table,
+        .table td,
+        .table th {
             color: var(--text-main) !important;
         }
 
@@ -316,7 +421,8 @@
             white-space: nowrap !important;
         }
 
-        .nav-pill-custom:hover, .nav-pill-custom:focus {
+        .nav-pill-custom:hover,
+        .nav-pill-custom:focus {
             color: #ffffff !important;
             background: rgba(255, 255, 255, 0.16) !important;
             border-color: rgba(255, 255, 255, 0.25) !important;
@@ -457,604 +563,1081 @@
     </style>
 
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/page-loader.css">
 </head>
+
 <body>
 
-<!-- Header Navigation Bar -->
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
-            <span class="fs-4 text-warning">📦</span> 
-            <span>STORE MANAGEMENT SYSTEM</span>
-        </a>
-        
-        <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#topNavbarMenu">
-            <i class="bi bi-list fs-2"></i>
-        </button>
+    <!-- 📦 Global Page Loader Elements -->
+    <div id="page-progress-bar"></div>
+    <div id="page-loader-overlay">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
 
-        <div class="collapse navbar-collapse" id="topNavbarMenu">
-            <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
-                
-                <!-- 1. Inward & Factory Dropdown -->
-                <div class="nav-item dropdown">
-                    <a class="nav-pill-custom dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-box-seam me-1 text-info"></i> આવક અને ઉત્પાદન
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                        <li><a class="dropdown-item dropdown-item-custom" href="/dashboard"><i class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
-                    </ul>
+    <!-- Header Navigation Bar -->
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
+                <span class="fs-4 text-warning">📦</span>
+                <span>STORE MANAGEMENT SYSTEM</span>
+            </a>
+
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse"
+                data-bs-target="#topNavbarMenu">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="topNavbarMenu">
+                <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+
+                    <!-- 1. Inward & Factory Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle active" href="#" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-box-seam me-1 text-info"></i> Inward & Production
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/inward-page"><i
+                                        class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i
+                                        class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 2. Dispatch & Yard Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-truck me-1 text-success"></i> Dispatch & Scanning
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i
+                                        class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i
+                                        class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i
+                                        class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 3. Master Controls Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-sliders me-1 text-warning"></i> Master Control
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i
+                                        class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i
+                                        class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 4. Reports & Logs Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-bar-chart-line me-1 text-primary"></i> Reports & Logs
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i
+                                        class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a>
+                            </li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i
+                                        class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 🌓 Global Theme Toggle Button -->
+                    <button id="globalThemeBtn" onclick="toggleGlobalTheme()"
+                        class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
+                        <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+                        <span id="themeText">Dark Mode</span>
+                    </button>
                 </div>
-
-                <!-- 2. Dispatch & Yard Dropdown -->
-                <div class="nav-item dropdown">
-                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-truck me-1 text-success"></i> ડિસ્પેચ અને સ્કેનિંગ
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                        <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a></li>
-                    </ul>
-                </div>
-
-                <!-- 3. Master Controls Dropdown -->
-                <div class="nav-item dropdown">
-                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-sliders me-1 text-warning"></i> માસ્ટર કંટ્રોલ
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                        <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
-                    </ul>
-                </div>
-
-                <!-- 4. Reports & Logs Dropdown -->
-                <div class="nav-item dropdown">
-                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-bar-chart-line me-1 text-primary"></i> રિપોર્ટ્સ અને લોગ
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                        <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
-                    </ul>
-                </div>
-
-                <!-- 🌓 Global Theme Toggle Button -->
-                <button id="globalThemeBtn" onclick="toggleGlobalTheme()" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
-                    <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
-                    <span id="themeText">Dark Mode</span>
-                </button>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<div class="container my-4 no-print">
-    <!-- Header Title -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <h3 class="fw-extrabold text-slate-800 m-0"><i class="bi bi-cpu-fill text-indigo me-2"></i> Machine Production & TSC Sticker Printing</h3>
-            <p class="text-muted small m-0 mt-1">Extruder મશીન પરથી રેડી થતી કોઇલ/રોલની એન્ટ્રી કરી 100x100 MM નો સ્ટીકર પ્રિન્ટ કરો.</p>
+    <div class="container my-4 no-print">
+        <!-- Header Title -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h3 class="fw-extrabold text-slate-800 m-0"><i class="bi bi-cpu-fill text-indigo me-2"></i> Machine
+                    Production & TSC Sticker Printing</h3>
+                <p class="text-muted small m-0 mt-1">Record finished extruder pipe coils/rolls and generate 100x100 MM
+                    TSC label stickers.</p>
+            </div>
+            <button class="btn btn-outline-dark fw-bold rounded-3" data-bs-toggle="modal"
+                data-bs-target="#addMachineModal">
+                <i class="bi bi-plus-circle me-1"></i> Add Machine
+            </button>
         </div>
-        <button class="btn btn-outline-dark fw-bold rounded-3" data-bs-toggle="modal" data-bs-target="#addMachineModal">
-            <i class="bi bi-plus-circle me-1"></i> નવું મશીન ઉમેરો (Add Machine)
-        </button>
-    </div>
 
-    <!-- Production Entry Form -->
-    <div class="card glass-card mb-4 overflow-hidden">
-        <div class="card-header-primary d-flex align-items-center justify-content-between">
-            <h5 class="mb-0 fw-bold"><i class="bi bi-file-earmark-diff me-2"></i> મશીન પ્રોડક્શન એન્ટ્રી (Coil Entry Form)</h5>
-            <span class="badge bg-success px-3 py-1 rounded-pill"><i class="bi bi-printer me-1"></i> Auto TSC Print Ready</span>
-        </div>
-        <div class="card-body p-4">
-            <form id="prodForm" onsubmit="submitProduction(event)">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="input-label-custom">Select Machine (મશીન નામ) *</label>
-                        <input type="text" id="machine_name" list="machine_list" class="form-control form-control-custom" placeholder="🔍 મશીન સિલેક્ટ કે ટાઈપ કરો..." required autocomplete="off">
-                        <datalist id="machine_list"></datalist>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="input-label-custom">Pipe Type (પાઈપનો પ્રકાર) *</label>
-                        <select id="pipe_type" class="form-select form-select-custom" onchange="updatePipeSizes()" required>
-                            <option value="Emitting Pipe">Emitting Pipe (Drip)</option>
-                            <option value="HDPE Pipe">HDPE Pipe</option>
-                            <option value="PVC Pipe">PVC Pipe</option>
-                            <option value="Lateral Pipe">Lateral Pipe</option>
-                            <option value="Column Pipe">Column Pipe</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="input-label-custom">Pipe Size / Full Item Name *</label>
-                        <input type="text" id="pipe_size_input" list="pipe_size_datalist" class="form-control form-control-custom" placeholder="🔍 સાઈઝ અથવા આઈટમ સર્ચ / ટાઈપ કરો..." required autocomplete="off">
-                        <datalist id="pipe_size_datalist"></datalist>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="input-label-custom">Coil Length (મીટરમાં) *</label>
-                        <input type="number" id="coil_length_meters" class="form-control form-control-custom" placeholder="ઉદા. 400" min="1" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="input-label-custom">Coil Weight (KG માં) *</label>
-                        <input type="number" step="0.01" id="coil_weight_kg" class="form-control form-control-custom" placeholder="ઉદા. 9.50" min="0.1" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="input-label-custom">Raw Material Used (KG)</label>
-                        <input type="number" step="0.01" id="raw_material_used_kg" class="form-control form-control-custom" placeholder="ઉદા. 9.80">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="input-label-custom">Shift / Operator Name</label>
-                        <input type="text" id="shift_operator" class="form-control form-control-custom" placeholder="ઉદા. Ramesh Bhai (Shift A)">
-                    </div>
-                    <div class="col-md-6 d-flex align-items-end">
-                        <button type="submit" id="saveBtn" class="btn btn-gradient-indigo w-100">
-                            <i class="bi bi-printer-fill me-2"></i> 💾 Save & Print Label Sticker (100x100 MM)
-                        </button>
-                    </div>
+        <!-- Top Plan vs Actual KPI Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 col-sm-6">
+                <div class="card glass-card p-3 border-0 shadow-sm text-center">
+                    <div class="text-muted small fw-bold text-uppercase"><i
+                            class="bi bi-calendar2-range me-1 text-primary"></i> Total Planned</div>
+                    <h3 class="fw-extrabold text-primary mb-0 mt-1" id="kpi_planned">0</h3>
+                    <small class="text-muted">Target Production</small>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Production Logs Table -->
-    <div class="card glass-card overflow-hidden">
-        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-            <h5 class="m-0 fw-bold text-dark"><i class="bi bi-clock-history me-2 text-indigo"></i> તાજેતરનું પ્રોડક્શન લોગ (Production History)</h5>
-            <button onclick="loadProductionLogs()" class="btn btn-outline-secondary btn-sm rounded-3"><i class="bi bi-arrow-clockwise me-1"></i> Refresh</button>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive" style="max-height: 450px;">
-                <table class="table table-hover align-middle m-0 text-center">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Coil QR ID</th>
-                            <th>Machine</th>
-                            <th>Pipe Spec</th>
-                            <th>Length</th>
-                            <th>Weight</th>
-                            <th>Operator</th>
-                            <th>તારીખ</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="prodHistoryTable"></tbody>
-                </table>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card glass-card p-3 border-0 shadow-sm text-center">
+                    <div class="text-muted small fw-bold text-uppercase"><i
+                            class="bi bi-box-seam-fill me-1 text-success"></i> Approved Actual</div>
+                    <h3 class="fw-extrabold text-success mb-0 mt-1" id="kpi_actual">0</h3>
+                    <small class="text-muted">In Store Inventory</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card glass-card p-3 border-0 shadow-sm text-center">
+                    <div class="text-muted small fw-bold text-uppercase"><i
+                            class="bi bi-hourglass-split me-1 text-warning"></i> Pending Approval</div>
+                    <h3 class="fw-extrabold text-warning mb-0 mt-1" id="kpi_pending">0</h3>
+                    <small class="text-muted">Waiting QC / Manager</small>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="card glass-card p-3 border-0 shadow-sm text-center">
+                    <div class="text-muted small fw-bold text-uppercase"><i
+                            class="bi bi-graph-up-arrow me-1 text-indigo"></i> Achievement Rate</div>
+                    <h3 class="fw-extrabold text-indigo mb-0 mt-1" id="kpi_achievement">100%</h3>
+                    <small class="text-muted">Actual vs Planned</small>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Modal: Add New Machine -->
-<div class="modal fade no-print" id="addMachineModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content glass-card">
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold"><i class="bi bi-cpu me-2 text-primary"></i> નવું મશીન ઉમેરો (Add Machine)</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <!-- Production Entry Form (Plan vs Actual) -->
+        <div class="card glass-card mb-4 overflow-hidden">
+            <div class="card-header-primary d-flex align-items-center justify-content-between">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-file-earmark-diff me-2"></i> Machine Production Entry (Plan vs
+                    Actual Workflow)</h5>
+                <span class="badge bg-light text-dark px-3 py-1 rounded-pill"><i
+                        class="bi bi-shield-check me-1 text-success"></i> Approval Controlled</span>
             </div>
-            <div class="modal-body">
-                <form id="addMachineForm" onsubmit="submitNewMachine(event)">
-                    <div class="mb-3">
-                        <label class="input-label-custom">Machine Name / ID *</label>
-                        <input type="text" id="new_machine_name" class="form-control form-control-custom" placeholder="ઉદા. Extruder Machine 04" required>
-                    </div>
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary fw-bold px-4">Save Machine</button>
+            <div class="card-body p-4">
+                <form id="prodForm" onsubmit="submitProduction(event)" onkeydown="preventEnterSubmit(event)">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="input-label-custom">Production Date *</label>
+                            <input type="date" id="production_date" class="form-control form-control-custom fw-bold"
+                                required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="input-label-custom">Select Machine *</label>
+                            <input type="text" id="machine_name" list="machine_list"
+                                class="form-control form-control-custom" placeholder="🔍 Select or type machine name..."
+                                required autocomplete="off">
+                            <datalist id="machine_list"></datalist>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="input-label-custom">Pipe Type *</label>
+                            <select id="pipe_type" class="form-select form-select-custom"
+                                onchange="updatePipeSizesAndPresets()" required>
+                                <option value="Emitting Pipe">Emitting Pipe (Drip)</option>
+                                <option value="HDPE Pipe">HDPE Pipe</option>
+                                <option value="PVC Pipe">PVC Pipe</option>
+                                <option value="Lateral Pipe">Lateral Pipe</option>
+                                <option value="Column Pipe">Column Pipe</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="input-label-custom">Packaging Type *</label>
+                            <select id="packaging_type" class="form-select form-select-custom"
+                                onchange="toggleBundleFields()">
+                                <option value="single" selected>Single Coil / Pipe</option>
+                                <option value="bundle">Bundle / Pack of Items</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-none" id="bundle_fields_container">
+                            <label class="input-label-custom">Items per Bundle & No. of Bundles</label>
+                            <div class="input-group">
+                                <input type="number" id="items_per_bundle" class="form-control form-control-custom"
+                                    placeholder="Items/Bundle" value="1"><span class="input-group-text">x</span><input
+                                    type="number" id="num_bundles" class="form-control form-control-custom"
+                                    placeholder="# Bundles" value="1">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="input-label-custom">Pipe Size / Full Item Name *</label>
+                            <input type="text" id="pipe_size_input" list="pipe_size_datalist"
+                                class="form-control form-control-custom"
+                                placeholder="🔍 Search or type pipe size / spec..." required autocomplete="off">
+                            <datalist id="pipe_size_datalist"></datalist>
+                        </div>
+
+                        <!-- Planned Quantity & Actual Quantity with Quick Presets -->
+                        <div class="col-md-4">
+                            <label class="input-label-custom">Planned Target Quantity *</label>
+                            <div class="input-group">
+                                <input type="number" step="any" id="planned_qty_input"
+                                    class="form-control form-control-custom fw-bold fs-5 text-primary"
+                                    placeholder="Target Qty" min="0.1" required oninput="syncActualQty()">
+                                <select id="bundle_unit" class="form-select form-select-custom"
+                                    style="max-width: 120px;">
+                                    <option value="MTR">MTR</option>
+                                    <option value="PCS">PCS</option>
+                                    <option value="BUNDLE">BUNDLE</option>
+                                    <option value="COIL">COIL</option>
+                                    <option value="NOS">NOS</option>
+                                </select>
+                            </div>
+                            <!-- Quick Presets Badges -->
+                            <div class="d-flex align-items-center gap-1 mt-2 flex-wrap" id="preset_buttons_container">
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="input-label-custom">Actual Produced Quantity</label>
+                            <input type="number" step="any" id="actual_qty_input"
+                                class="form-control form-control-custom fw-bold fs-5 text-success"
+                                placeholder="Actual Produced Qty" min="0.1">
+                            <div class="form-text small text-muted">Leave equal to planned if full batch was produced.
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="input-label-custom">Shift / Operator Name</label>
+                            <input type="text" id="shift_operator" class="form-control form-control-custom"
+                                placeholder="e.g. Ramesh Bhai (Shift A)">
+                            <div class="form-text small text-muted">Operator name will be logged with entry.</div>
+                        </div>
+
+                        <!-- Hidden Weight Fields (Preserved for future use) -->
+                        <div class="d-none">
+                            <input type="number" step="0.01" id="coil_weight_kg" value="0">
+                            <input type="number" step="0.01" id="raw_material_used_kg" value="0">
+                        </div>
+
+                        <!-- Plan vs Actual Workflow Notice -->
+                        <div class="col-12 mt-2">
+                            <div class="alert alert-warning d-flex align-items-center mb-0 py-2 px-3 rounded-3 border-warning"
+                                role="alert">
+                                <i class="bi bi-info-circle-fill me-2 fs-5 text-warning"></i>
+                                <div class="small">
+                                    <strong>Plan vs Actual Workflow Active:</strong> Production entries are recorded in
+                                    the <strong>Pending Approval Queue</strong> first. Store inventory stock is updated
+                                    and QR label stickers are generated only upon final approval.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-3">
+                            <button type="submit" id="saveBtn"
+                                class="btn btn-gradient-indigo w-100 py-2 fs-6 fw-bold shadow-sm">
+                                <i class="bi bi-hourglass-split me-2"></i> 💾 Submit to Pending Approval Queue
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- 🏷️ Printable Sticker Area (100x100 MM / 4x4 Inch TSC Printer Format) -->
-<div id="label-print-area" style="display:none; margin-top: 20px;">
-    <div class="sticker-box">
-        <div class="sticker-header">
-            <div class="company-title">BHUMI POLYMERS</div>
-            <div class="company-sub">QUALITY EXTRUSION PIPING SYSTEM</div>
-        </div>
+        <!-- Plan vs Actual & Production History Tabs -->
+        <div class="card glass-card overflow-hidden">
+            <div
+                class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <ul class="nav nav-pills card-header-pills" id="productionTabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active fw-bold position-relative me-2" id="pending-tab"
+                            data-bs-toggle="tab" data-bs-target="#pendingPane" type="button">
+                            <i class="bi bi-hourglass-split me-1 text-warning"></i> ⏳ Pending Approval Queue
+                            <span class="badge bg-danger rounded-pill ms-1" id="pendingBadge">0</span>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link fw-bold" id="approved-tab" data-bs-toggle="tab"
+                            data-bs-target="#approvedPane" type="button">
+                            <i class="bi bi-check2-circle me-1 text-success"></i> ✅ Approved Store Inventory History
+                        </button>
+                    </li>
+                </ul>
+                <button onclick="refreshAllProductionData()" class="btn btn-outline-secondary btn-sm rounded-3">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh All
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="tab-content" id="productionTabsContent">
 
-        <div class="sticker-details">
-            <div class="detail-row">
-                <span class="detail-label">Machine No:</span>
-                <span class="detail-value" id="lbl_machine"></span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">Pipe Type:</span>
-                <span class="detail-value" id="lbl_type"></span>
-            </div>
-            <div class="detail-row">
-                <span class="detail-label">Pipe Size / Spec:</span>
-                <span class="detail-value" id="lbl_size"></span>
-            </div>
-            
-            <div class="detail-grid-2">
-                <div class="detail-box">
-                    <span class="box-label">Length (Meter)</span>
-                    <span class="box-value"><span id="lbl_length"></span> MTR</span>
+                    <!-- TAB 1: Pending Approval Queue (Plan vs Actual) -->
+                    <div class="tab-pane fade show active" id="pendingPane" role="tabpanel">
+                        <div class="table-responsive" style="max-height: 480px;">
+                            <table class="table table-hover align-middle m-0 text-center">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#ID</th>
+                                        <th>Machine</th>
+                                        <th>Prod. Date</th>
+                                        <th>Pipe Spec</th>
+                                        <th>Planned Target</th>
+                                        <th>Actual Produced</th>
+                                        <th>Variance / Diff</th>
+                                        <th>Operator</th>
+                                        <th>Logged Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pendingApprovalTable">
+                                    <tr>
+                                        <td colspan="10" class="text-muted py-4"><span
+                                                class="spinner-border spinner-border-sm me-2"></span>Loading pending
+                                            queue...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: Approved History Table -->
+                    <div class="tab-pane fade" id="approvedPane" role="tabpanel">
+                        <div class="table-responsive" style="max-height: 480px;">
+                            <table class="table table-hover align-middle m-0 text-center">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Coil QR ID</th>
+                                        <th>Machine</th>
+                                        <th>Prod. Date</th>
+                                        <th>Pipe Spec</th>
+                                        <th>Planned</th>
+                                        <th>Actual In Store</th>
+                                        <th>Operator</th>
+                                        <th>Approved Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="prodHistoryTable">
+                                    <tr>
+                                        <td colspan="9" class="text-muted py-4">No approved entries found.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                 </div>
-                <div class="detail-box">
-                    <span class="box-label">Weight (KG)</span>
-                    <span class="box-value"><span id="lbl_weight"></span> KG</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add New Machine -->
+    <div class="modal fade no-print" id="addMachineModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card">
+                <div class="modal-header border-bottom">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-cpu me-2 text-primary"></i> Add New Machine</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addMachineForm" onsubmit="submitNewMachine(event)">
+                        <div class="mb-3">
+                            <label class="input-label-custom">Machine Name / ID *</label>
+                            <input type="text" id="new_machine_name" class="form-control form-control-custom"
+                                placeholder="e.g. Extruder Machine 04" required>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary fw-bold px-4">Save Machine</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Printable Sticker Area (100x150 MM / 4x6 Inch TSC Printer Format) -->
+    <div id="label-print-area" style="display:none; margin-top: 20px;">
+        <div class="sticker-box">
+            <div class="sticker-header">
+                <div class="company-title">BHUMI POLYMERS</div>
+                <div class="company-sub">QUALITY EXTRUSION PIPING SYSTEM</div>
+            </div>
+
+            <div class="sticker-details">
+                <div class="detail-row">
+                    <span class="detail-label">Machine No:</span>
+                    <span class="detail-value" id="lbl_machine"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Pipe Type:</span>
+                    <span class="detail-value" id="lbl_type"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Pipe Size / Spec:</span>
+                    <span class="detail-value" id="lbl_size"></span>
+                </div>
+
+                <div class="detail-grid-2">
+                    <div class="detail-box">
+                        <span class="box-label">Bundle Size / Qty</span>
+                        <span class="box-value"><span id="lbl_length"></span> <span id="lbl_unit">MTR</span></span>
+                    </div>
+                    <div class="detail-box">
+                        <span class="box-label">Package Type</span>
+                        <span class="box-value" id="lbl_package">1 Coil / Bundle</span>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Operator:</span>
+                    <span class="detail-value" id="lbl_operator"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date & Time:</span>
+                    <span class="detail-value" id="lbl_date"></span>
                 </div>
             </div>
 
-            <div class="detail-row">
-                <span class="detail-label">Operator:</span>
-                <span class="detail-value" id="lbl_operator"></span>
+            <div class="sticker-footer">
+                <div class="qr-info">
+                    <span class="qr-label">COIL SERIAL / QR NO:</span>
+                    <span class="qr-code-text" id="lbl_qr_text"></span>
+                </div>
+                <div id="qrcode" class="qr-container" style="padding: 1mm; background: white;"></div>
             </div>
-            <div class="detail-row">
-                <span class="detail-label">Date & Time:</span>
-                <span class="detail-value" id="lbl_date"></span>
-            </div>
-        </div>
-
-        <div class="sticker-footer">
-            <div class="qr-info">
-                <span class="qr-label">COIL SERIAL / QR NO:</span>
-                <span class="qr-code-text" id="lbl_qr_text"></span>
-            </div>
-            <div id="qrcode" class="qr-container"></div>
         </div>
     </div>
-</div>
 
-<script>
-    const API_URL = window.location.origin;
+    <script>
+        const API_URL = window.location.origin;
 
-    const PIPE_SPECS = {
-        "Emitting Pipe": [
-            "16x2x30 Cl-2 Round",
-            "16x2x40 Cl-2 Round",
-            "16x2x50 Cl-2 Round",
-            "16x2x20 Cl-2 Round",
-            "12x2x30 Cl-2 Round",
-            "16mm / 30cm / 2 LPH",
-            "16mm / 40cm / 2 LPH",
-            "Other / Custom"
-        ],
-        "HDPE Pipe": [
-            "20mm PN6",
-            "25mm PN6",
-            "32mm PN6",
-            "40mm PN6",
-            "50mm PN6",
-            "63mm PN6",
-            "75mm PN6",
-            "90mm PN6",
-            "110mm PN6",
-            "63mm PN10",
-            "75mm PN10",
-            "90mm PN10",
-            "110mm PN10",
-            "Other / Custom"
-        ],
-        "PVC Pipe": [
-            "40mm x 4 kg/cm²",
-            "50mm x 4 kg/cm²",
-            "63mm x 4 kg/cm²",
-            "75mm x 4 kg/cm²",
-            "90mm x 4 kg/cm²",
-            "90mm x 6 kg/cm²",
-            "90mm x 8 kg/cm²",
-            "90mm x 10 kg/cm²",
-            "110mm x 4 kg/cm²",
-            "110mm x 6 kg/cm²",
-            "110mm x 8 kg/cm²",
-            "110mm x 10 kg/cm²",
-            "140mm x 6 kg/cm²",
-            "160mm x 6 kg/cm²",
-            "Other / Custom"
-        ],
-        "Lateral Pipe": [
-            "12mm Plain Lateral",
-            "16mm Plain Lateral",
-            "20mm Plain Lateral",
-            "25mm Plain Lateral",
-            "32mm Plain Lateral",
-            "Other / Custom"
-        ],
-        "Column Pipe": [
-            "1 inch (32mm) Column",
-            "1.25 inch (40mm) Column",
-            "1.5 inch (50mm) Column",
-            "2 inch (63mm) Column",
-            "2.5 inch (75mm) Column",
-            "3 inch (90mm) Column",
-            "Other / Custom"
-        ]
-    };
-
-    async function updatePipeSizes() {
-        const pipeTypeElem = document.getElementById('pipe_type');
-        const datalist = document.getElementById('pipe_size_datalist');
-        const pipeInput = document.getElementById('pipe_size_input');
-        if (!pipeTypeElem || !datalist) return;
-
-        const pipeType = pipeTypeElem.value;
-        datalist.innerHTML = '';
-        if (pipeInput) pipeInput.value = '';
-
-        if (pipeType) {
-            try {
-                const searchPrefix = pipeType.split(' ')[0]; // e.g. "Emitting", "HDPE", "PVC", "Lateral", "Column"
-                const res = await fetch(`${API_URL}/api/items/list?search=${encodeURIComponent(searchPrefix)}&limit=1000`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
-                const data = await res.json();
-                if (data.items && data.items.length > 0) {
-                    const addedNames = new Set();
-                    data.items.forEach(item => {
-                        if (!addedNames.has(item.item_name)) {
-                            addedNames.add(item.item_name);
-                            datalist.innerHTML += `<option value="${item.item_name}">`;
-                        }
-                    });
-                }
-            } catch(e) { console.error("Error fetching items for pipe specs:", e); }
-        }
-
-        const specs = PIPE_SPECS[pipeType] || [];
-        specs.forEach(spec => {
-            if (spec !== "Other / Custom") {
-                datalist.innerHTML += `<option value="${spec}">`;
-            }
-        });
-    }
-
-    async function loadMachines() {
-        try {
-            const res = await fetch(`${API_URL}/api/machines/list`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
-            const data = await res.json();
-            const datalist = document.getElementById('machine_list');
-            if (datalist) {
-                datalist.innerHTML = '';
-                if (data.machines && data.machines.length > 0) {
-                    data.machines.forEach(m => {
-                        datalist.innerHTML += `<option value="${m.machine_name}">`;
-                    });
-                }
-            }
-            updatePipeSizes();
-        } catch (err) {
-            console.error("Error loading machines:", err);
-        }
-    }
-
-    async function submitNewMachine(e) {
-        e.preventDefault();
-        const machineName = document.getElementById('new_machine_name').value.trim();
-        if (!machineName) return;
-
-        const formData = new FormData();
-        formData.append('machine_name', machineName);
-
-        try {
-            const res = await fetch(`${API_URL}/api/machines/add`, {
-                method: 'POST',
-                headers: { 'Bypass-Tunnel-Reminder': 'true' },
-                body: formData
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-                alert("✅ " + data.message);
-                document.getElementById('addMachineForm').reset();
-                bootstrap.Modal.getInstance(document.getElementById('addMachineModal')).hide();
-                loadMachines();
-            } else {
-                alert("❌ " + (data.detail || "Error adding machine"));
-            }
-        } catch (err) {
-            alert("❌ Server સાથે કનેક્શન થઈ શક્યું નથી.");
-        }
-    }
-
-    async function submitProduction(e) {
-        e.preventDefault();
-        
-        const selectedSize = document.getElementById('pipe_size_input').value.trim();
-        if (!selectedSize) {
-            alert("⚠️ કૃપા કરીને Pipe Size / Spec સિલેક્ટ અથવા ટાઈપ કરો!");
-            return;
-        }
-
-        const saveBtn = document.getElementById('saveBtn');
-        saveBtn.disabled = true;
-        const originalText = saveBtn.innerHTML;
-        saveBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Saving & Preparing Print...`;
-        saveBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Saving & Preparing Print...`;
-
-        const data = {
-            machine_name: document.getElementById('machine_name').value,
-            pipe_type: document.getElementById('pipe_type').value,
-            pipe_size: selectedSize,
-            coil_length_meters: parseFloat(document.getElementById('coil_length_meters').value),
-            coil_weight_kg: parseFloat(document.getElementById('coil_weight_kg').value),
-            raw_material_used_kg: parseFloat(document.getElementById('raw_material_used_kg').value || 0),
-            shift_operator: document.getElementById('shift_operator').value || "Operator"
+        const PIPE_SPECS = {
+            "Emitting Pipe": [
+                "16x2x30 Cl-2 Round",
+                "16x2x40 Cl-2 Round",
+                "16x2x50 Cl-2 Round",
+                "16x2x20 Cl-2 Round",
+                "12x2x30 Cl-2 Round",
+                "16mm / 30cm / 2 LPH",
+                "16mm / 40cm / 2 LPH",
+                "Other / Custom"
+            ],
+            "HDPE Pipe": [
+                "20mm PN6",
+                "25mm PN6",
+                "32mm PN6",
+                "40mm PN6",
+                "50mm PN6",
+                "63mm PN6",
+                "75mm PN6",
+                "90mm PN6",
+                "110mm PN6",
+                "63mm PN10",
+                "75mm PN10",
+                "90mm PN10",
+                "110mm PN10",
+                "Other / Custom"
+            ],
+            "PVC Pipe": [
+                "40mm x 4 kg/cm²",
+                "50mm x 4 kg/cm²",
+                "63mm x 4 kg/cm²",
+                "75mm x 4 kg/cm²",
+                "90mm x 4 kg/cm²",
+                "90mm x 6 kg/cm²",
+                "90mm x 8 kg/cm²",
+                "90mm x 10 kg/cm²",
+                "110mm x 4 kg/cm²",
+                "110mm x 6 kg/cm²",
+                "110mm x 8 kg/cm²",
+                "110mm x 10 kg/cm²",
+                "140mm x 6 kg/cm²",
+                "160mm x 6 kg/cm²",
+                "Other / Custom"
+            ],
+            "Lateral Pipe": [
+                "12mm Plain Lateral",
+                "16mm Plain Lateral",
+                "20mm Plain Lateral",
+                "25mm Plain Lateral",
+                "32mm Plain Lateral",
+                "Other / Custom"
+            ],
+            "Column Pipe": [
+                "1 inch (32mm) Column",
+                "1.25 inch (40mm) Column",
+                "1.5 inch (50mm) Column",
+                "2 inch (63mm) Column",
+                "2.5 inch (75mm) Column",
+                "3 inch (90mm) Column",
+                "Other / Custom"
+            ]
         };
 
-        try {
-            const res = await fetch(`${API_URL}/api/production/add`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Bypass-Tunnel-Reminder': 'true' 
-                },
-                body: JSON.stringify(data)
-            });
+        const PIPE_PRESETS = {
+            "Emitting Pipe": { unit: "MTR", presets: [500, 400, 300, 100], defaultVal: 500 },
+            "HDPE Pipe": { unit: "MTR", presets: [500, 100, 50], defaultVal: 100 },
+            "PVC Pipe": { unit: "MTR", presets: [6, 3, 20], defaultVal: 6 },
+            "Column Pipe": { unit: "PCS", presets: [8, 10, 25, 3], defaultVal: 8 },
+            "Lateral Pipe": { unit: "MTR", presets: [500, 400, 250, 100], defaultVal: 400 }
+        };
 
-            const result = await res.json();
-            if (res.ok) {
-                triggerLabelPrint(data, result.qr_code);
-                document.getElementById('prodForm').reset();
-                loadProductionLogs();
-            } else {
-                alert("❌ Error: " + (result.detail || "પ્રોડક્શન એન્ટ્રી સેવ થઈ નથી."));
-            }
-        } catch (err) {
-            console.error("Production save error:", err);
-            alert("❌ Network/Server Error: " + (err.message || "Server સાથે કનેક્શન થઈ શક્યું નથી."));
-        } finally {
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = originalText;
+        function selectPreset(val) {
+            const plannedInput = document.getElementById('planned_qty_input');
+            const actualInput = document.getElementById('actual_qty_input');
+            if (plannedInput) plannedInput.value = val;
+            if (actualInput) actualInput.value = val;
         }
-    }
 
-    function triggerLabelPrint(data, qrCodeText) {
-        document.getElementById('lbl_type').innerText = data.pipe_type || '';
-        document.getElementById('lbl_machine').innerText = data.machine_name || '';
-        document.getElementById('lbl_size').innerText = data.pipe_size || '';
-        document.getElementById('lbl_operator').innerText = data.shift_operator || '';
-        document.getElementById('lbl_length').innerText = data.coil_length_meters || '0';
-        document.getElementById('lbl_weight').innerText = data.coil_weight_kg || '0';
-        document.getElementById('lbl_qr_text').innerText = qrCodeText || '';
-        
-        const now = new Date();
-        const formattedDate = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-        document.getElementById('lbl_date').innerText = formattedDate;
+        function syncActualQty() {
+            const plannedInput = document.getElementById('planned_qty_input');
+            const actualInput = document.getElementById('actual_qty_input');
+            if (plannedInput && actualInput && (!actualInput.value || actualInput.dataset.touched !== "true")) {
+                actualInput.value = plannedInput.value;
+            }
+        }
 
-        document.getElementById('qrcode').innerHTML = "";
-        new QRCode(document.getElementById("qrcode"), {
-            text: qrCodeText,
-            width: 75,
-            height: 75,
-            correctLevel: QRCode.CorrectLevel.H
+        // ─── Block accidental Enter key submission on prodForm ──────────────
+        function preventEnterSubmit(e) {
+            // Only intercept Enter key
+            if (e.key !== 'Enter') return;
+
+            const tag = e.target.tagName;
+            // Allow Enter inside <textarea> (if any)
+            if (tag === 'TEXTAREA') return;
+
+            e.preventDefault(); // stop form submit
+
+            // Move focus to the next focusable element inside the form
+            const form = document.getElementById('prodForm');
+            const focusable = Array.from(
+                form.querySelectorAll('input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])')
+            );
+            const currentIdx = focusable.indexOf(document.activeElement);
+            if (currentIdx !== -1 && currentIdx < focusable.length - 1) {
+                focusable[currentIdx + 1].focus();
+            } else if (currentIdx === focusable.length - 1) {
+                // Last field — blur so user sees the Save button clearly
+                document.activeElement.blur();
+            }
+        }
+
+        function toggleBundleFields() {
+            const packagingType = document.getElementById('packaging_type').value;
+            const bundleFields = document.getElementById('bundle_fields_container');
+            const plannedQtyInput = document.getElementById('planned_qty_input');
+            const actualQtyInput = document.getElementById('actual_qty_input');
+
+            if (packagingType === 'bundle') {
+                bundleFields.classList.remove('d-none');
+            } else {
+                bundleFields.classList.add('d-none');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const prodDateInput = document.getElementById('production_date');
+            if (prodDateInput) {
+                prodDateInput.valueAsDate = new Date();
+            }
+
+            const actualInput = document.getElementById('actual_qty_input');
+            if (actualInput) {
+                actualInput.addEventListener('input', () => {
+                    actualInput.dataset.touched = "true";
+                });
+            }
         });
 
-        const printArea = document.getElementById('label-print-area');
-        printArea.style.display = "block";
+        async function updatePipeSizesAndPresets() {
+            const pipeTypeElem = document.getElementById('pipe_type');
+            const datalist = document.getElementById('pipe_size_datalist');
+            const pipeInput = document.getElementById('pipe_size_input');
+            const plannedInput = document.getElementById('planned_qty_input');
+            const actualInput = document.getElementById('actual_qty_input');
+            const unitSelect = document.getElementById('bundle_unit');
+            const presetContainer = document.getElementById('preset_buttons_container');
+            if (!pipeTypeElem) return;
 
-        setTimeout(() => {
-            window.print();
-        }, 400);
-    }
+            const pipeType = pipeTypeElem.value;
+            if (datalist) datalist.innerHTML = '';
+            if (pipeInput) pipeInput.value = '';
 
-    async function loadProductionLogs() {
-        try {
-            const res = await fetch(`${API_URL}/api/production/logs`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
-            const data = await res.json();
-            const tbody = document.getElementById('prodHistoryTable');
+            // Update Default Unit & Dynamic Presets
+            const config = PIPE_PRESETS[pipeType] || { unit: "MTR", presets: [500, 100, 8, 6], defaultVal: 100 };
+            if (unitSelect) unitSelect.value = config.unit;
+            if (plannedInput) plannedInput.value = config.defaultVal;
+            if (actualInput) {
+                actualInput.value = config.defaultVal;
+                actualInput.dataset.touched = "false";
+            }
 
-            if (!data.logs || data.logs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-muted py-4">હજી સુધી કોઈ પ્રોડક્શન લોગ મળ્યા નથી.</td></tr>`;
+            if (presetContainer) {
+                presetContainer.innerHTML = '<span class="text-muted small me-1 fw-bold">Presets:</span>' + config.presets.map(p => `
+                    <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill fw-bold" onclick="selectPreset(${p})">
+                        ${p} ${config.unit}
+                    </button>
+                `).join(' ');
+            }
+
+            if (pipeType) {
+                try {
+                    const searchPrefix = pipeType.split(' ')[0]; // e.g. "Emitting", "HDPE", "PVC", "Lateral", "Column"
+                    const res = await fetch(`${API_URL}/api/items/list?search=${encodeURIComponent(searchPrefix)}&limit=1000`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+                    const data = await res.json();
+                    if (data.items && data.items.length > 0 && datalist) {
+                        const addedNames = new Set();
+                        data.items.forEach(item => {
+                            if (!addedNames.has(item.item_name)) {
+                                addedNames.add(item.item_name);
+                                datalist.innerHTML += `<option value="${item.item_name}">`;
+                            }
+                        });
+                    }
+                } catch (e) { console.error("Error fetching items for pipe specs:", e); }
+            }
+
+            const specs = PIPE_SPECS[pipeType] || [];
+            specs.forEach(spec => {
+                if (spec !== "Other / Custom" && datalist) {
+                    datalist.innerHTML += `<option value="${spec}">`;
+                }
+            });
+        }
+
+        async function loadMachines() {
+            try {
+                const res = await fetch(`${API_URL}/api/machines/list`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+                const data = await res.json();
+                const datalist = document.getElementById('machine_list');
+                if (datalist) {
+                    datalist.innerHTML = '';
+                    if (data.machines && data.machines.length > 0) {
+                        data.machines.forEach(m => {
+                            datalist.innerHTML += `<option value="${m.machine_name}">`;
+                        });
+                    }
+                }
+                updatePipeSizesAndPresets();
+            } catch (err) {
+                console.error("Error loading machines:", err);
+            }
+        }
+
+        async function submitNewMachine(e) {
+            e.preventDefault();
+            const machineName = document.getElementById('new_machine_name').value.trim();
+            if (!machineName) return;
+
+            const formData = new FormData();
+            formData.append('machine_name', machineName);
+
+            try {
+                const res = await fetch(`${API_URL}/api/machines/add`, {
+                    method: 'POST',
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' },
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    alert("✅ " + data.message);
+                    document.getElementById('addMachineForm').reset();
+                    bootstrap.Modal.getInstance(document.getElementById('addMachineModal')).hide();
+                    loadMachines();
+                } else {
+                    alert("❌ " + (data.detail || "Error adding machine"));
+                }
+            } catch (err) {
+                alert("❌ Unable to connect to server.");
+            }
+        }
+
+        async function submitProduction(e) {
+            e.preventDefault();
+
+            // ── Confirm before saving ────────────────────────────────────────
+            const machineName = document.getElementById('machine_name').value.trim();
+            const pipeSize = document.getElementById('pipe_size_input').value.trim();
+            const plannedVal = document.getElementById('planned_qty_input').value;
+            const unit = document.getElementById('bundle_unit').value;
+            const confirmMsg =
+                `✅ Entry confirm karo:\n\n` +
+                `🔧 Machine : ${machineName || '(not set)'}\n` +
+                `📦 Pipe    : ${pipeSize || '(not set)'}\n` +
+                `📊 Qty     : ${plannedVal} ${unit}\n\n` +
+                `Save karvanu chhe? (Enter key thi nahi, OK thi j save thase)`;
+            if (!window.confirm(confirmMsg)) return;
+
+            const selectedSize = document.getElementById('pipe_size_input').value.trim();
+            if (!selectedSize) {
+                alert("⚠️ Please select or type a Pipe Size / Spec!");
                 return;
             }
 
-            tbody.innerHTML = data.logs.map(log => `
-                <tr>
-                    <td><span class="badge bg-dark font-monospace">${log.qr_code}</span></td>
-                    <td><span class="fw-bold">${log.machine_name}</span></td>
-                    <td>${log.pipe_type} (${log.pipe_size})</td>
-                    <td><span class="badge bg-success">${log.coil_length_meters} Mtr</span></td>
-                    <td><span class="badge bg-info text-dark">${log.coil_weight_kg} KG</span></td>
-                    <td><small class="text-muted">${log.shift_operator || 'N/A'}</small></td>
-                    <td><small class="text-muted">${new Date(log.created_at).toLocaleString()}</small></td>
-                    <td>
-                        <button onclick='reprintLogLabel(${JSON.stringify(log)})' class="btn btn-sm btn-outline-primary fw-bold">
-                            <i class="bi bi-printer me-1"></i> Print
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        } catch (err) {
-            console.error("Error loading production logs:", err);
+            const packagingType = document.getElementById('packaging_type').value;
+            let plannedQty, actualQty;
+
+            if (packagingType === 'bundle') {
+                const itemsPerBundle = parseFloat(document.getElementById('items_per_bundle').value) || 1;
+                const numBundles = parseFloat(document.getElementById('num_bundles').value) || 1;
+                plannedQty = itemsPerBundle * numBundles;
+                actualQty = plannedQty; // For bundles, actual is same as planned
+            } else {
+                plannedQty = parseFloat(document.getElementById('planned_qty_input').value);
+                if (!plannedQty || plannedQty <= 0) {
+                    alert("⚠️ Please enter a valid Planned Target Quantity!");
+                    return;
+                }
+                actualQty = parseFloat(document.getElementById('actual_qty_input').value || plannedQty);
+            }
+
+            const bundleUnit = document.getElementById('bundle_unit').value;
+
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Saving to Queue...`;
+
+            const data = {
+                production_date: document.getElementById('production_date').value,
+                machine_name: document.getElementById('machine_name').value,
+                pipe_type: document.getElementById('pipe_type').value,
+                pipe_size: selectedSize,
+                planned_qty: plannedQty,
+                actual_qty: actualQty,
+                coil_length_meters: actualQty,
+                coil_weight_kg: parseFloat(document.getElementById('coil_weight_kg').value || 0),
+                raw_material_used_kg: parseFloat(document.getElementById('raw_material_used_kg').value || 0),
+                shift_operator: document.getElementById('shift_operator').value || "Operator",
+                bundle_unit: bundleUnit,
+                status: "PENDING_APPROVAL"
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/api/production/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Bypass-Tunnel-Reminder': 'true'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+                if (res.ok) {
+                    if (result.is_approved && result.qr_code) {
+                        triggerLabelPrint(data, result.qr_code);
+                        alert("✅ Production approved and added to Store Inventory!");
+                    } else {
+                        alert("✅ " + (result.message || "Production entry logged in Pending Approval Queue!"));
+                    }
+                    document.getElementById('prodForm').reset();
+                    updatePipeSizesAndPresets();
+                    refreshAllProductionData();
+                } else {
+                    alert("❌ Error: " + (result.detail || "Could not save production entry."));
+                }
+            } catch (err) {
+                console.error("Production save error:", err);
+                alert("❌ Network/Server Error: " + (err.message || "Unable to connect to server."));
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
         }
-    }
 
-    function reprintLogLabel(log) {
-        triggerLabelPrint({
-            pipe_type: log.pipe_type,
-            machine_name: log.machine_name,
-            pipe_size: log.pipe_size,
-            shift_operator: log.shift_operator,
-            coil_length_meters: log.coil_length_meters,
-            coil_weight_kg: log.coil_weight_kg
-        }, log.qr_code);
-    }
+        function triggerLabelPrint(data, qrCodeText) {
+            document.getElementById('lbl_type').innerText = data.pipe_type || '';
+            document.getElementById('lbl_machine').innerText = data.machine_name || '';
+            document.getElementById('lbl_size').innerText = data.pipe_size || '';
+            document.getElementById('lbl_operator').innerText = data.shift_operator || '';
+            document.getElementById('lbl_length').innerText = data.actual_qty || data.coil_length_meters || data.planned_qty || '0';
+            const unitEl = document.getElementById('lbl_unit');
+            if (unitEl) unitEl.innerText = data.bundle_unit || 'MTR';
+            const pkgEl = document.getElementById('lbl_package');
+            if (pkgEl) pkgEl.innerText = `1 ${data.bundle_unit === 'PCS' ? 'Bundle' : 'Coil'}`;
+            document.getElementById('lbl_qr_text').innerText = qrCodeText || '';
 
-    // 🌓 Global Dark / Light Theme Management
-    function applyGlobalTheme() {
-        const theme = localStorage.getItem('theme_preference') || 'dark';
-        document.documentElement.setAttribute('data-theme', theme);
-        updateThemeBtn(theme);
-    }
-    function toggleGlobalTheme() {
-        const current = document.documentElement.getAttribute('data-theme') || 'dark';
-        const next = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('theme_preference', next);
-        updateThemeBtn(next);
-    }
-    function updateThemeBtn(theme) {
-        const btn = document.getElementById('globalThemeBtn');
-        const icon = document.getElementById('themeIcon');
-        const text = document.getElementById('themeText');
-        if (!btn || !icon || !text) return;
-        if (theme === 'light') {
-            icon.className = 'bi bi-sun-fill text-warning';
-            text.innerText = 'Light Mode';
-            btn.className = 'btn btn-light text-dark border-secondary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-        } else {
-            icon.className = 'bi bi-moon-stars-fill text-warning';
-            text.innerText = 'Dark Mode';
-            btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+            const now = new Date();
+            const formattedDate = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('lbl_date').innerText = formattedDate;
+
+            document.getElementById('qrcode').innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), {
+                text: qrCodeText,
+                width: 120,
+                height: 120,
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            const printArea = document.getElementById('label-print-area');
+            printArea.style.display = "block";
+
+            // Allow QRCode to paint before opening the print dialog.
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                setTimeout(() => window.print(), 300);
+            }));
         }
-    }
 
-    applyGlobalTheme();
-    loadMachines();
-    loadProductionLogs();
-</script>
+        window.addEventListener('afterprint', () => {
+            document.getElementById('label-print-area').style.display = 'none';
+        });
 
-<script>
-// Global Theme Switcher Logic
-function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('user-theme', newTheme);
-    localStorage.setItem('theme_preference', newTheme);
-    updateThemeBtnUI(newTheme);
-}
+        // 🔄 Refresh All Dashboard Data
+        function refreshAllProductionData() {
+            loadPlanVsActualSummary();
+            loadPendingProduction();
+            loadProductionLogs();
+        }
 
-function updateThemeBtnUI(theme) {
-    const btn = document.getElementById('globalThemeBtn');
-    const icon = document.getElementById('themeIcon');
-    const text = document.getElementById('themeText');
-    if (!btn) return;
-    
-    if (theme === 'dark') {
-        if (icon) icon.className = 'bi bi-moon-stars-fill text-warning';
-        if (text) text.innerText = 'Dark';
-        btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-    } else {
-        if (icon) icon.className = 'bi bi-sun-fill text-warning';
-        if (text) text.innerText = 'Light';
-        btn.className = 'btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-    }
-}
+        // 📊 Load Plan vs Actual KPIs
+        async function loadPlanVsActualSummary() {
+            try {
+                const res = await fetch(`${API_URL}/api/production/plan-vs-actual-summary?_t=${Date.now()}`, {
+                    headers: { 'Bypass-Tunnel-Reminder': 'true', 'Cache-Control': 'no-cache' }
+                });
+                const data = await res.json();
+                if (data.summary) {
+                    const s = data.summary;
+                    const plannedEl = document.getElementById('kpi_planned');
+                    const actualEl = document.getElementById('kpi_actual');
+                    const pendingEl = document.getElementById('kpi_pending');
+                    const badgeEl = document.getElementById('pendingBadge');
+                    const achEl = document.getElementById('kpi_achievement');
 
-// Global Theme Auto-Apply Functions
-function toggleGlobalTheme() { toggleTheme(); }
-function applyGlobalTheme() {
-    const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeBtnUI(savedTheme);
-}
+                    if (plannedEl) plannedEl.innerText = Number(s.total_planned_qty || 0).toLocaleString();
+                    if (actualEl) actualEl.innerText = Number(s.total_actual_qty || 0).toLocaleString();
+                    if (pendingEl) pendingEl.innerText = Number(s.pending_count || 0).toLocaleString();
+                    if (badgeEl) badgeEl.innerText = Number(s.pending_count || 0).toString();
+                    if (achEl) achEl.innerText = (s.achievement_rate !== undefined ? s.achievement_rate : 100) + '%';
+                }
+            } catch (err) {
+                console.error("Error loading summary KPIs:", err);
+            }
+        }
 
-// Page Load Auto-Apply Saved Theme
-(function () {
-    const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    document.addEventListener('DOMContentLoaded', function () {
-        updateThemeBtnUI(savedTheme);
-    });
-})();
-</script>
+        // ⏳ Load Pending Production Queue (Plan vs Actual)
+        async function loadPendingProduction() {
+            try {
+                const res = await fetch(`${API_URL}/api/production/pending?_t=${Date.now()}`, {
+                    headers: { 'Bypass-Tunnel-Reminder': 'true', 'Cache-Control': 'no-cache' }
+                });
+                const data = await res.json();
+                const tbody = document.getElementById('pendingApprovalTable');
 
+                if (!data.pending || data.pending.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="10" class="text-muted py-4"><i class="bi bi-check-circle-fill text-success me-2"></i> No pending approvals. All production entries are up to date!</td></tr>`;
+                    document.getElementById('pendingBadge').innerText = '0';
+                    return;
+                }
+
+                document.getElementById('pendingBadge').innerText = data.pending.length;
+
+                tbody.innerHTML = data.pending.map(item => {
+                    const planned = parseFloat(item.planned_qty || item.coil_length_meters || 0);
+                    const actual = parseFloat(item.actual_qty || planned);
+                    const diff = actual - planned;
+                    const diffBadge = diff === 0 ? `<span class="badge bg-secondary">0 Exact</span>` :
+                        diff > 0 ? `<span class="badge bg-success">+${diff}</span>` :
+                            `<span class="badge bg-danger">${diff}</span>`;
+                    const unit = item.bundle_unit || 'MTR';
+
+                    return `
+                        <tr>
+                            <td><span class="badge bg-secondary font-monospace">#${item.id}</span></td>
+                            <td><span class="fw-bold text-dark">${item.machine_name}</span></td>
+                            <td><small class="text-muted fw-bold">${new Date(item.production_date || item.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</small></td>
+                            <td><span class="fw-semibold">${item.pipe_type}</span><br><small class="text-muted">${item.pipe_size}</small></td>
+                            <td><span class="badge bg-primary fs-6">${planned} ${unit}</span></td>
+                            <td style="max-width: 140px;">
+                                <div class="input-group input-group-sm">
+                                    <input type="number" step="any" class="form-control fw-bold text-success text-center" id="actual_inline_${item.id}" value="${actual}">
+                                    <span class="input-group-text">${unit}</span>
+                                </div>
+                            </td>
+                            <td>${diffBadge}</td>
+                            <td><small class="text-muted">${item.shift_operator || 'N/A'}</small></td>
+                            <td><small class="text-muted">${new Date(item.created_at).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}</small></td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-success fw-bold px-3" onclick="approvePendingProduction(${item.id})">
+                                        <i class="bi bi-check-lg me-1"></i> Approve & Store
+                                    </button>
+                                    <button class="btn btn-outline-danger" title="Delete / Reject Entry" onclick="deleteProductionEntry(${item.id})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error("Error loading pending production:", err);
+            }
+        }
+
+        // ✅ Approve Pending Production Entry
+        async function approvePendingProduction(logId) {
+            const actualInput = document.getElementById(`actual_inline_${logId}`);
+            const finalActualQty = actualInput ? parseFloat(actualInput.value) : null;
+
+            if (!confirm(`Are you sure you want to approve Production Entry #${logId} (Actual: ${finalActualQty}) and add it into Store Inventory?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/api/production/approve/${logId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Bypass-Tunnel-Reminder': 'true'
+                    },
+                    body: JSON.stringify({
+                        actual_qty: finalActualQty,
+                        approved_by: "Production Incharge"
+                    })
+                });
+
+                const result = await res.json();
+                if (res.ok) {
+                    alert("✅ " + result.message);
+                    if (result.qr_code && result.log) {
+                        triggerLabelPrint(result.log, result.qr_code);
+                    }
+                    refreshAllProductionData();
+                } else {
+                    alert("❌ Error: " + (result.detail || "Approval failed."));
+                }
+            } catch (err) {
+                console.error("Approval error:", err);
+                alert("❌ Server Error: Unable to approve production.");
+            }
+        }
+
+        // 🗑️ Delete Production Entry (Instant Refresh & Anti-Cache)
+        async function deleteProductionEntry(logId) {
+            if (!confirm(`Are you sure you want to permanently delete Production Entry #${logId}?`)) return;
+
+            try {
+                const res = await fetch(`${API_URL}/api/production/delete/${logId}`, {
+                    method: 'DELETE',
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    alert("✅ " + (result.message || "Entry deleted successfully."));
+                    refreshAllProductionData();
+                } else {
+                    alert("❌ " + (result.detail || "Error deleting production entry."));
+                    refreshAllProductionData();
+                }
+            } catch (err) {
+                alert("❌ Error deleting production entry.");
+            }
+        }
+
+        // 📦 Load Approved Production History
+        async function loadProductionLogs() {
+            try {
+                const res = await fetch(`${API_URL}/api/production/logs?status=APPROVED&_t=${Date.now()}`, {
+                    headers: { 'Bypass-Tunnel-Reminder': 'true', 'Cache-Control': 'no-cache' }
+                });
+                const data = await res.json();
+                const tbody = document.getElementById('prodHistoryTable');
+
+                if (!data.logs || data.logs.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9" class="text-muted py-4"><i class="bi bi-info-circle me-1"></i> No approved production entries found yet.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = data.logs.map(log => `
+                    <tr>
+                        <td><span class="badge bg-dark font-monospace">${log.qr_code || 'N/A'}</span></td>
+                        <td><small class="text-muted fw-bold">${new Date(log.production_date || log.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</small></td>
+                        <td><span class="fw-bold">${log.machine_name}</span></td>
+                        <td>${log.pipe_type} (${log.pipe_size})</td>
+                        <td><small class="text-muted">${log.planned_qty || log.coil_length_meters || '-'} ${log.bundle_unit || 'MTR'}</small></td>
+                        <td><span class="badge bg-success fs-6">${log.actual_qty || log.coil_length_meters || 0} ${log.bundle_unit || 'MTR'}</span></td>
+                        <td><small class="text-muted">${log.shift_operator || 'N/A'}</small></td>
+                        <td><small class="text-muted">${log.approved_at ? new Date(log.approved_at).toLocaleString() : new Date(log.created_at).toLocaleString()}</small></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button onclick='reprintLogLabel(${JSON.stringify(log)})' class="btn btn-outline-primary fw-bold" title="Print TSC Label">
+                                    <i class="bi bi-printer me-1"></i> Print
+                                </button>
+                                <button onclick="deleteProductionEntry(${log.id})" class="btn btn-outline-danger" title="Delete Entry">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error("Error loading production logs:", err);
+            }
+        }
+
+        function reprintLogLabel(log) {
+            triggerLabelPrint({
+                pipe_type: log.pipe_type,
+                machine_name: log.machine_name,
+                pipe_size: log.pipe_size,
+                shift_operator: log.shift_operator,
+                actual_qty: log.actual_qty || log.coil_length_meters,
+                bundle_unit: log.bundle_unit || 'MTR'
+            }, log.qr_code);
+        }
+
+        // Initialize on load
+        loadMachines();
+        refreshAllProductionData();
+    </script>
+
+    <script>
+        // Global Theme Switcher Logic
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('user-theme', newTheme);
+            localStorage.setItem('theme_preference', newTheme);
+            updateThemeBtnUI(newTheme);
+        }
+
+        function updateThemeBtnUI(theme) {
+            const btn = document.getElementById('globalThemeBtn');
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (!btn) return;
+
+            if (theme === 'dark') {
+                if (icon) icon.className = 'bi bi-moon-stars-fill text-warning';
+                if (text) text.innerText = 'Dark';
+                btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+            } else {
+                if (icon) icon.className = 'bi bi-sun-fill text-warning';
+                if (text) text.innerText = 'Light';
+                btn.className = 'btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+            }
+        }
+
+        // Global Theme Auto-Apply Functions
+        function toggleGlobalTheme() { toggleTheme(); }
+        function applyGlobalTheme() {
+            const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeBtnUI(savedTheme);
+        }
+
+        // Page Load Auto-Apply Saved Theme
+        (function () {
+            const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.addEventListener('DOMContentLoaded', function () {
+                updateThemeBtnUI(savedTheme);
+            });
+        })();
+    </script>
+
+    <script src="/static/js/english-ui.js"></script>
+    <script src="/static/js/page-loader.js"></script>
 </body>
+
 </html>

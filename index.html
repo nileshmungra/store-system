@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="gu">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -17,77 +17,151 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- Styles from production.html -->
     <style>
-        /* 🖨️ Single QR Print Styling (A4 or Label Printer) */
-        @media print {
-            body * {
-                visibility: hidden !important;
-            }
+        /* 🖨️ Improved 100x100 MM TSC Label Print CSS */
+        .sticker-box {
+            width: 100%;
+            height: 100%;
+            border: 3px solid #000;
+            padding: 3.5mm;
+            margin: 0;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            color: #000;
+        }
 
-            #single-qr-print-area,
-            #single-qr-print-area * {
-                visibility: visible !important;
-            }
+        /* Header Section */
+        .sticker-header {
+            text-align: center;
+            border-bottom: 3px solid #000;
+            padding-bottom: 2.5mm;
+        }
 
-            #single-qr-print-area {
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                width: 100% !important;
-                /* Adjust for A4 or label */
-                height: auto !important;
-                display: block !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
+        .company-title {
+            font-size: 18pt;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
 
-            .single-qr-label-box {
-                width: 96mm;
-                /* Standard label width */
-                height: 96mm;
-                /* Standard label height */
-                border: 1px solid #000000;
-                padding: 5mm;
-                margin: 0;
-                /* No margin for printing */
-                background: #ffffff;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                box-sizing: border-box;
-                font-family: 'Poppins', 'Plus Jakarta Sans', sans-serif;
-                color: #000000;
-            }
+        /* Details Table Grid */
+        .info-grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            margin-top: 4px;
+        }
 
-            @page {
-                size: 100mm 100mm;
-                /* For 100x100mm label printer */
-                margin: 0;
-            }
+        .company-sub {
+            font-size: 7pt;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
 
-            /* Fallback for A4 printing if label size not supported */
-            @media print and (min-width: 210mm) {
+        .sticker-details {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5mm;
+            margin: 2.5mm 0;
+            flex-grow: 1;
+        }
 
-                /* A4 width */
-                @page {
-                    size: A4 portrait;
-                    margin: 10mm;
-                }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10pt;
+            border-bottom: 1.5px dashed #999999;
+            padding-bottom: 1.5mm;
+        }
 
-                .single-qr-label-box {
-                    width: 90mm;
-                    /* Smaller for A4 layout */
-                    height: auto;
-                    /* Auto height for content */
-                    border: 1px solid #ccc;
-                    margin: 5mm;
-                    /* Some margin on A4 */
-                    box-shadow: none;
-                }
-            }
+        .detail-label {
+            font-weight: 700;
+            color: #222222;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            margin-right: 10px;
+        }
 
-            .no-print {
-                display: none !important;
-            }
+        .detail-value {
+            font-weight: 800;
+            color: #000000;
+            text-align: right;
+        }
+
+        .detail-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5mm;
+            margin: 2.5mm 0;
+        }
+
+        .detail-box {
+            border: 2px solid #000000;
+            border-radius: 6px;
+            padding: 1.5mm;
+            text-align: center;
+        }
+
+        .box-label {
+            display: block;
+            font-size: 8pt;
+            font-weight: 800;
+            color: #333333;
+            text-transform: uppercase;
+        }
+
+        .box-value {
+            display: block;
+            font-size: 16pt;
+            font-weight: 900;
+            color: #000000;
+        }
+
+        .sticker-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 3px solid #000000;
+            padding-top: 2.5mm;
+        }
+
+        .qr-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .qr-label {
+            font-size: 7.5pt;
+            font-weight: 800;
+            color: #444444;
+        }
+
+        .qr-code-text {
+            font-size: 12pt;
+            font-weight: 900;
+            color: #000000;
+            letter-spacing: 0.5px;
+            font-family: monospace;
+        }
+
+        .qr-container {
+            width: 22mm;
+            height: 22mm;
+            box-sizing: border-box;
+            flex: 0 0 22mm;
+        }
+
+        .qr-container canvas,
+        .qr-container img {
+            display: block;
+            width: 20mm !important;
+            height: 20mm !important;
         }
 
         .single-qr-label-box {
@@ -103,52 +177,61 @@
         }
     </style>
     <style>
-        /* NEW: Bulk QR Print Styling */
+        /* Consolidated Print Styles */
         @media print {
+
+            body.print-sticker,
+            body.print-single {
+                width: 100mm !important;
+                height: 100mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+
             body * {
                 visibility: hidden !important;
             }
 
-            /* Target the container for search results */
-            #search-results-area,
-            #search-results-area * {
+            .no-print {
+                display: none !important;
+            }
+
+            /* --- Bulk QR Print (Search Results) --- */
+            .print-bulk #search-results-area,
+            .print-bulk #search-results-area * {
                 visibility: visible !important;
             }
 
-            #search-results-area {
+            .print-bulk #search-results-area {
                 position: absolute !important;
                 left: 0 !important;
                 top: 0 !important;
                 width: 100% !important;
                 padding: 10mm !important;
-                /* A4 Margin */
                 background: #fff !important;
             }
 
-            /* Target the row inside search-results-area */
-            #search-results-area .row {
+            .print-bulk #search-results-area .row {
                 display: flex !important;
                 flex-wrap: wrap !important;
                 justify-content: flex-start !important;
                 gap: 10mm 5mm !important;
-                /* Row and column gap */
                 margin: 0 !important;
             }
 
-            /* Target the column wrapper */
-            #search-results-area .qr-card-printable {
+            .print-bulk #search-results-area .qr-card-printable {
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
                 flex: 0 0 48% !important;
-                /* Two columns per row */
+                /* Two columns */
                 max-width: 48% !important;
                 width: 48% !important;
                 padding: 0 !important;
                 margin: 0 !important;
             }
 
-            /* This is the inner card */
-            #search-results-area .glass-card {
+            .print-bulk #search-results-area .glass-card {
                 border: 1px solid #000 !important;
                 padding: 8px !important;
                 color: #000 !important;
@@ -157,22 +240,67 @@
                 height: 100% !important;
             }
 
-            #search-results-area .text-indigo,
-            #search-results-area .text-muted,
-            #search-results-area .text-slate-800,
-            #search-results-area .fw-bold {
+            .print-bulk #search-results-area .text-indigo,
+            .print-bulk #search-results-area .text-muted,
+            .print-bulk #search-results-area .text-slate-800,
+            .print-bulk #search-results-area .fw-bold {
                 color: #000 !important;
             }
 
-            #search-results-area .badge {
+            .print-bulk #search-results-area .badge {
                 background-color: #ccc !important;
                 color: #000 !important;
                 border: 1px solid #999 !important;
             }
 
-            #search-results-area .btn {
+            .print-bulk #search-results-area .btn {
                 display: none !important;
-                /* Hide buttons in print */
+                /* Hide buttons */
+            }
+
+            /* --- Single QR Print --- */
+            .print-single #single-qr-print-area,
+            .print-single #single-qr-print-area * {
+                visibility: visible !important;
+            }
+
+            .print-single #single-qr-print-area {
+                position: fixed !important;
+                left: 3mm !important;
+                top: 3mm !important;
+                width: 94mm !important;
+                height: 94mm !important;
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+            }
+
+            /* --- Sticker Label Print (from Production/Search) --- */
+            .print-sticker #label-print-area,
+            .print-sticker #label-print-area * {
+                visibility: visible !important;
+            }
+
+            .print-sticker #label-print-area {
+                position: fixed !important;
+                left: 3mm !important;
+                top: 3mm !important;
+                width: 94mm !important;
+                height: 94mm !important;
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            @page {
+                size: 100mm 100mm;
+                margin: 0;
             }
         }
     </style>
@@ -352,9 +480,17 @@
     </style>
 
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/page-loader.css">
 </head>
 
 <body>
+
+    <!-- 📦 Global Page Loader Elements -->
+    <div id="page-progress-bar"></div>
+    <div id="page-loader-overlay">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
@@ -376,10 +512,10 @@
                     <div class="nav-item dropdown">
                         <a class="nav-pill-custom dropdown-toggle active" href="#" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-box-seam me-1 text-info"></i> આવક અને ઉત્પાદન
+                            <i class="bi bi-box-seam me-1 text-info"></i> Inward & Production
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                            <li><a class="dropdown-item dropdown-item-custom" href="/dashboard"><i
+                            <li><a class="dropdown-item dropdown-item-custom" href="/inward-page"><i
                                         class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
                             <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i
                                         class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
@@ -390,7 +526,7 @@
                     <div class="nav-item dropdown">
                         <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            <i class="bi bi-truck me-1 text-success"></i> ડિસ્પેચ અને સ્કેનિંગ
+                            <i class="bi bi-truck me-1 text-success"></i> Dispatch & Scanning
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
                             <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i
@@ -407,7 +543,7 @@
                     <div class="nav-item dropdown">
                         <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            <i class="bi bi-sliders me-1 text-warning"></i> માસ્ટર કંટ્રોલ
+                            <i class="bi bi-sliders me-1 text-warning"></i> Master Control
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
                             <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i
@@ -421,7 +557,7 @@
                     <div class="nav-item dropdown">
                         <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            <i class="bi bi-bar-chart-line me-1 text-primary"></i> રિપોર્ટ્સ અને લોગ
+                            <i class="bi bi-bar-chart-line me-1 text-primary"></i> Reports & Logs
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
                             <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i
@@ -447,36 +583,34 @@
         <!-- Header Title -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <div>
-                <h3 class="fw-extrabold text-slate-800 m-0"><i class="bi bi-box-seam text-indigo me-2"></i> માલની આવક
-                    (Material Inward)</h3>
-                <p class="text-muted small m-0 mt-1">નવા માલની એન્ટ્રી કરી QR કોડ જનરેટ કરો.</p>
-            </div>
-            <!-- Toggle Switch -->
-            <div class="form-check form-switch fs-5">
-                <input class="form-check-input" type="checkbox" role="switch" id="inwardTypeToggle">
-                <label class="form-check-label fw-bold" for="inwardTypeToggle" id="toggleLabel">Own
-                    Manufacturing</label>
+                <h3 class="fw-extrabold text-slate-800 m-0"><i class="bi bi-box-seam text-indigo me-2"></i> Material Inward & Receipt</h3>
+                <p class="text-muted small m-0 mt-1">Receive new inventory items and generate QR code batch labels.</p>
             </div>
         </div>
 
         <!-- Main Form Card -->
         <div class="card glass-card mb-4 overflow-hidden">
             <div class="card-header-primary">
-                <h5 class="mb-0 fw-bold" id="form-title"><i class="bi bi-truck me-2"></i> સપ્લાયર પાસેથી આવેલ માલ
-                    (Supplier Inward)</h5>
+                <h5 class="mb-10 fw-bold" id="form-title"><i class="bi bi-truck me-2"></i> Supplier Material Inward</h5>
             </div>
             <div class="card-body p-4">
                 <!-- Form Container -->
                 <div id="form-container">
                     <!-- Supplier Inward Form -->
-                    <form id="supplier-inward-form" onsubmit="submitForm(event)">
+                    <form id="supplier-inward-form" onsubmit="submitSupplierInward(event)">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="input-label-custom">Item નું નામ (ટાઈપ કરીને શોધો) *</label>
+                                <label class="input-label-custom">Item Name (Search or Type) *</label>
                                 <input type="text" id="item_name" list="item_list"
                                     class="form-control form-control-custom"
-                                    placeholder="આઈટમનું નામ ટાઈપ કે સિલેક્ટ કરો..." required autocomplete="off">
+                                    placeholder="Search or enter item name..." required autocomplete="off">
                                 <datalist id="item_list"></datalist>
+                                <div class="form-check form-switch mt-1">
+                                    <input class="form-check-input" type="checkbox" id="showOwnProductionItemsToggle">
+                                    <label class="form-check-label small text-muted" for="showOwnProductionItemsToggle">
+                                        Show Own Production Items
+                                    </label>
+                                </div>
                             </div>
                             <div class="col-md-3">
                                 <label class="input-label-custom">Total Boxes *</label>
@@ -510,62 +644,6 @@
                             </div>
                         </div>
                     </form>
-
-                    <!-- Own Manufacturing Form -->
-                    <form id="production-inward-form" onsubmit="submitForm(event)" style="display: none;">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="input-label-custom">Select Machine (મશીન નામ) *</label>
-                                <input type="text" id="machine_name" list="machine_list"
-                                    class="form-control form-control-custom"
-                                    placeholder="🔍 મશીન સિલેક્ટ કે ટાઈપ કરો..." required autocomplete="off">
-                                <datalist id="machine_list"></datalist>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="input-label-custom">Pipe Type (પાઈપનો પ્રકાર) *</label>
-                                <select id="pipe_type" class="form-select form-select-custom"
-                                    onchange="updatePipeSizes()" required>
-                                    <option value="Emitting Pipe">Emitting Pipe (Drip)</option>
-                                    <option value="HDPE Pipe">HDPE Pipe</option>
-                                    <option value="PVC Pipe">PVC Pipe</option>
-                                    <option value="Lateral Pipe">Lateral Pipe</option>
-                                    <option value="Column Pipe">Column Pipe</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="input-label-custom">Pipe Size / Full Item Name *</label>
-                                <input type="text" id="pipe_size_input" list="pipe_size_datalist"
-                                    class="form-control form-control-custom"
-                                    placeholder="🔍 સાઈઝ અથવા આઈટમ સર્ચ / ટાઈપ કરો..." required autocomplete="off">
-                                <datalist id="pipe_size_datalist"></datalist>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="input-label-custom">Coil Length (મીટરમાં) *</label>
-                                <input type="number" id="coil_length_meters" class="form-control form-control-custom"
-                                    placeholder="ઉદા. 400" min="1" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="input-label-custom">Coil Weight (KG માં) *</label>
-                                <input type="number" step="0.01" id="coil_weight_kg"
-                                    class="form-control form-control-custom" placeholder="ઉદા. 9.50" min="0.1" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="input-label-custom">Raw Material Used (KG)</label>
-                                <input type="number" step="0.01" id="raw_material_used_kg"
-                                    class="form-control form-control-custom" placeholder="ઉદા. 9.80">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="input-label-custom">Shift / Operator Name</label>
-                                <input type="text" id="shift_operator" class="form-control form-control-custom"
-                                    placeholder="ઉદા. Ramesh Bhai (Shift A)">
-                            </div>
-                            <div class="col-md-6 d-flex align-items-end">
-                                <button type="submit" id="saveProdBtn" class="btn btn-gradient-indigo w-100">
-                                    <i class="bi bi-printer-fill me-2"></i> 💾 Save & Print Label Sticker
-                                </button>
-                            </div>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>
@@ -578,7 +656,7 @@
             <div
                 class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="m-0 fw-bold">
-                    <i class="bi bi-speedometer2 text-warning me-2"></i> DP Plan રિયલ-ટાઇમ ડિસ્પેચ પ્રોગ્રેસ (Live DP
+                    <i class="bi bi-speedometer2 text-warning me-2"></i> Live Dispatch Plan (DP) Tracking & Progress
                     Progress)
                 </h5>
                 <div class="d-flex align-items-center gap-2">
@@ -592,7 +670,7 @@
             <div class="card-body p-4">
                 <div id="dp-plans-loading" class="text-center py-4">
                     <div class="spinner-border text-primary" role="status"></div>
-                    <p class="text-muted small mt-2">DP Plan પ્રોગ્રેસ લોડ થઈ રહ્યો છે...</p>
+                    <p class="text-muted small mt-2">Loading Dispatch Plan progress...</p>
                 </div>
 
                 <div id="dp-plans-container" class="row g-3">
@@ -606,7 +684,7 @@
             <div
                 class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="m-0 fw-bold">
-                    <i class="bi bi-box-seam-fill text-warning me-2"></i> સંયુક્ત Store Kit QR સ્ટીકર જનરેટર (Generate
+                    <i class="bi bi-box-seam-fill text-warning me-2"></i> Combined Store Kit QR Sticker Generator (Generate
                     Store Kit QR)
                 </h5>
                 <span class="badge bg-warning text-dark fw-bold px-2.5 py-1.5">SO Fittings Kit Generator</span>
@@ -614,22 +692,22 @@
             <div class="card-body p-4">
                 <div class="row g-3 align-items-end mb-3">
                     <div class="col-md-5">
-                        <label class="input-label-custom">Sales Order (SO No.) સિલેક્ટ કરો *</label>
+                        <label class="input-label-custom">Select Sales Order (SO No.) *</label>
                         <select id="store_kit_so_select" class="form-select form-control-custom"
                             onchange="loadStoreKitSoItems()">
-                            <option value="">-- SO No. પસંદ કરો --</option>
+                            <option value="">-- Select SO No. --</option>
                         </select>
                     </div>
                     <div class="col-md-4">
                         <label class="input-label-custom">Kit Code (Auto / Custom)</label>
                         <input type="text" id="store_kit_code_input"
                             class="form-control form-control-custom font-monospace"
-                            placeholder="ઉદા. KIT-SO-4301-FITTINGS">
+                            placeholder="e.g. KIT-SO-4301-FITTINGS">
                     </div>
                     <div class="col-md-3">
                         <button onclick="generateAndPrintStoreKitQr()"
                             class="btn btn-warning text-dark fw-bold w-100 py-2">
-                            <i class="bi bi-qr-code-scan me-1"></i> Print Kit QR (૧-ક્લિક)
+                            <i class="bi bi-qr-code-scan me-1"></i> Print Kit QR (1-Click)
                         </button>
                     </div>
                 </div>
@@ -638,8 +716,7 @@
                 <div id="store-kit-preview-area" class="mt-3" style="display:none;">
                     <div class="p-3 bg-light rounded-3 border">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <strong class="text-dark small"><i class="bi bi-list-stars me-1 text-primary"></i> આ SO ના
-                                તમામ ફિટિંગ્સ (Store Kit Items Preview):</strong>
+                            <strong class="text-dark small"><i class="bi bi-list-stars me-1 text-primary"></i> All Fittings for this SO (Store Kit Items Preview):</strong>
                             <span class="badge bg-dark font-monospace" id="store_kit_items_count_badge">0
                                 Fittings</span>
                         </div>
@@ -668,7 +745,7 @@
         <div class="card glass-card mt-4 overflow-hidden no-print">
             <div
                 class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h5 class="m-0 fw-bold"><i class="bi bi-search me-2 text-warning"></i> જૂના QR કોડ શોધો અને પ્રિન્ટ કરો
+                <h5 class="m-0 fw-bold"><i class="bi bi-search me-2 text-warning"></i> Search & Reprint QR Codes
                     (Search & Reprint)</h5>
             </div>
             <div class="card-body p-4">
@@ -676,16 +753,16 @@
                     <div class="col-md-4">
                         <label class="input-label-custom">Box ID / Coil Serial / Batch ID</label>
                         <input type="text" id="search_batch_input" class="form-control form-control-custom"
-                            placeholder="ઉદા. BOX-1-1 અથવા COIL-EMP-00001">
+                            placeholder="e.g. BOX-1-1 or COIL-EMP-00001">
                     </div>
                     <div class="col-md-3">
-                        <label class="input-label-custom">આઈટમ / પાઈપનું નામ</label>
+                        <label class="input-label-custom">Item / Pipe Name</label>
                         <input type="text" id="search_item_input" class="form-control form-control-custom"
-                            placeholder="ઉદા. HDPE Pipe અથવા PVC">
+                            placeholder="e.g. HDPE Pipe or PVC">
                     </div>
                     <div class="col-md-2">
                         <button onclick="searchOldQrs(true)" class="btn btn-gradient-indigo w-100">
-                            <i class="bi bi-search me-1"></i> શોધો (Search)
+                            <i class="bi bi-search me-1"></i> Search
                         </button>
                     </div>
                     <div class="col-md-3 text-end">
@@ -702,36 +779,55 @@
     <!-- Printable Sticker Area -->
     <div id="label-print-area" style="display:none; margin-top: 20px;">
         <div class="sticker-box">
-            <div class="header">
-                <div class="company-name">BHUMI POLYMERS</div>
+            <div class="sticker-header">
+                <div class="company-title">BHUMI POLYMERS</div>
+                <div class="company-sub">QUALITY EXTRUSION PIPING SYSTEM</div>
             </div>
-            <div class="info-grid">
-                <div><b>Pipe Type:</b> <span id="lbl_type"></span></div>
-                <div><b>Machine:</b> <span id="lbl_machine"></span></div>
-                <div><b>Spec/Size:</b> <span id="lbl_size"></span></div>
-                <div><b>Operator:</b> <span id="lbl_operator"></span></div>
-                <div><b>Length:</b> <span id="lbl_length" style="font-weight: 700;"></span> Mtr</div>
-                <div><b>Weight:</b> <span id="lbl_weight" style="font-weight: 700;"></span> KG</div>
-            </div>
-            <div class="qr-section">
-                <div>
-                    <div style="font-size: 8.5pt; color: #444; font-weight: 600;">Coil Serial No:</div>
-                    <div id="lbl_qr_text"
-                        style="font-size: 11pt; font-weight: 800; color: #000; letter-spacing: 0.5px;"></div>
+
+            <div class="sticker-details">
+                <div class="detail-row">
+                    <span class="detail-label">Machine No:</span>
+                    <span class="detail-value" id="lbl_machine"></span>
                 </div>
-                <div id="qrcode-sticker"></div>
+                <div class="detail-row">
+                    <span class="detail-label">Pipe Type:</span>
+                    <span class="detail-value" id="lbl_type"></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Pipe Size / Spec:</span>
+                    <span class="detail-value" id="lbl_size"></span>
+                </div>
+
+                <div class="detail-grid-2">
+                    <div class="detail-box">
+                        <span class="box-label">Length (Meter)</span>
+                        <span class="box-value"><span id="lbl_length"></span> MTR</span>
+                    </div>
+                    <div class="detail-box">
+                        <span class="box-label">Weight (KG)</span>
+                        <span class="box-value"><span id="lbl_weight"></span> KG</span>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Operator:</span>
+                    <span class="detail-value" id="lbl_operator"></span>
+                </div>
+            </div>
+
+            <div class="sticker-footer">
+                <div id="qrcode-sticker" class="qr-container" style="padding: 1mm; background: white;"></div>
+                <div class="qr-info" style="text-align: right;">
+                    <span class="qr-label">COIL SERIAL / QR NO:</span>
+                    <span class="qr-code-text" id="lbl_qr_text"></span>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         const API_URL = window.location.origin;
-        const inwardTypeToggle = document.getElementById('inwardTypeToggle');
         const supplierForm = document.getElementById('supplier-inward-form');
-        const productionForm = document.getElementById('production-inward-form');
-        const formTitle = document.getElementById('form-title');
-        const toggleLabel = document.getElementById('toggleLabel');
-
         const PIPE_SPECS = {
             "Emitting Pipe": ["16x2x30 Cl-2 Round", "16x2x40 Cl-2 Round", "16x2x50 Cl-2 Round", "16x2x20 Cl-2 Round", "12x2x30 Cl-2 Round", "16mm / 30cm / 2 LPH", "16mm / 40cm / 2 LPH", "Other / Custom"],
             "HDPE Pipe": ["20mm PN6", "25mm PN6", "32mm PN6", "40mm PN6", "50mm PN6", "63mm PN6", "75mm PN6", "90mm PN6", "110mm PN6", "63mm PN10", "75mm PN10", "90mm PN10", "110mm PN10", "Other / Custom"],
@@ -740,60 +836,15 @@
             "Column Pipe": ["1 inch (32mm) Column", "1.25 inch (40mm) Column", "1.5 inch (50mm) Column", "2 inch (63mm) Column", "2.5 inch (75mm) Column", "3 inch (90mm) Column", "Other / Custom"]
         };
 
-        async function updatePipeSizes() {
-            const pipeTypeElem = document.querySelector('#production-inward-form #pipe_type');
-            const datalist = document.getElementById('pipe_size_datalist');
-            const pipeInput = document.getElementById('pipe_size_input');
-            if (!pipeTypeElem || !datalist) return;
-
-            const pipeType = pipeTypeElem.value;
-            datalist.innerHTML = '';
-            if (pipeInput) pipeInput.value = '';
-
-            if (pipeType) {
-                try {
-                    const searchPrefix = pipeType.split(' ')[0]; // e.g. "Emitting", "HDPE", "PVC", "Lateral", "Column"
-                    const res = await fetch(`${API_URL}/api/items/list?search=${encodeURIComponent(searchPrefix)}&limit=1000`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
-                    const data = await res.json();
-                    if (data.items && data.items.length > 0) {
-                        const addedNames = new Set();
-                        data.items.forEach(item => {
-                            if (!addedNames.has(item.item_name)) {
-                                addedNames.add(item.item_name);
-                                datalist.innerHTML += `<option value="${item.item_name}">`;
-                            }
-                        });
-                    }
-                } catch (e) { console.error("Error fetching items for pipe specs:", e); }
-            }
-
-            (PIPE_SPECS[pipeType] || []).forEach(spec => {
-                if (spec !== "Other / Custom") {
-                    datalist.innerHTML += `<option value="${spec}">`;
-                }
-            });
-        }
-
-        inwardTypeToggle.addEventListener('change', function () {
-            if (this.checked) {
-                supplierForm.style.display = 'none';
-                productionForm.style.display = 'block';
-                formTitle.innerHTML = '<i class="bi bi-cpu-fill me-2"></i> પોતાની બનાવટ (Own Manufacturing)';
-                toggleLabel.textContent = 'Supplier Inward';
-                loadMachines();
-                updatePipeSizes();
-            } else {
-                supplierForm.style.display = 'block';
-                productionForm.style.display = 'none';
-                formTitle.innerHTML = '<i class="bi bi-truck me-2"></i> સપ્લાયર પાસેથી આવેલ માલ (Supplier Inward)';
-                toggleLabel.textContent = 'Own Manufacturing';
-                loadItems();
-            }
-        });
-
         async function loadItems() {
+            const showOwnToggle = document.getElementById('showOwnProductionItemsToggle');
+            const excludeOwn = showOwnToggle ? !showOwnToggle.checked : true;
+            let url = `${API_URL}/api/items/list?limit=0`; // limit=0 to get all items
+            if (excludeOwn) {
+                url += '&exclude_own=true';
+            }
             try {
-                const res = await fetch(`${API_URL}/api/items/list?exclude_own=true`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+                const res = await fetch(url, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
                 const data = await res.json();
                 const datalist = document.getElementById('item_list');
                 datalist.innerHTML = '';
@@ -801,26 +852,10 @@
             } catch (err) { console.error("Error loading items:", err); }
         }
 
-        async function loadMachines() {
-            try {
-                const res = await fetch(`${API_URL}/api/machines`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
-                const data = await res.json();
-                const datalist = document.getElementById('machine_list');
-                if (datalist) {
-                    datalist.innerHTML = '';
-                    if (data.machines) data.machines.forEach(m => datalist.innerHTML += `<option value="${m.machine_name}">`);
-                }
-            } catch (err) { console.error("Error loading machines:", err); }
-        }
-
-        async function submitForm(e) {
+        async function submitSupplierInward(e) {
             e.preventDefault();
-            inwardTypeToggle.checked ? await submitProduction() : await submitSupplierInward();
-        }
-
-        async function submitSupplierInward() {
             const itemNameInput = document.getElementById('item_name').value.trim();
-            if (!itemNameInput) { alert("⚠️ કૃપા કરીને આઈટમનું નામ ટાઈપ કે સિલેક્ટ કરો!"); return; }
+            if (!itemNameInput) { alert("⚠️ Please enter or select an item name!"); return; }
             const saveBtn = document.getElementById('saveBtn');
             saveBtn.disabled = true;
             const data = {
@@ -834,48 +869,13 @@
             try {
                 const res = await fetch(`${API_URL}/api/inward`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true' }, body: JSON.stringify(data) });
                 const result = await res.json();
-                if (res.ok) { alert(`✅ Batch #${result.batch_id} સફળતાપૂર્વક ઉમેરાઈ ગયું!`); supplierForm.reset(); }
+                if (res.ok) displayQrCodes(result.boxes || []);
+                if (res.ok) { alert(`✅ Batch #${result.batch_id} added successfully!`); supplierForm.reset(); }
             } catch (err) { alert("❌ Connection Error"); } finally { saveBtn.disabled = false; }
         }
 
-        async function submitProduction() {
-            const selectedSize = document.querySelector('#production-inward-form #pipe_size_input').value.trim();
-            if (!selectedSize) { alert("⚠️ કૃપા કરીને Pipe Size સિલેક્ટ અથવા ટાઈપ કરો!"); return; }
-            const saveBtn = document.getElementById('saveProdBtn');
-            saveBtn.disabled = true;
-            const data = {
-                machine_name: document.querySelector('#production-inward-form #machine_name').value.trim(),
-                pipe_type: document.querySelector('#production-inward-form #pipe_type').value,
-                pipe_size: selectedSize,
-                coil_length_meters: parseFloat(document.querySelector('#production-inward-form #coil_length_meters').value),
-                coil_weight_kg: parseFloat(document.querySelector('#production-inward-form #coil_weight_kg').value),
-                raw_material_used_kg: parseFloat(document.querySelector('#production-inward-form #raw_material_used_kg').value || 0),
-                shift_operator: document.querySelector('#production-inward-form #shift_operator').value || "Operator"
-            };
-            try {
-                const res = await fetch(`${API_URL}/api/production/add`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true' },
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                if (res.ok) {
-                    triggerLabelPrint(data, result.qr_code);
-                    productionForm.reset();
-                } else {
-                    alert("❌ Error: " + (result.detail || "પ્રોડક્શન એન્ટ્રી સેવ થઈ નથી."));
-                }
-            } catch (err) {
-                console.error("Production save error:", err);
-                alert("❌ Network/Server Error: " + (err.message || "Server સાથે કનેક્શન થઈ શક્યું નથી."));
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = '<i class="bi bi-printer-fill me-2"></i> 💾 Save & Print Label Sticker';
-            }
-        }
-
         function displayQrCodes(boxes) {
-            const qrArea = document.getElementById('qr-code-area');
+            const qrArea = document.getElementById('qr-container');
             qrArea.innerHTML = `
             <div class="card glass-card">
                 <div class="card-header bg-success text-white">
@@ -917,15 +917,16 @@
             document.getElementById('qrcode-sticker').innerHTML = "";
             new QRCode(document.getElementById("qrcode-sticker"), {
                 text: qrCodeText,
-                width: 70,
-                height: 70
+                width: 80,
+                height: 80,
+                correctLevel: QRCode.CorrectLevel.H
             });
 
+            document.body.classList.add('print-sticker');
             document.getElementById('label-print-area').style.display = "block";
 
             setTimeout(() => {
                 window.print();
-                document.getElementById('label-print-area').style.display = "none";
             }, 400);
         }
 
@@ -935,10 +936,10 @@
             const item_name = document.getElementById('search_item_input').value.trim();
             const resultsArea = document.getElementById('search-results-area');
 
-            resultsArea.innerHTML = `<div class="text-center py-3"><span class="spinner-border text-primary"></span> શોધાઈ રહ્યું છે...</div>`;
+            resultsArea.innerHTML = `<div class="text-center py-3"><span class="spinner-border text-primary"></span> Searching...</div>`;
 
             try {
-                let url = `${API_URL}/api/search-qrs?`;
+                let url = `${API_URL}/api/search-qrs?supplier_only=true&`;
                 if (q) url += `q=${encodeURIComponent(q)}&`;
                 if (item_name) url += `item_name=${encodeURIComponent(item_name)}&`;
 
@@ -946,13 +947,13 @@
                 const data = await res.json();
 
                 if (!data.boxes || data.boxes.length === 0) {
-                    resultsArea.innerHTML = `<div class="alert alert-warning text-center m-0">⚠️ આપેલા ફિલ્ટર મુજબ કોઈ પણ QR Code/Batch મળ્યા નથી.</div>`;
+                    resultsArea.innerHTML = `<div class="alert alert-warning text-center m-0">⚠️ No QR codes or batches found matching filter.</div>`;
                     return;
                 }
 
                 renderSearchResults(data.boxes);
             } catch (err) {
-                resultsArea.innerHTML = `<div class="alert alert-danger text-center m-0">❌ સર્ચ કરતી વખતે ભૂલ આવી છે.</div>`;
+                resultsArea.innerHTML = `<div class="alert alert-danger text-center m-0">❌ Error searching QR codes.</div>`;
             }
         }
 
@@ -979,11 +980,11 @@
                                 <div class="mt-3">
                                     ${isProduction ? `
                                         <button onclick='reprintSticker(${JSON.stringify(box).replace(/'/g, "&apos;")})' class="btn btn-sm btn-primary w-100 fw-bold">
-                                            <i class="bi bi-printer-fill me-1"></i> Sticker પ્રિન્ટ કરો
+                                            <i class="bi bi-printer-fill me-1"></i> Print Sticker
                                         </button>
                                     ` : ` 
                                         <button onclick='printSingleBoxQr("${box.box_id}", "${box.item_name}", ${box.qty_in_box})' class="btn btn-sm btn-dark w-100 fw-bold">
-                                            <i class="bi bi-qr-code me-1"></i> QR પ્રિન્ટ કરો
+                                            <i class="bi bi-qr-code me-1"></i> Print QR
                                         </button>
                                     `}
                                 </div>
@@ -1039,10 +1040,10 @@
             });
 
             // Show and print
+            document.body.classList.add('print-single');
             printArea.style.display = 'block';
             setTimeout(() => {
                 window.print();
-                printArea.style.display = 'none';
             }, 300);
         }
 
@@ -1062,15 +1063,17 @@
         }
 
         function printAllQRCodes() {
-            // 1. ચેક કરો કે સ્ક્રીન પર QR કાર્ડ્સ છે કે નહીં
-            const qrCards = document.querySelectorAll('.qr-card-printable'); // અથવા તમારો QR નો class name
-
+            // 1. Check if QR cards are present on screen
+            const qrCards = document.querySelectorAll('.qr-card-printable'); // or your QR class name
             if (qrCards.length === 0) {
-                alert("⚠️ પ્રિન્ટ કરવા માટે કોઈ QR કોડ મળ્યા નથી! પહેલા સર્ચ કરો.");
+                alert("⚠️ No QR codes found to print! Please search first.");
                 return;
             }
 
-            // 2. બ્રાઉઝરની પ્રિન્ટ વિન્ડો ઓપન કરો
+            // 2. Add print-bulk class to body
+            document.body.classList.add('print-bulk');
+
+            // 2. Open browser print window
             window.print();
         }
         async function loadDashboardDpPlans() {
@@ -1090,7 +1093,7 @@
                     container.innerHTML = `
                     <div class="col-12 text-center py-4 text-muted">
                         <i class="bi bi-inbox fs-2 text-secondary d-block mb-2"></i>
-                        હજી સુધી કોઈ DP Plan ઉમેરાયેલ નથી.
+                        No Dispatch Plans added yet.
                     </div>
                 `;
                     if (badge) badge.innerText = `0 DP Plans`;
@@ -1203,7 +1206,7 @@
                 const data = await res.json();
                 const list = data.so_list || [];
 
-                select.innerHTML = '<option value="">-- SO No. પસંદ કરો --</option>' +
+                select.innerHTML = '<option value="">-- Select SO No. --</option>' +
                     list.map(s => `<option value="${s.so_number}">${s.so_number} (DP: ${s.dp_number || 'N/A'})</option>`).join('');
             } catch (err) {
                 console.error("Error loading Store Kit SO list:", err);
@@ -1238,7 +1241,7 @@
                 if (badge) badge.innerText = `${currentStoreKitItems.length} Fittings`;
 
                 if (currentStoreKitItems.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-muted">કોઈ ફિટિંગ્સ આઈટમો મળી શકી નથી.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-muted">No fitting items found.</td></tr>`;
                     return;
                 }
 
@@ -1262,7 +1265,7 @@
             const kitCode = document.getElementById('store_kit_code_input').value.trim();
 
             if (!soNum) {
-                alert("⚠️ કૃપા કરીને પહેલા Sales Order (SO No.) પસંદ કરો!");
+                alert("⚠️ Please select a Sales Order (SO No.) first!");
                 return;
             }
 
@@ -1282,7 +1285,7 @@
                 const data = await res.json();
 
                 if (!res.ok) {
-                    alert("❌ Error: " + (data.detail || "Kit QR જનરેટ થઈ શક્યો નથી"));
+                    alert("❌ Error: " + (data.detail || "Could not generate Kit QR"));
                     return;
                 }
 
@@ -1294,7 +1297,7 @@
                         <small class="text-muted fw-bold d-block mb-2">SO: ${data.so_number} | Items: ${data.total_items_count} Fittings</small>
                         <div id="store-kit-qr-canvas" class="d-flex justify-content-center py-2 bg-white rounded border"></div>
                         <div class="mt-2 font-monospace fw-extrabold text-primary fs-6">${data.kit_code}</div>
-                        <small class="text-success extra-small fw-bold d-block mt-1">📲 ૧-ક્લિક સ્કેનિંગથી તમામ ${data.total_items_count} ફિટિંગ્સ ઓટો-ડિસ્પેચ થશે</small>
+                        <small class="text-success extra-small fw-bold d-block mt-1">📲 1-Click scan will auto-dispatch all ${data.total_items_count} fittings</small>
                         <button onclick="window.print()" class="btn btn-success btn-sm fw-bold mt-2 px-3">
                             <i class="bi bi-printer-fill me-1"></i> Print Sticker (100x100mm)
                         </button>
@@ -1308,12 +1311,20 @@
                     height: 140
                 });
 
-                alert(`✅ Store Kit QR '${data.kit_code}' સફળતાપૂર્વક જનરેટ થઈ ગયો!`);
+                alert(`✅ Store Kit QR '${data.kit_code}' generated successfully!`);
 
             } catch (err) {
                 alert("❌ Server Connection Error");
             }
         }
+
+        // Add an event listener to remove the print class after printing
+        window.onafterprint = () => {
+            document.body.classList.remove('print-bulk', 'print-single');
+            document.body.classList.remove('print-sticker');
+            document.getElementById('label-print-area').style.display = 'none';
+            document.getElementById('single-qr-print-area').style.display = 'none';
+        };
 
         // 🌓 Global Dark / Light Theme Management
         function applyGlobalTheme() {
@@ -1347,6 +1358,12 @@
         // Initial Load & Auto Refresh Every 5 Seconds
         applyGlobalTheme();
         loadItems();
+
+        const showOwnToggle = document.getElementById('showOwnProductionItemsToggle');
+        if (showOwnToggle) {
+            showOwnToggle.addEventListener('change', loadItems);
+        }
+
         loadDashboardDpPlans();
         loadStoreKitSoList();
         searchOldQrs(true); // Initial load of search results
@@ -1396,8 +1413,8 @@
     <style>
         /* Styles for the single QR print layout */
         .single-qr-print-box {
-            width: 96mm;
-            height: 96mm;
+            width: 94mm;
+            height: 94mm;
             border: 2px solid #000;
             padding: 5mm;
             margin: auto;
@@ -1499,6 +1516,8 @@
         })();
     </script>
 
+    <script src="/static/js/english-ui.js"></script>
+    <script src="/static/js/page-loader.js"></script>
 </body>
 
 </html>

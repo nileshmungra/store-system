@@ -1,0 +1,103 @@
+/* =========================================================
+   📦 Page Loader / Progress Bar - Store Management System
+   ========================================================= */
+
+/* --- Top Progress Bar (Slim, always visible at top) --- */
+#page-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, #6366f1 0%, #4f46e5 50%, #818cf8 100%);
+    z-index: 99999;
+    transition: width 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+}
+
+#page-progress-bar.active {
+    opacity: 1;
+}
+
+#page-progress-bar.complete {
+    opacity: 0;
+    transition: opacity 0.5s ease 0.3s;
+}
+
+/* --- Full Screen Overlay Loader --- */
+#page-loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 99998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#page-loader-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- Spinner Animation --- */
+.loader-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255, 255, 255, 0.15);
+    border-top-color: #6366f1;
+    border-right-color: #818cf8;
+    border-radius: 50%;
+    animation: loaderSpin 0.8s linear infinite;
+}
+
+@keyframes loaderSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- Loader Text --- */
+.loader-text {
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    opacity: 0.9;
+}
+
+/* --- Light Mode Override --- */
+[data-theme="light"] #page-loader-overlay {
+    background: rgba(241, 245, 249, 0.9);
+}
+
+[data-theme="light"] .loader-text {
+    color: #0f172a;
+}
+
+[data-theme="light"] .loader-spinner {
+    border-color: rgba(0, 0, 0, 0.1);
+    border-top-color: #4f46e5;
+    border-right-color: #6366f1;
+}
+
+/* --- Print: Hide Loaders --- */
+@media print {
+    #page-progress-bar,
+    #page-loader-overlay {
+        display: none !important;
+    }
+}

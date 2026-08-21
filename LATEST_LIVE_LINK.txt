@@ -1,4 +1,4 @@
-Dashboard: https://uniprotkb-wallpaper-complications-surrounding.trycloudflare.com/dashboard
-Scanner: https://uniprotkb-wallpaper-complications-surrounding.trycloudflare.com/scanner
-Reports: https://uniprotkb-wallpaper-complications-surrounding.trycloudflare.com/report-page
-Log Book: https://uniprotkb-wallpaper-complications-surrounding.trycloudflare.com/logs-page
+Dashboard: https://introductory-webmaster-specially-insert.trycloudflare.com/dashboard
+Scanner:   https://introductory-webmaster-specially-insert.trycloudflare.com/scanner
+Reports:   https://introductory-webmaster-specially-insert.trycloudflare.com/report-page
+Log Book:  https://introductory-webmaster-specially-insert.trycloudflare.com/logs-page

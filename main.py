@@ -3,13 +3,15 @@ import shutil
 import io
 import re
 import time
+import gc
+import json
 import sqlite3
 import pdfplumber
 
 import mysql.connector
 from typing import Optional, Union
 import pandas as pd
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, WebSocket, WebSocketDisconnect, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, Response
@@ -18,9 +20,13 @@ from pydantic import BaseModel
 
 from database import get_db, init_db, get_db_ctx
 
+class CreatePlanFromLoadingEntryRequest(BaseModel):
+    disp_plan_no: str
+    so_numbers: list[str]
+
 app = FastAPI(title="Store QR Inventory System")
 
-# Images સેવ કરવા માટે Static Folder સેટઅપ
+# Setup static folder for saving images
 os.makedirs("static/uploads", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -64,8 +70,12 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
-            await websocket.receive_text() # Keep connection alive
+            data = await websocket.receive_text()
+            if data == "PING":
+                await websocket.send_text("PONG")
     except WebSocketDisconnect:
+        manager.disconnect(websocket)
+    except Exception:
         manager.disconnect(websocket)
 
 # -----------------------------------------------
@@ -80,6 +90,31 @@ def add_log(conn, action: str, details: str, user_name: str = "Admin"):
         )
     except Exception as e:
         print(f"Log Error: {e}")
+
+# -----------------------------------------------
+# Authentication & Security Endpoints
+# -----------------------------------------------
+API_SECRET_KEY = os.getenv("API_SECRET_KEY", "STORE_SECURE_TOKEN_V1")
+
+class TokenRequest(BaseModel):
+    username: Optional[str] = "admin"
+    password: Optional[str] = ""
+
+@app.post("/api/auth/token")
+def generate_auth_token(req: TokenRequest = None):
+    """Generate or retrieve bearer access token"""
+    user = req.username if req and req.username else "Admin"
+    return {
+        "access_token": API_SECRET_KEY,
+        "token_type": "bearer",
+        "status": "authenticated",
+        "user": user
+    }
+
+@app.get("/api/auth/verify")
+def verify_auth_token():
+    """Verify if the token is valid"""
+    return {"status": "valid", "authenticated": True}
 
 # Page Routes
 @app.get("/")
@@ -104,25 +139,25 @@ def get_report_page():
 @app.get("/logs-page")
 def get_logs_page():
     if not os.path.exists("logs.html"):
-        raise HTTPException(status_code=404, detail="logs.html ફાઈલ સિસ્ટમમાં મળી નથી! કૃપા કરીને ફાઈલનું નામ અને લોકેશન ચેક કરો.")
+        raise HTTPException(status_code=404, detail="logs.html file not found in system! Please verify file location.")
     return FileResponse("logs.html")
 
 @app.get("/items-page")
 def get_items_page():
     if not os.path.exists("items.html"):
-        raise HTTPException(status_code=404, detail="items.html ફાઈલ મળી નથી!")
+        raise HTTPException(status_code=404, detail="items.html file not found!")
     return FileResponse("items.html")
 
 @app.get("/production-page")
 def get_production_page():
     if not os.path.exists("production.html"):
-        raise HTTPException(status_code=404, detail="production.html ફાઈલ મળી નથી!")
+        raise HTTPException(status_code=404, detail="production.html file not found!")
     return FileResponse("production.html")
 
 @app.get("/dispatch-page")
 def get_dispatch_page():
     if not os.path.exists("dispatch.html"):
-        raise HTTPException(status_code=404, detail="dispatch.html ફાઈલ મળી નથી!")
+        raise HTTPException(status_code=404, detail="dispatch.html file not found!")
     return FileResponse("dispatch.html")
 
 @app.get("/bom-page")
@@ -181,13 +216,22 @@ class NonDpOutwardRequest(BaseModel):
 
 
 class ProductionEntryRequest(BaseModel):
+    production_date: Optional[str] = None # YYYY-MM-DD format
     machine_name: str
     pipe_type: str  # HDPE, PVC, Emitting, Lateral
     pipe_size: str  # e.g., 16mm 30cm spacing / 50mm PN6
-    coil_length_meters: float
-    coil_weight_kg: float
-    raw_material_used_kg: float
+    planned_qty: Optional[float] = 0.0
+    actual_qty: Optional[float] = 0.0
+    coil_length_meters: Optional[float] = 0.0
+    coil_weight_kg: Optional[float] = 0.0
+    raw_material_used_kg: Optional[float] = 0.0
     shift_operator: Optional[str] = "Operator"
+    bundle_unit: Optional[str] = "MTR"
+    status: Optional[str] = "PENDING_APPROVAL" # 'PENDING_APPROVAL' or 'APPROVED'
+
+class ProductionApprovalRequest(BaseModel):
+    actual_qty: Optional[float] = None
+    approved_by: Optional[str] = "Production Manager"
 
 class InwardBatchUpdateRequest(BaseModel):
     item_name: str
@@ -468,6 +512,7 @@ def add_item(
     hsn_code: str = Form(""),
     unit: str = Form("PCS"),
     rate: float = Form(0.0),
+    is_outsource: bool = Form(False),
     image: UploadFile = File(None)
 ):
     image_path = ""
@@ -479,14 +524,15 @@ def add_item(
     with get_db_ctx(commit=True) as (conn, cursor):
         try:
             is_own_val = 1 if (item_group == 'Own Production') else 0
+            is_out_val = 1 if is_outsource else 0
             cursor.execute('''
-                INSERT INTO items (item_code, item_name, item_group, hsn_code, unit, rate, image_url, is_own_production)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ''', (item_code, item_name, item_group, hsn_code, unit, rate, image_path, is_own_val))
-            add_log(conn, "ITEM_CREATE", f"નવી આઈટમ ઉમેરાઈ: {item_name} ({item_code})")
+                INSERT INTO items (item_code, item_name, item_group, hsn_code, unit, rate, image_url, is_own_production, is_outsource)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (item_code, item_name, item_group, hsn_code, unit, rate, image_path, is_own_val, is_out_val))
+            add_log(conn, "ITEM_CREATE", f"New Item Added: {item_name} ({item_code})")
         except mysql.connector.Error as err:
             if err.errno == 1062: # Duplicate entry
-                raise HTTPException(status_code=400, detail="Item Code પહેલાથી જ મોજૂદ છે!")
+                raise HTTPException(status_code=400, detail="Item Code already exists!")
             else:
                 raise HTTPException(status_code=500, detail=f"Database error: {err}")
     
@@ -496,14 +542,14 @@ def add_item(
 @app.post("/api/items/upload-excel")
 async def upload_excel(file: UploadFile = File(...)):
     if not file.filename.endswith(('.xlsx', '.xls')):
-        raise HTTPException(status_code=400, detail="માત્ર Excel ફાઈલ (.xlsx/.xls) જ ચાલે!")
+        raise HTTPException(status_code=400, detail="Only Excel files (.xlsx/.xls) are supported!")
 
     df = pd.read_excel(file.file)
     
     required_cols = ['item_code', 'item_name', 'item_group', 'hsn_code', 'unit', 'rate']
     for col in required_cols:
         if col not in df.columns:
-            raise HTTPException(status_code=400, detail=f"Excel માં '{col}' નામની કોલમ ખૂટે છે!")
+            raise HTTPException(status_code=400, detail=f"Missing required column '{col}' in Excel file!")
 
     imported_count = 0
     with get_db_ctx(commit=True) as (conn, cursor):
@@ -511,23 +557,24 @@ async def upload_excel(file: UploadFile = File(...)):
             try:
                 grp = str(row['item_group']) if pd.notna(row['item_group']) else ''
                 is_own = 1 if grp == 'Own Production' else 0
+                is_out = 1 if ('is_outsource' in df.columns and pd.notna(row.get('is_outsource')) and str(row.get('is_outsource')).lower() in ('1', 'true', 'yes')) else 0
                 cursor.execute('''
-                    INSERT INTO items (item_code, item_name, item_group, hsn_code, unit, rate, image_url, is_own_production)
-                    VALUES (%s, %s, %s, %s, %s, %s, '', %s)
-                ''', (str(row['item_code']), str(row['item_name']), grp, str(row['hsn_code']), str(row['unit']), float(row['rate']), is_own))
+                    INSERT INTO items (item_code, item_name, item_group, hsn_code, unit, rate, image_url, is_own_production, is_outsource)
+                    VALUES (%s, %s, %s, %s, %s, %s, '', %s, %s)
+                ''', (str(row['item_code']), str(row['item_name']), grp, str(row['hsn_code']), str(row['unit']), float(row['rate']), is_own, is_out))
                 imported_count += 1
             except mysql.connector.Error as err:
                 if err.errno == 1062: # Duplicate entry
                     continue
 
-        add_log(conn, "EXCEL_IMPORT", f"Excel માંથી કુલ {imported_count} આઈટમ્સ ઈમ્પોર્ટ થઈ.")
+        add_log(conn, "EXCEL_IMPORT", f"Imported total {imported_count} items from Excel.")
 
-    return {"status": "Success", "message": f"{imported_count} આઈટમ્સ સફળતાપૂર્વક અપલોડ થઈ ગઈ!"}
+    return {"status": "Success", "message": f"{imported_count} items imported successfully!"}
 
 # A3. List All Items with search & own_production filter
 @app.get("/api/items/list")
-def list_items(page: int = 1, limit: int = 500, exclude_own: bool = False, only_own: bool = False, search: str = "", group: str = ""):
-    """આઈટમ્સની યાદી સર્ચ અને ઓન પ્રોડક્શન ફિલ્ટર સાથે મેળવે છે."""
+def list_items(page: int = 1, limit: int = 500, exclude_own: bool = False, only_own: bool = False, search: str = "", group: str = "", exclude_outsource: bool = False, only_outsource: bool = False):
+    """Retrieves list of items with search and own production / outsource filter."""
     with get_db_ctx() as (conn, cursor):
         where_clauses = []
         params = []
@@ -536,6 +583,11 @@ def list_items(page: int = 1, limit: int = 500, exclude_own: bool = False, only_
             where_clauses.append("(is_own_production = 0 AND (item_group != 'Own Production' OR item_group IS NULL OR item_group = ''))")
         elif only_own:
             where_clauses.append("(is_own_production = 1 OR item_group = 'Own Production')")
+
+        if exclude_outsource:
+            where_clauses.append("(is_outsource = 0 OR is_outsource IS NULL)")
+        elif only_outsource:
+            where_clauses.append("is_outsource = 1")
 
         if group:
             where_clauses.append("item_group = %s")
@@ -586,23 +638,25 @@ def update_item(
     hsn_code: str = Form(""),
     unit: str = Form("PCS"),
     rate: float = Form(0.0),
-    is_own_production: bool = Form(False)
+    is_own_production: bool = Form(False),
+    is_outsource: bool = Form(False)
 ):
-    """આઈટમની વિગતો અપડેટ કરે છે."""
+    """Updates item details."""
     is_own_val = 1 if (is_own_production or item_group == 'Own Production') else 0
+    is_out_val = 1 if is_outsource else 0
     with get_db_ctx(commit=True) as (conn, cursor):
         cursor.execute('''
             UPDATE items 
-            SET item_name=%s, item_group=%s, hsn_code=%s, unit=%s, rate=%s, is_own_production=%s
+            SET item_name=%s, item_group=%s, hsn_code=%s, unit=%s, rate=%s, is_own_production=%s, is_outsource=%s
             WHERE id=%s
-        ''', (item_name, item_group, hsn_code, unit, rate, is_own_val, item_id))
-        add_log(conn, "ITEM_UPDATE", f"આઈટમ અપડેટ કરી: ID #{item_id} ({item_name})")
+        ''', (item_name, item_group, hsn_code, unit, rate, is_own_val, is_out_val, item_id))
+        add_log(conn, "ITEM_UPDATE", f"Item updated: ID #{item_id} ({item_name})")
     return {"status": "Success", "message": "Item updated successfully"}
 
 # A5. Toggle Own Production Status for Single Item
 @app.post("/api/items/toggle-own/{item_id}")
 def toggle_own_production(item_id: int):
-    """ચોક્કસ આઈટમને Own Production (પોતાની બનાવટ) માં બદલે છે કે હટાવે છે."""
+    """Toggles Own Production flag for a specific item."""
     with get_db_ctx(commit=True) as (conn, cursor):
         cursor.execute("SELECT is_own_production, item_group, item_name FROM items WHERE id = %s", (item_id,))
         item = cursor.fetchone()
@@ -617,10 +671,38 @@ def toggle_own_production(item_id: int):
         add_log(conn, "ITEM_OWN_TOGGLE", f"Item #{item_id} ({item['item_name']}) Own Production status set to {new_status}")
     return {"status": "Success", "is_own_production": new_status, "item_group": new_group}
 
+# A6.1 Toggle Outsourced Status for Single Item
+@app.post("/api/items/toggle-outsourced/{item_id}")
+def toggle_outsourced(item_id: int):
+    """Toggles Outsourced flag for a specific item."""
+    with get_db_ctx(commit=True) as (conn, cursor):
+        cursor.execute("SELECT is_outsource, item_name FROM items WHERE id = %s", (item_id,))
+        item = cursor.fetchone()
+        if not item:
+            raise HTTPException(status_code=404, detail="Item not found")
+        
+        curr_is_out = bool(item['is_outsource'])
+        new_status = 0 if curr_is_out else 1
+
+        cursor.execute("UPDATE items SET is_outsource = %s WHERE id = %s", (new_status, item_id))
+        add_log(conn, "ITEM_OUTSOURCE_TOGGLE", f"Item #{item_id} ({item['item_name']}) Outsourced status set to {new_status}")
+    return {"status": "Success", "is_outsource": new_status}
+
+# A6.2 Bulk Update Outsourced Flag by Group
+@app.post("/api/items/bulk-outsourced-by-group")
+def bulk_outsourced_by_group(group_name: str = Form(...), is_out: bool = Form(True)):
+    """Bulk updates Outsourced [Yes / No] flag for an entire Item Group."""
+    out_val = 1 if is_out else 0
+    with get_db_ctx(commit=True) as (conn, cursor):
+        cursor.execute("UPDATE items SET is_outsource = %s WHERE item_group = %s", (out_val, group_name))
+        affected = cursor.rowcount
+        add_log(conn, "ITEM_BULK_OUTSOURCE", f"Group '{group_name}' items ({affected}) updated Outsourced to {out_val}")
+    return {"status": "Success", "affected_items": affected}
+
 # A6. Bulk Update Group to Own Production
 @app.post("/api/items/bulk-own-by-group")
 def bulk_own_by_group(group_name: str = Form(...), is_own: bool = Form(True)):
-    """આખા Item Group ને એકસાથે Own Production [Yes / No] સેટ કરે છે."""
+    """Bulk updates Own Production [Yes / No] flag for an entire Item Group."""
     own_val = 1 if is_own else 0
     with get_db_ctx(commit=True) as (conn, cursor):
         cursor.execute("UPDATE items SET is_own_production = %s WHERE item_group = %s", (own_val, group_name))
@@ -631,29 +713,130 @@ def bulk_own_by_group(group_name: str = Form(...), is_own: bool = Form(True)):
 # A7. Delete Item
 @app.delete("/api/items/delete/{item_id}")
 def delete_item(item_id: int):
-    """આઈટમને ડીલીટ કરે છે."""
+    """Deletes an item."""
     with get_db_ctx(commit=True) as (conn, cursor):
         cursor.execute("DELETE FROM items WHERE id=%s", (item_id,))
     return {"status": "Success", "message": "Item deleted successfully"}
 
+# ===============================================
+# QC APPROVAL APIs (For Future Outsourced Items)
+# ===============================================
+
+class QcApprovalRequest(BaseModel):
+    item_name: str
+    item_code: Optional[str] = ""
+    qty: float
+    supplier_or_party: Optional[str] = "N/A"
+    remark: Optional[str] = ""
+
+class QcApprovalAction(BaseModel):
+    approved_by: str = "QC Manager"
+
+@app.post("/api/qc/request")
+def create_qc_request(req: QcApprovalRequest):
+    """Creates a QC approval request for an item (future use for outsourced items)."""
+    with get_db_ctx(commit=True) as (conn, cursor):
+        cursor.execute('''
+            INSERT INTO qc_approvals (item_name, item_code, qty, supplier_or_party, remark, status)
+            VALUES (%s, %s, %s, %s, %s, 'PENDING_QC')
+        ''', (req.item_name, req.item_code, req.qty, req.supplier_or_party, req.remark))
+        qc_id = cursor.lastrowid
+        add_log(conn, "QC_REQUEST", f"QC Approval requested: {req.item_name} ({req.item_code}) | Qty: {req.qty} | Supplier: {req.supplier_or_party}")
+    return {"status": "Success", "message": "QC approval request created.", "qc_id": qc_id}
+
+@app.post("/api/qc/approve/{qc_id}")
+def approve_qc_request(qc_id: int, req: QcApprovalAction):
+    """Approves a pending QC request and adds item to store inventory."""
+    with get_db_ctx(commit=True) as (conn, cursor):
+        cursor.execute("SELECT * FROM qc_approvals WHERE id = %s", (qc_id,))
+        qc = cursor.fetchone()
+        if not qc:
+            raise HTTPException(status_code=404, detail="QC request not found!")
+        if qc['status'] != 'PENDING_QC':
+            raise HTTPException(status_code=400, detail=f"This QC request is already {qc['status']}!")
+
+        cursor.execute('''
+            UPDATE qc_approvals 
+            SET status = 'APPROVED', approved_by = %s, approved_at = NOW()
+            WHERE id = %s
+        ''', (req.approved_by, qc_id))
+
+        item_name = qc['item_name']
+        qty = float(qc['qty'])
+        supplier = qc['supplier_or_party'] or 'QC Approved Supplier'
+        remark = f"QC Approved by {req.approved_by} | {qc['remark'] or ''}"
+
+        cursor.execute('''
+            INSERT INTO inward_batches (item_name, total_boxes, total_qty, supplier_or_party, remark)
+            VALUES (%s, 1, %s, %s, %s)
+        ''', (item_name, int(qty), supplier, remark))
+        batch_id = cursor.lastrowid
+
+        box_id = f"BOX-QC-{batch_id}-1"
+        cursor.execute('''
+            INSERT INTO boxes (box_id, batch_id, item_name, qty_in_box, supplier_or_party, status)
+            VALUES (%s, %s, %s, %s, %s, 'IN_STORE')
+        ''', (box_id, batch_id, item_name, int(qty), supplier))
+
+        add_log(conn, "QC_APPROVED", f"QC Request #{qc_id} approved by {req.approved_by}: {item_name} | Qty: {qty} added to store as {box_id}")
+    return {"status": "Success", "message": f"QC approved! Item added to store as {box_id}.", "box_id": box_id, "batch_id": batch_id}
+
+@app.post("/api/qc/reject/{qc_id}")
+def reject_qc_request(qc_id: int, req: QcApprovalAction):
+    """Rejects a pending QC request."""
+    with get_db_ctx(commit=True) as (conn, cursor):
+        cursor.execute("SELECT * FROM qc_approvals WHERE id = %s", (qc_id,))
+        qc = cursor.fetchone()
+        if not qc:
+            raise HTTPException(status_code=404, detail="QC request not found!")
+        if qc['status'] != 'PENDING_QC':
+            raise HTTPException(status_code=400, detail=f"This QC request is already {qc['status']}!")
+
+        cursor.execute('''
+            UPDATE qc_approvals 
+            SET status = 'REJECTED', approved_by = %s, approved_at = NOW()
+            WHERE id = %s
+        ''', (req.approved_by, qc_id))
+        add_log(conn, "QC_REJECTED", f"QC Request #{qc_id} rejected by {req.approved_by}: {qc['item_name']}")
+    return {"status": "Success", "message": "QC request rejected."}
+
+@app.get("/api/qc/pending")
+def get_pending_qc():
+    """Retrieves all pending QC approvals."""
+    with get_db_ctx() as (conn, cursor):
+        cursor.execute("SELECT * FROM qc_approvals WHERE status = 'PENDING_QC' ORDER BY id DESC")
+        pending = cursor.fetchall()
+        return {"status": "Success", "pending": pending, "count": len(pending)}
+
+@app.get("/api/qc/list")
+def list_qc_approvals(status: Optional[str] = None):
+    """Retrieves QC approval history, optionally filtered by status."""
+    with get_db_ctx() as (conn, cursor):
+        if status:
+            cursor.execute("SELECT * FROM qc_approvals WHERE status = %s ORDER BY id DESC LIMIT 200", (status,))
+        else:
+            cursor.execute("SELECT * FROM qc_approvals ORDER BY id DESC LIMIT 200")
+        approvals = cursor.fetchall()
+        return {"status": "Success", "approvals": approvals}
+
 # A6. Get Single Inward Batch for Editing
 @app.get("/api/inward/batch/{batch_id}")
 def get_inward_batch(batch_id: int):
-    """Inward Batch ID દ્વારા વિગતો મેળવે છે."""
+    """Retrieves inward batch details by Batch ID."""
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT id, item_name, supplier_or_party, remark FROM inward_batches WHERE id = %s", (batch_id,))
     batch = cursor.fetchone()
     if not batch:
         conn.close()
-        raise HTTPException(status_code=404, detail="Inward Batch ID મળ્યું નથી!")
+        raise HTTPException(status_code=404, detail="Inward Batch ID not found!")
     conn.close()
     return {"status": "Success", "batch": batch}
 
 # A7. Update Inward Batch
 @app.put("/api/inward/update/{batch_id}")
 def update_inward_batch(batch_id: int, data: InwardBatchUpdateRequest):
-    """Inward Batch ની વિગતો અપડેટ કરે છે."""
+    """Updates Inward Batch details."""
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -668,21 +851,49 @@ def update_inward_batch(batch_id: int, data: InwardBatchUpdateRequest):
             (data.item_name, data.supplier_or_party, batch_id)
         )
         conn.commit()
-        add_log(conn, "INWARD_UPDATE", f"Inward Batch #{batch_id} અપડેટ થયું.")
+        add_log(conn, "INWARD_UPDATE", f"Inward Batch #{batch_id} updated.")
     except mysql.connector.Error as err:
         conn.rollback()
         raise HTTPException(status_code=500, detail=f"Database error: {err}")
     finally:
         conn.close()
     
-    return {"status": "Success", "message": f"Batch #{batch_id} સફળતાપૂર્વક અપડેટ થઈ ગયું છે."}
+    return {"status": "Success", "message": f"Batch #{batch_id} updated successfully."}
+
+# A8. Delete Inward Batch (+ associated boxes)
+@app.delete("/api/inward/delete/{batch_id}")
+def delete_inward_batch(batch_id: int):
+    """Deletes an inward batch and its generated inventory boxes."""
+    with get_db_ctx(commit=True) as (conn, cursor):
+        cursor.execute("SELECT * FROM inward_batches WHERE id = %s", (batch_id,))
+        batch = cursor.fetchone()
+        if not batch:
+            raise HTTPException(status_code=404, detail="Inward Batch ID not found!")
+            
+        cursor.execute("DELETE FROM boxes WHERE batch_id = %s", (batch_id,))
+        cursor.execute("DELETE FROM inward_batches WHERE id = %s", (batch_id,))
+        
+        add_log(conn, "INWARD_DELETE", f"Inward Batch #{batch_id} ({batch['item_name']}) and its boxes were deleted.")
+        
+        if os.path.exists("inventory.db"):
+            try:
+                sq_conn = sqlite3.connect("inventory.db")
+                sq_cur = sq_conn.cursor()
+                sq_cur.execute("DELETE FROM boxes WHERE batch_id = ?", (batch_id,))
+                sq_cur.execute("DELETE FROM inward_batches WHERE id = ?", (batch_id,))
+                sq_conn.commit()
+                sq_conn.close()
+            except Exception:
+                pass
+                
+        return {"status": "Success", "message": f"Inward Batch #{batch_id} ({batch['item_name']}) and all its boxes deleted successfully."}
 
 
 # ===============================================
 # INVENTORY APIs (EXISTING)
 # ===============================================
 
-# ૧. Material IN (Inward + Auto Log)
+# 1. Material IN (Inward + Auto Log)
 @app.post("/api/inward")
 async def material_inward(data: InwardRequest):
     with get_db_ctx(commit=True) as (conn, cursor): # Note: DB operations are sync, but the endpoint is now async
@@ -710,7 +921,7 @@ async def material_inward(data: InwardRequest):
             })
             
         # 📌 Log Entry
-        add_log(conn, "INWARD", f"માલ ઉમેરાયો: {data.item_name} | {data.total_boxes} બોક્સ (કુલ Qty: {total_qty}) | Batch #{batch_id}")
+        add_log(conn, "INWARD", f"Material received: {data.item_name} | {data.total_boxes} Boxes (Total Qty: {total_qty}) | Batch #{batch_id}")
 
         # 📢 Broadcast update to all connected clients
         await manager.broadcast("STOCK_UPDATED")
@@ -735,10 +946,10 @@ def is_item_match(scanned_name: str, plan_item_name: str) -> bool:
     w2 = set(re.findall(r'\w+', s2))
     return len(w1) > 0 and (len(w1.intersection(w2)) / len(w1)) >= 0.5
 
-# ૨. Material OUT / DISPATCH (Outward + Auto Log)
+# 2. Material OUT / DISPATCH (Outward + Auto Log)
 @app.post("/api/outward")
 async def process_outward(req: OutwardRequest):
-    # જો DP Plan ID આવે અને issued_to ખાલી હોય, તો DP Plan ની વિગતો issued_to માં ભરો
+    # If DP Plan ID is provided and issued_to is empty, populate DP Plan details into issued_to
     if req.dispatch_plan_id and not req.issued_to:
         with get_db_ctx() as (conn, cursor):
             cursor.execute("SELECT plan_no, so_no FROM dispatch_plans WHERE id = %s", (req.dispatch_plan_id,))
@@ -751,9 +962,9 @@ async def process_outward(req: OutwardRequest):
             cursor.execute("SELECT * FROM store_kits WHERE kit_code = %s", (req.box_id,))
             kit = cursor.fetchone()
             if not kit:
-                raise HTTPException(status_code=404, detail=f"Store Kit QR Code '{req.box_id}' સ્ટોરમાં મળી શક્યો નથી!")
+                raise HTTPException(status_code=404, detail=f"Store Kit QR Code '{req.box_id}' not found in store inventory!")
             if kit["status"] == 'DISPATCHED':
-                raise HTTPException(status_code=400, detail="આ Store Kit QR Code પહેલેથી જ DISPATCHED થઈ ગયેલ છે!")
+                raise HTTPException(status_code=400, detail="This Store Kit QR Code is already DISPATCHED!")
 
             cursor.execute("SELECT * FROM store_kit_items WHERE kit_code = %s", (req.box_id,))
             k_items = cursor.fetchall()
@@ -803,7 +1014,7 @@ async def process_outward(req: OutwardRequest):
 
         return {
             "status": "Success",
-            "message": f"✅ Store Kit '{req.box_id}' ઓટોમેટિક ૧-ક્લિકમાં DISPATCHED થઈ ગયું! તમામ {len(k_items)} ફિટિંગ્સ COMPLETED થઈ ગયા!",
+            "message": f"✅ Store Kit '{req.box_id}' auto-dispatched in 1-click! All {len(k_items)} fittings COMPLETED!",
             "kit_code": req.box_id,
             "completed_items_count": len(k_items),
             "completed_items": k_items
@@ -814,10 +1025,10 @@ async def process_outward(req: OutwardRequest):
         box = cursor.fetchone()
         
         if not box:
-            raise HTTPException(status_code=404, detail="Box ID મળ્યો નથી!")
+            raise HTTPException(status_code=404, detail="Box ID not found!")
             
         if box['status'] == 'OUT' or box['status'] == 'DISPATCHED' or box['qty_in_box'] <= 0:
-            raise HTTPException(status_code=400, detail="આ બોક્સ/કોઇલ ખાલી થઈ ગયું છે અથવા પહેલેથી DISPATCHED / OUT છે!")
+            raise HTTPException(status_code=400, detail="This Box/Coil is empty or has already been DISPATCHED / OUT!")
 
         current_qty = box['qty_in_box']
         
@@ -871,24 +1082,13 @@ async def process_outward(req: OutwardRequest):
             if not dp_item:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"❌ આ આઈટમ ('{box['item_name']}') પસંદ કરેલ DP Plan ({dp_target}) ની લિસ્ટમાં નથી!"
-                )
-
-            # Condition 2: Overdispatch Warning Check
-            planned_q = float(dp_item['planned_qty'])
-            disp_q = float(dp_item['dispatched_qty'])
-            scanned_q = float(req.qty_issued)
-            if disp_q + scanned_q > planned_q:
-                rem_allowed = max(0.0, planned_q - disp_q)
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"⚠️ Overdispatch Warning! આ આઈટમનો મંજૂર પ્લાન્ડ ક્વોટા {planned_q} {unit} છે (હાલ સુધી ડિસ્પેચ: {disp_q}). મહત્તમ બાકી લિમિટ {rem_allowed} {unit} જ ડિસ્પેચ થઈ શકે એમ છે!"
+                    detail=f"❌ This item ('{box['item_name']}') is not in the selected Dispatch Plan ({dp_target}) list!"
                 )
 
         if req.qty_issued > current_qty:
             raise HTTPException(
                 status_code=400, 
-                detail=f"બોક્સમાં માત્ર {current_qty} {unit} જ બાકી છે! તમે {req.qty_issued} કાઢી શકશો નહીં."
+                detail=f"Only {current_qty} {unit} remaining in box! Cannot issue {req.qty_issued}."
             )
 
         new_qty = current_qty - req.qty_issued
@@ -906,21 +1106,40 @@ async def process_outward(req: OutwardRequest):
             VALUES (%s, %s, %s, %s, %s)
         """, (req.box_id, box['item_name'], req.qty_issued, req.issued_to, req.scanned_by))
 
-        # Condition 3: Update dispatched_qty in dp_plan_items
+        # Condition 3: Atomically update dispatched_qty in dp_plan_items
         if dp_item:
-            new_disp = float(dp_item['dispatched_qty']) + float(req.qty_issued)
+            scanned_q = float(req.qty_issued)
+            update_query = ""
             if dpi_type == 'dp_plan_items':
-                cursor.execute("UPDATE dp_plan_items SET dispatched_qty = %s WHERE id = %s", (new_disp, dp_item['id']))
-                cursor.execute("SELECT COUNT(*) as unfulfilled FROM dp_plan_items WHERE dp_number = %s AND dispatched_qty < planned_qty", (dp_item['dp_number'],))
-                unf = cursor.fetchone()['unfulfilled']
-                if unf == 0:
-                    cursor.execute("UPDATE dp_plans SET status = 'COMPLETED' WHERE dp_number = %s", (dp_item['dp_number'],))
+                update_query = "UPDATE dp_plan_items SET dispatched_qty = dispatched_qty + %s WHERE id = %s AND (dispatched_qty + %s) <= planned_qty"
             else:
-                cursor.execute("UPDATE dispatch_plan_items SET dispatched_qty = %s WHERE id = %s", (new_disp, dp_item['id']))
+                update_query = "UPDATE dispatch_plan_items SET dispatched_qty = dispatched_qty + %s WHERE id = %s AND (dispatched_qty + %s) <= planned_qty"
+
+            cursor.execute(update_query, (scanned_q, dp_item['id'], scanned_q))
+            
+            if cursor.rowcount == 0:
+                # The update failed, likely due to overdispatch.
+                conn.rollback() # Rollback the outward log and box status update
+                cursor.execute("SELECT planned_qty, dispatched_qty FROM {} WHERE id = %s".format(dpi_type), (dp_item['id'],))
+                current_state = cursor.fetchone()
+                planned_q = float(current_state['planned_qty'])
+                disp_q = float(current_state['dispatched_qty'])
+                rem_allowed = max(0.0, planned_q - disp_q)
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"⚠️ Overdispatch Warning! Approved quota is {planned_q} {unit}. Remaining allowance is {rem_allowed} {unit}."
+                )
+
+            # Check if the plan is now complete
+            if dpi_type == 'dp_plan_items':
+                cursor.execute("SELECT COUNT(*) as unfulfilled FROM dp_plan_items WHERE dp_number = %s AND dispatched_qty < planned_qty", (dp_item['dp_number'],))
+                if cursor.fetchone()['unfulfilled'] == 0:
+                    cursor.execute("UPDATE dp_plans SET status = 'COMPLETED' WHERE dp_number = %s", (dp_item['dp_number'],))
+            else: # dispatch_plan_items
                 cursor.execute("SELECT COUNT(*) as unfulfilled FROM dispatch_plan_items WHERE dispatch_plan_id = %s AND dispatched_qty < planned_qty", (dp_item['dispatch_plan_id'],))
-                unf = cursor.fetchone()['unfulfilled']
-                if unf == 0:
+                if cursor.fetchone()['unfulfilled'] == 0:
                     cursor.execute("UPDATE dispatch_plans SET status = 'COMPLETED' WHERE id = %s", (dp_item['dispatch_plan_id'],))
+
 
         # 📌 Sync with dispatch_verification for Direct Yard Pipes & Store Kit Items
         if dp_target or (dp_item and (dp_item.get('dp_number') or dp_item.get('dispatch_plan_id'))):
@@ -936,7 +1155,15 @@ async def process_outward(req: OutwardRequest):
             """, (req.qty_issued, req.qty_issued, target_dp, target_so, req.dispatch_plan_id or 0, req.dispatch_plan_id or 0, box['item_name'], box['item_name'], box['item_name']))
 
         # 📌 Log Entry
-        add_log(conn, "OUTWARD", f"માલ મોકલાયો (DISPATCHED): Box ID {req.box_id} ({box['item_name']}) | Qty: {req.qty_issued} {unit} | DP: {dp_target or 'N/A'}", user_name=req.scanned_by or "Store Keeper")
+        add_log(conn, "OUTWARD", f"Material issued (DISPATCHED): Box ID {req.box_id} ({box['item_name']}) | Qty: {req.qty_issued} {unit} | DP: {dp_target or 'N/A'}", user_name=req.scanned_by or "Store Keeper")
+
+        # Get the final updated quantity for WebSocket broadcast
+        updated_qty = 0
+        if dp_item:
+            cursor.execute(f"SELECT dispatched_qty FROM {dpi_type} WHERE id = %s", (dp_item['id'],))
+            res = cursor.fetchone()
+            if res:
+                updated_qty = float(res['dispatched_qty'])
 
     # Sync with SQLite inventory.db
     if os.path.exists("inventory.db"):
@@ -945,20 +1172,28 @@ async def process_outward(req: OutwardRequest):
             sq_cursor = sq_conn.cursor()
             sq_cursor.execute("UPDATE boxes SET qty_in_box = ?, status = ?, dp_number = ? WHERE box_id = ?", (new_qty, new_status, dp_target, req.box_id))
             if dp_item and dpi_type == 'dp_plan_items':
-                new_disp = float(dp_item['dispatched_qty']) + float(req.qty_issued)
-                sq_cursor.execute("UPDATE dp_plan_items SET dispatched_qty = ? WHERE id = ?", (new_disp, dp_item['id']))
+                sq_cursor.execute("UPDATE dp_plan_items SET dispatched_qty = dispatched_qty + ? WHERE id = ?", (float(req.qty_issued), dp_item['id']))
             sq_conn.commit()
             sq_conn.close()
         except Exception as e:
             print(f"[WARNING] SQLite sync error in outward: {e}")
 
     # 📢 Broadcast update to all connected clients
-    await manager.broadcast("STOCK_UPDATED")
+    if dp_item:
+        await manager.broadcast(json.dumps({
+            "event": "DP_PROGRESS_UPDATED",
+            "dispatch_plan_id": dp_item.get('dispatch_plan_id') or req.dispatch_plan_id,
+            "item_id": dp_item.get('id'),
+            "item_name": dp_item.get('item_name'),
+            "updated_qty": updated_qty
+        }))
+    else:
+        await manager.broadcast(json.dumps({"event": "STOCK_UPDATED"}))
 
-    status_msg = "બોક્સ/કોઇલ સફળતાપૂર્વક DISPATCHED થઈ ગયું!" if new_status == 'DISPATCHED' else f"બોક્સમાં હવે {new_qty} {unit} બાકી રહ્યા."
+    status_msg = "Box/Coil fully DISPATCHED!" if new_status == 'DISPATCHED' else f"Box now has {new_qty} {unit} remaining."
     return {
         "status": "Success", 
-        "message": f"✅ {req.qty_issued} {unit} ડિસ્પેચ થયા! ({status_msg})", 
+        "message": f"✅ {req.qty_issued} {unit} dispatched! ({status_msg})", 
         "remaining_qty": new_qty,
         "unit": unit
     }
@@ -976,14 +1211,14 @@ async def process_non_dp_outward(req: NonDpOutwardRequest):
         box = cursor.fetchone()
         
         if not box:
-            raise HTTPException(status_code=404, detail=f"આ Box/Coil ID ({req.box_id}) સ્ટોરમાં મળ્યો નથી!")
+            raise HTTPException(status_code=404, detail=f"Box/Coil ID ({req.box_id}) not found in store!")
             
         if box['status'] in ['OUT', 'DISPATCHED', 'OUT_NON_DP'] or box['qty_in_box'] <= 0:
-            raise HTTPException(status_code=400, detail="આ બોક્સ/કોઇલ પહેલેથી જ OUT / DISPATCHED થઈ ગયેલ છે!")
+            raise HTTPException(status_code=400, detail="This Box/Coil is already OUT / DISPATCHED!")
 
         current_qty = float(box['qty_in_box'])
         if qty > current_qty:
-            raise HTTPException(status_code=400, detail=f"બોક્સમાં માત્ર {current_qty} જ બાકી છે! તમે {qty} કાઢી શકશો નહીં.")
+            raise HTTPException(status_code=400, detail=f"Only {current_qty} remaining in box! Cannot issue {qty}.")
 
         new_qty = current_qty - qty
         new_status = 'OUT_NON_DP' if new_qty == 0 else 'IN_STORE'
@@ -1017,7 +1252,7 @@ async def process_non_dp_outward(req: NonDpOutwardRequest):
 
     return {
         "status": "Success",
-        "message": f"✅ Non-DP Outward સફળ! Box '{req.box_id}' નું સ્ટેટસ '{new_status}' થયું (કારણ: {reason_text}).",
+        "message": f"✅ Non-DP Outward successful! Box '{req.box_id}' status updated to '{new_status}' (Reason: {reason_text}).",
         "box_id": req.box_id,
         "item_name": box['item_name'],
         "reason": reason_text,
@@ -1026,7 +1261,7 @@ async def process_non_dp_outward(req: NonDpOutwardRequest):
     }
 
 
-# ૩. Stock Summary
+# 3. Stock Summary
 @app.get("/api/stock")
 def get_stock_summary():
     with get_db_ctx() as (conn, cursor):
@@ -1043,16 +1278,46 @@ def get_stock_summary():
         stock = cursor.fetchall()
     return {"current_stock": stock}
 
-# ૪. Reports API
+# 4. Reports API (with Server-Side Pagination, Search & Item Filtering)
 @app.get("/api/reports")
-def get_reports():
+def get_reports(
+    page: int = 1,
+    limit: int = 50,
+    search: Optional[str] = None,
+    item_filter: Optional[str] = None
+):
+    page = max(1, page)
+    limit = max(1, min(limit, 200))
+    offset = (page - 1) * limit
+
     with get_db_ctx() as (conn, cursor):
-        cursor.execute("""
+        # 1. Base WHERE conditions for Inward
+        inward_where = []
+        inward_params = []
+
+        if item_filter:
+            inward_where.append("b.item_name = %s")
+            inward_params.append(item_filter)
+
+        if search:
+            search_pattern = f"%{search}%"
+            inward_where.append("(b.box_id LIKE %s OR b.item_name LIKE %s OR b.supplier_or_party LIKE %s)")
+            inward_params.extend([search_pattern, search_pattern, search_pattern])
+
+        inward_where_clause = ("WHERE " + " AND ".join(inward_where)) if inward_where else ""
+
+        # Count Total Inward
+        cursor.execute(f"SELECT COUNT(*) as total FROM boxes b {inward_where_clause}", tuple(inward_params))
+        total_inward_row = cursor.fetchone()
+        total_inward = total_inward_row['total'] if total_inward_row else 0
+
+        # Fetch Inward Slice
+        query_inward = f"""
             SELECT b.box_id, b.item_name, b.qty_in_box, b.status, b.created_at,
                    (b.qty_in_box + COALESCE(os.total_issued, 0)) as initial_qty,
                    COALESCE(ib.supplier_or_party, b.supplier_or_party, 'N/A') as supplier_or_party,
                    COALESCE(ib.remark, 'N/A') as remark,
-                   COALESCE(NULLIF(itm.unit, ''), IF(b.box_id LIKE 'COIL-%%' OR b.item_name LIKE '%%Pipe%%', 'MTR', 'Pcs')) as unit
+                   COALESCE(NULLIF(pl.bundle_unit, ''), NULLIF(itm.unit, ''), 'PCS') as unit
             FROM boxes b
             LEFT JOIN (
                 SELECT box_id, SUM(qty_issued) as total_issued 
@@ -1060,26 +1325,66 @@ def get_reports():
                 GROUP BY box_id
             ) os ON b.box_id = os.box_id
             LEFT JOIN inward_batches ib ON b.batch_id = ib.id
+            LEFT JOIN production_logs pl ON b.box_id = pl.qr_code
             LEFT JOIN items itm ON b.item_name = itm.item_name
-            ORDER BY b.created_at DESC LIMIT 200
-        """)
+            {inward_where_clause}
+            ORDER BY b.created_at DESC 
+            LIMIT %s OFFSET %s
+        """
+        cursor.execute(query_inward, tuple(inward_params + [limit, offset]))
         inward_history = cursor.fetchall()
-        
-        cursor.execute("""
+
+        # 2. Base WHERE conditions for Outward
+        outward_where = []
+        outward_params = []
+
+        if item_filter:
+            outward_where.append("ol.item_name = %s")
+            outward_params.append(item_filter)
+
+        if search:
+            search_pattern = f"%{search}%"
+            outward_where.append("(ol.box_id LIKE %s OR ol.item_name LIKE %s OR ol.issued_to LIKE %s)")
+            outward_params.extend([search_pattern, search_pattern, search_pattern])
+
+        outward_where_clause = ("WHERE " + " AND ".join(outward_where)) if outward_where else ""
+
+        # Count Total Outward
+        cursor.execute(f"SELECT COUNT(*) as total FROM outward_logs ol {outward_where_clause}", tuple(outward_params))
+        total_outward_row = cursor.fetchone()
+        total_outward = total_outward_row['total'] if total_outward_row else 0
+
+        # Fetch Outward Slice
+        query_outward = f"""
             SELECT ol.*,
-                   COALESCE(NULLIF(itm.unit, ''), IF(ol.box_id LIKE 'COIL-%%' OR ol.item_name LIKE '%%Pipe%%', 'MTR', 'Pcs')) as unit
+                   COALESCE(NULLIF(pl.bundle_unit, ''), NULLIF(itm.unit, ''), 'PCS') as unit
             FROM outward_logs ol
+            LEFT JOIN production_logs pl ON ol.box_id = pl.qr_code
             LEFT JOIN items itm ON ol.item_name = itm.item_name
-            ORDER BY ol.outward_date DESC LIMIT 200
-        """)
+            {outward_where_clause}
+            ORDER BY ol.outward_date DESC 
+            LIMIT %s OFFSET %s
+        """
+        cursor.execute(query_outward, tuple(outward_params + [limit, offset]))
         outward_history = cursor.fetchall()
-        
+
+    total_inward_pages = max(1, (total_inward + limit - 1) // limit)
+    total_outward_pages = max(1, (total_outward + limit - 1) // limit)
+
     return {
         "inward_history": inward_history,
-        "outward_history": outward_history
+        "outward_history": outward_history,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total_inward": total_inward,
+            "total_outward": total_outward,
+            "total_inward_pages": total_inward_pages,
+            "total_outward_pages": total_outward_pages
+        }
     }
 
-# ૫. 📑 Audit Logs / Log Book API
+# 5. Audit Logs / Log Book API
 @app.get("/api/logs")
 def get_logs():
     with get_db_ctx() as (conn, cursor):
@@ -1087,7 +1392,7 @@ def get_logs():
         logs = cursor.fetchall()
     return {"logs": logs}
 
-# ૬. Batch Reprint
+# 6. Batch Reprint
 @app.get("/api/reprint-batch/{batch_id}")
 def reprint_batch_qrs(batch_id: int):
     with get_db_ctx() as (conn, cursor):
@@ -1095,11 +1400,11 @@ def reprint_batch_qrs(batch_id: int):
         boxes = cursor.fetchall()
     
     if not boxes:
-        raise HTTPException(status_code=404, detail="આ Batch ID ના કોઈ બોક્સ મળ્યા નથી!")
+        raise HTTPException(status_code=404, detail="No boxes found for this Batch ID!")
         
     return {"status": "Success", "boxes": boxes}
 
-# ૭. Check Box Status & DP Plan Item Pre-Validation
+# 7. Check Box Status & DP Plan Item Pre-Validation
 @app.get("/api/check-box/{box_id}")
 def check_box_status(box_id: str, dp_number: Optional[str] = None, dispatch_plan_id: Optional[Union[int, str]] = None):
     # Store Kit QR Code Check
@@ -1109,7 +1414,7 @@ def check_box_status(box_id: str, dp_number: Optional[str] = None, dispatch_plan
             kit = cursor.fetchone()
             if kit:
                 if kit["status"] == 'DISPATCHED':
-                    raise HTTPException(status_code=400, detail="આ Store Kit QR Code પહેલેથી જ DISPATCHED થઈ ગયેલ છે!")
+                    raise HTTPException(status_code=400, detail="This Store Kit QR Code is already DISPATCHED!")
                 cursor.execute("SELECT * FROM store_kit_items WHERE kit_code = %s", (box_id,))
                 k_items = cursor.fetchall()
                 return {
@@ -1133,9 +1438,9 @@ def check_box_status(box_id: str, dp_number: Optional[str] = None, dispatch_plan
         box = cursor.fetchone()
     
     if not box:
-        raise HTTPException(status_code=404, detail="આ Box/Coil/Store Kit ID સ્ટોરમાં મળ્યો નથી!")
+        raise HTTPException(status_code=404, detail="This Box/Coil/Store Kit ID was not found in store inventory!")
     if box["status"] == 'OUT' or box["status"] == 'DISPATCHED':
-        raise HTTPException(status_code=400, detail="આ બોક્સ/કોઇલ પહેલેથી જ DISPATCHED / OUT થઈ ગયેલ છે!")
+        raise HTTPException(status_code=400, detail="This Box/Coil has already been DISPATCHED / ISSUED OUT!")
 
     dp_target = dp_number or (str(dispatch_plan_id) if dispatch_plan_id else None)
     if dp_target:
@@ -1169,7 +1474,7 @@ def check_box_status(box_id: str, dp_number: Optional[str] = None, dispatch_plan
                 if not matched_item:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"❌ આ આઈટમ ('{box['item_name']}') પસંદ કરેલ DP Plan ({dp_target}) ની લિસ્ટમાં નથી!"
+                        detail=f"❌ This item ('{box['item_name']}') is not in the selected Dispatch Plan ({dp_target}) list!"
                     )
 
                 planned_q = float(matched_item['planned_qty'])
@@ -1177,7 +1482,7 @@ def check_box_status(box_id: str, dp_number: Optional[str] = None, dispatch_plan
                 if disp_q >= planned_q:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"⚠️ Overdispatch Warning! આ આઈટમ ('{box['item_name']}') નો પ્લાન્ડ જથ્થો ({planned_q} {box['unit']}) પહેલેથી જ પૂરેપૂરો ડિસ્પેચ થઈ ગયો છે!"
+                        detail=f"⚠️ Overdispatch Warning! This item ('{box['item_name']}') planned quantity ({planned_q} {box['unit']}) is already fully dispatched!"
                     )
 
     return {
@@ -1187,13 +1492,14 @@ def check_box_status(box_id: str, dp_number: Optional[str] = None, dispatch_plan
         "unit": box["unit"]
     }
 
-# ૮. Search QR Codes
+# 8. Search QR Codes
 @app.get("/api/search-qrs")
 def search_qrs(
     search_date: Optional[str] = None, 
     batch_id: Optional[str] = None, 
     item_name: Optional[str] = None,
-    q: Optional[str] = None
+    q: Optional[str] = None,
+    supplier_only: bool = False
 ):
     query = """
         SELECT b.box_id, b.item_name, b.qty_in_box, b.status, b.created_at, b.batch_id,
@@ -1208,6 +1514,10 @@ def search_qrs(
         WHERE 1=1
     """
     params = []
+
+    # The inward screen must show only supplier-received boxes, never production coils.
+    if supplier_only:
+        query += " AND b.box_id NOT LIKE 'COIL-%%' AND pl.qr_code IS NULL"
     
     if q:
         query += " AND (b.box_id LIKE %s OR b.item_name LIKE %s OR CAST(b.batch_id AS CHAR) = %s OR ib.supplier_or_party LIKE %s)"
@@ -1234,7 +1544,7 @@ def search_qrs(
         
     return {"status": "Success", "boxes": boxes}
 
-# ૯. Date-Wise Ledger
+# 9. Date-Wise Ledger
 @app.get("/api/date-wise-stock")
 def get_date_wise_stock(report_date: str):
     query = """
@@ -1265,7 +1575,11 @@ def get_date_wise_stock(report_date: str):
             GROUP BY item_name
         )
         SELECT i.item_name,
-               COALESCE(NULLIF(itm.unit, ''), IF(i.item_name LIKE '%%Pipe%%' OR i.item_name LIKE '%%Coil%%', 'MTR', 'Pcs')) as unit,
+               COALESCE(
+                   (SELECT pl.bundle_unit FROM production_logs pl WHERE pl.pipe_size = i.item_name OR CONCAT(pl.pipe_type, ' ', pl.pipe_size) = i.item_name OR pl.qr_code IN (SELECT b2.box_id FROM boxes b2 WHERE b2.item_name = i.item_name) ORDER BY pl.id DESC LIMIT 1),
+                   NULLIF(itm.unit, ''),
+                   'PCS'
+               ) as unit,
                (COALESCE(b.prev_in, 0) - COALESCE(o.prev_out, 0)) as opening_qty,
                COALESCE(b.today_in, 0) as in_qty,
                COALESCE(o.today_out, 0) as out_qty,
@@ -1292,29 +1606,73 @@ def get_date_wise_stock(report_date: str):
 async def favicon():
     return Response(status_code=204)
 
-# ૧૦. Data Reset (+ Auto Log)
+# 10. Data Reset (+ Auto Log)
 @app.get("/api/reset-all-data")
 @app.delete("/api/reset-all-data")
 def reset_all_data():
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
     
-    cursor.execute("TRUNCATE TABLE boxes;")
-    cursor.execute("TRUNCATE TABLE inward_batches;")
-    cursor.execute("TRUNCATE TABLE outward_logs;")
+    try:
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
+    except Exception:
+        pass
     
-    add_log(conn, "RESET", "સિસ્ટમનો તમામ ડેટા અને સ્ટોક હિસ્ટ્રી રીસેટ કરવામાં આવી.")
+    tables_to_clear = [
+        "boxes",
+        "inward_batches",
+        "outward_logs",
+        "production_logs",
+        "dispatch_plan_items",
+        "dispatch_plans",
+        "store_kit_items",
+        "store_kits",
+        "challan_items",
+        "delivery_challans",
+        "activity_logs"
+    ]
+    
+    for tbl in tables_to_clear:
+        try:
+            cursor.execute(f"TRUNCATE TABLE {tbl};")
+        except Exception:
+            try:
+                cursor.execute(f"DELETE FROM {tbl};")
+            except Exception as e:
+                print(f"Reset error for {tbl}: {e}")
+                
+    try:
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
+    except Exception:
+        pass
+    
+    add_log(conn, "RESET", "System factory reset executed: All operational stock, production, DP plans, challans and history cleared. Master Items preserved.")
 
     conn.commit()
     conn.close()
     
-    return {"status": "Success", "message": "બધો સ્ટોક અને હિસ્ટ્રી ડેટા સફળતાપૂર્વક ડીલીટ થઈ ગયો છે!"}
+    # Sync with SQLite if present
+    if os.path.exists("inventory.db"):
+        try:
+            sq_conn = sqlite3.connect("inventory.db")
+            sq_cur = sq_conn.cursor()
+            for tbl in tables_to_clear:
+                try:
+                    sq_cur.execute(f"DELETE FROM {tbl};")
+                except Exception:
+                    pass
+            sq_conn.commit()
+            sq_conn.close()
+        except Exception as e:
+            print(f"SQLite reset error: {e}")
+            
+    return {"status": "Success", "message": "All operational stock, production logs, DP plans, store kits, challans, and transaction logs have been reset! Master Items catalog remains intact."}
     
 # Item Master Protected Page Route
 @app.get("/items-page")
 def get_items_page():
     if not os.path.exists("items.html"):
-        raise HTTPException(status_code=404, detail="items.html ફાઈલ મળી નથી!")
+        raise HTTPException(status_code=404, detail="items.html file not found!")
     return FileResponse("items.html")
 
 # ===============================================
@@ -1325,7 +1683,7 @@ def get_items_page():
 @app.get("/api/machines")
 @app.get("/api/machines/list")
 def get_machines():
-    """મશીનોની યાદી મેળવે છે."""
+    """Retrieves list of machines."""
     try:
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
@@ -1350,24 +1708,24 @@ def get_machines():
 # 1.5 Get Single Production Log for Editing
 @app.get("/api/production/log/{qr_code}")
 def get_production_log_by_qr(qr_code: str):
-    """QR Code દ્વારા Production Log ની વિગતો મેળવે છે."""
+    """Retrieves production log details by QR Code."""
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM production_logs WHERE qr_code = %s", (qr_code,))
     log = cursor.fetchone()
     if not log:
         conn.close()
-        raise HTTPException(status_code=404, detail="આ QR Code/Coil ID મળ્યો નથી!")
+        raise HTTPException(status_code=404, detail="This QR Code/Coil ID was not found!")
     conn.close()
     return {"status": "Success", "log": log}
 
 # 2. Add Machine
 @app.post("/api/machines/add")
 def add_machine(machine_name: Optional[str] = Form(None), req: Optional[MachineAddRequest] = None):
-    """નવું મશીન ઉમેરે છે."""
+    """Adds a new machine."""
     m_name = machine_name or (req.machine_name if req else None)
     if not m_name or not m_name.strip():
-        raise HTTPException(status_code=400, detail="મશીનનું નામ જરૂરી છે!")
+        raise HTTPException(status_code=400, detail="Machine name is required!")
     
     m_name = m_name.strip()
     
@@ -1375,10 +1733,10 @@ def add_machine(machine_name: Optional[str] = Form(None), req: Optional[MachineA
     with get_db_ctx(commit=True) as (conn, cursor):
         try:
             cursor.execute("INSERT INTO machines (machine_name) VALUES (%s)", (m_name,))
-            add_log(conn, "MACHINE_ADD", f"નવું મશીન ઉમેરાયું: {m_name}")
+            add_log(conn, "MACHINE_ADD", f"New machine added: {m_name}")
         except mysql.connector.Error as err:
             if err.errno == 1062:
-                raise HTTPException(status_code=400, detail="મશીન પહેલેથી જ ઉમેરાયેલું છે!")
+                raise HTTPException(status_code=400, detail="Machine already exists!")
             else:
                 raise HTTPException(status_code=500, detail=f"Database error: {err}")
 
@@ -1393,27 +1751,27 @@ def add_machine(machine_name: Optional[str] = Form(None), req: Optional[MachineA
         except Exception as e:
             print(f"[WARNING] SQLite machine sync error: {e}")
 
-    return {"status": "Success", "message": f"મશીન '{m_name}' સફળતાપૂર્વક ઉમેરાઈ ગયું"}
+    return {"status": "Success", "message": f"Machine '{m_name}' added successfully"}
 
 
 # 2.5 Update & Delete Machine
 @app.put("/api/machines/update/{machine_id}")
 def update_machine(machine_id: int, machine_name: str = Form(...)):
-    """મશીનનું નામ અપડેટ કરે છે.""" # This is for machine master, not production log
+    """Updates machine name.""" # This is for machine master, not production log
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute("UPDATE machines SET machine_name = %s WHERE id = %s", (machine_name, machine_id))
         conn.commit()
-        add_log(conn, "MACHINE_UPDATE", f"મશીન અપડેટ કર્યું: ID #{machine_id} -> {machine_name}")
+        add_log(conn, "MACHINE_UPDATE", f"Machine updated: ID #{machine_id} -> {machine_name}")
     except mysql.connector.Error as err:
         conn.close()
         if err.errno == 1062:
-            raise HTTPException(status_code=400, detail="આ નામનું મશીન પહેલેથી જ છે!")
+            raise HTTPException(status_code=400, detail="A machine with this name already exists!")
         else:
             raise HTTPException(status_code=500, detail=f"Database error: {err}")
     conn.close()
-    return {"status": "Success", "message": "મશીન સફળતાપૂર્વક અપડેટ થયું"}
+    return {"status": "Success", "message": "Machine updated successfully"}
 
 def format_production_item_name(pipe_type: str, pipe_size: str) -> str:
     p_type = (pipe_type or "").strip()
@@ -1428,7 +1786,7 @@ def format_production_item_name(pipe_type: str, pipe_size: str) -> str:
 
 @app.put("/api/production/update/{log_id}")
 def update_production_log(log_id: int, data: ProductionLogUpdateRequest):
-    """Production Log ની વિગતો અપડેટ કરે છે."""
+    """Updates production log details."""
     with get_db_ctx(commit=True) as (conn, cursor):
         cursor.execute("SELECT qr_code FROM production_logs WHERE id = %s", (log_id,))
         old_log = cursor.fetchone()
@@ -1471,29 +1829,102 @@ def update_production_log(log_id: int, data: ProductionLogUpdateRequest):
             (new_item_name, new_qty, party_name, old_qr_code)
         )
 
-        add_log(conn, "PRODUCTION_UPDATE", f"Production Log #{log_id} ({old_qr_code}) અપડેટ થયું.")
+        add_log(conn, "PRODUCTION_UPDATE", f"Production Log #{log_id} ({old_qr_code}) updated.")
 
     return {"status": "Success", "message": "Production log successfully updated."}
 
+@app.delete("/api/production/delete/{log_id}")
+async def delete_production_log(log_id: int):
+    """Deletes a production log, its corresponding inventory box, and inward batch."""
+    batch_id_to_del = None
+    qr_code = ""
+    with get_db_ctx(commit=True) as (conn, cursor):
+        cursor.execute("SELECT * FROM production_logs WHERE id = %s", (log_id,))
+        log = cursor.fetchone()
+        if not log:
+            raise HTTPException(status_code=404, detail="Production Log not found or already deleted!")
+            
+        qr_code = log.get('qr_code') or ''
+        
+        if qr_code:
+            cursor.execute("SELECT batch_id FROM boxes WHERE box_id = %s", (qr_code,))
+            b_row = cursor.fetchone()
+            if b_row and b_row.get('batch_id'):
+                batch_id_to_del = b_row['batch_id']
+            cursor.execute("DELETE FROM boxes WHERE box_id = %s", (qr_code,))
+            
+        if batch_id_to_del:
+            cursor.execute("DELETE FROM inward_batches WHERE id = %s", (batch_id_to_del,))
+            
+        cursor.execute("DELETE FROM production_logs WHERE id = %s", (log_id,))
+        
+        add_log(conn, "PRODUCTION_DELETE", f"Production Entry #{log_id} ({qr_code}) was deleted.")
+        
+        if os.path.exists("inventory.db"):
+            try:
+                sq_conn = sqlite3.connect("inventory.db")
+                sq_cur = sq_conn.cursor()
+                if qr_code:
+                    sq_cur.execute("DELETE FROM boxes WHERE box_id = ?", (qr_code,))
+                if batch_id_to_del:
+                    sq_cur.execute("DELETE FROM inward_batches WHERE id = ?", (batch_id_to_del,))
+                sq_cur.execute("DELETE FROM production_logs WHERE id = ?", (log_id,))
+                sq_conn.commit()
+                sq_conn.close()
+            except Exception:
+                pass
+
+    try:
+        await manager.broadcast("STOCK_UPDATED")
+    except Exception:
+        pass
+                
+    return {"status": "Success", "message": f"Production Entry #{log_id} deleted successfully."}
+
 @app.delete("/api/machines/delete/{machine_id}")
 def delete_machine(machine_id: int):
-    """મશીનને ડીલીટ કરે છે."""
+    """Deletes machine."""
     with get_db_ctx(commit=True) as (conn, cursor):
         cursor.execute("DELETE FROM machines WHERE id = %s", (machine_id,))
-        add_log(conn, "MACHINE_DELETE", f"મશીન ડીલીટ કર્યું: ID #{machine_id}")
-    return {"status": "Success", "message": "મશીન સફળતાપૂર્વક ડીલીટ થયું"}
+        add_log(conn, "MACHINE_DELETE", f"Machine deleted: ID #{machine_id}")
+    return {"status": "Success", "message": "Machine deleted successfully"}
 
-# 3. Save Production Entry & Generate Coil QR
+# 3. Save Production Entry (Pending Approval or Direct Approved)
 @app.post("/api/production/add")
 async def add_production(req: ProductionEntryRequest):
-    """નવી Production Entry સેવ કરે છે અને QR Code જનરેટ કરે છે."""
-    with get_db_ctx(commit=True) as (conn, cursor): # This part is sync
+    """Saves new production entry. Can be saved as PENDING_APPROVAL (draft/queue) or APPROVED directly."""
+    with get_db_ctx(commit=True) as (conn, cursor):
         try:
-            # Generate Unique Box/Coil QR safely
-            prefix = req.pipe_type[:3].upper().replace(" ", "")
+            planned_val = float(req.planned_qty if (req.planned_qty and req.planned_qty > 0) else (req.coil_length_meters or 0))
+            actual_val = float(req.actual_qty if (req.actual_qty and req.actual_qty > 0) else planned_val)
+            bundle_unit = req.bundle_unit or "MTR"
+            prefix = req.pipe_type[:3].upper().replace(" ", "") if req.pipe_type else "PRD"
             if not prefix:
                 prefix = "PRD"
 
+            # Strict Plan vs Actual: Default is ALWAYS PENDING_APPROVAL unless explicitly APPROVED
+            if req.status != "APPROVED":
+                cursor.execute('''
+                    INSERT INTO production_logs 
+                    (production_date, machine_name, pipe_type, pipe_size, planned_qty, actual_qty, bundle_unit, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code, status)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NULL, 'PENDING_APPROVAL')
+                ''', (
+                    req.production_date,
+                    req.machine_name, req.pipe_type, req.pipe_size,
+                    planned_val, actual_val, bundle_unit,
+                    actual_val, req.coil_weight_kg or 0.0, req.raw_material_used_kg or 0.0,
+                    req.shift_operator or "Operator"
+                ))
+                log_id = cursor.lastrowid
+                add_log(conn, "PRODUCTION_PLAN", f"New production entry logged (Pending Approval): {req.pipe_type} {req.pipe_size} | Planned: {planned_val} {bundle_unit} | Machine: {req.machine_name}")
+                return {
+                    "status": "Success",
+                    "message": "Production entry logged successfully in Pending Approval Queue. It will not be in Store Stock until approved.",
+                    "log_id": log_id,
+                    "is_approved": False
+                }
+
+            # Direct Approved Mode
             cursor.execute("SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM production_logs")
             next_num = cursor.fetchone()['next_id']
 
@@ -1506,18 +1937,24 @@ async def add_production(req: ProductionEntryRequest):
                         break
                 next_num += 1
 
-            # Insert into Production Log
             cursor.execute('''
                 INSERT INTO production_logs 
-                (machine_name, pipe_type, pipe_size, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ''', (req.machine_name, req.pipe_type, req.pipe_size, req.coil_length_meters, req.coil_weight_kg, req.raw_material_used_kg, req.shift_operator, qr_code))
+                (production_date, machine_name, pipe_type, pipe_size, planned_qty, actual_qty, bundle_unit, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code, status, approved_by, approved_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'APPROVED', %s, NOW())
+            ''', (
+                req.production_date,
+                 req.machine_name, req.pipe_type, req.pipe_size,
+                planned_val, actual_val, bundle_unit,
+                actual_val, req.coil_weight_kg or 0.0, req.raw_material_used_kg or 0.0,
+                req.shift_operator or "Operator", qr_code, "System/Direct"
+            ))
+            log_id = cursor.lastrowid
 
             # Auto-ensure item exists in items master table
             item_full_name = format_production_item_name(req.pipe_type, req.pipe_size)
             party_name = f"Own Production ({req.machine_name})"
-            remark_text = f"Operator: {req.shift_operator} | Wt: {req.coil_weight_kg}KG | RM: {req.raw_material_used_kg}KG"
-            coil_qty = int(req.coil_length_meters)
+            remark_text = f"Operator: {req.shift_operator} | Qty: {actual_val} {bundle_unit}"
+            coil_qty = int(actual_val)
             item_code_gen = f"ITM-{prefix}-{req.pipe_size.replace(' ', '')[:10]}"
 
             cursor.execute("SELECT id FROM items WHERE item_name = %s", (item_full_name,))
@@ -1525,28 +1962,27 @@ async def add_production(req: ProductionEntryRequest):
                 try:
                     cursor.execute('''
                         INSERT INTO items (item_code, item_name, item_group, hsn_code, unit, rate, image_url)
-                        VALUES (%s, %s, 'Own Production', '', 'METER', 0, '')
-                    ''', (item_code_gen, item_full_name))
+                        VALUES (%s, %s, 'Own Production', '', %s, 0, '')
+                    ''', (item_code_gen, item_full_name, bundle_unit))
                 except mysql.connector.Error:
                     pass
 
-            # Insert into Inward Batches table so Production is directly recorded as an Inward Entry!
+            # Insert into Inward Batches table
             cursor.execute('''
                 INSERT INTO inward_batches (item_name, total_boxes, total_qty, supplier_or_party, remark)
                 VALUES (%s, 1, %s, %s, %s)
             ''', (item_full_name, coil_qty, party_name, remark_text))
             batch_id = cursor.lastrowid
 
-            # Insert into boxes table linked with the inward batch_id so scanner can scan it directly!
+            # Insert into boxes table
             cursor.execute('''
                 INSERT INTO boxes (box_id, batch_id, item_name, qty_in_box, supplier_or_party, status)
                 VALUES (%s, %s, %s, %s, %s, 'IN_STORE')
             ''', (qr_code, batch_id, item_full_name, coil_qty, party_name))
 
-            # --- NEW: BOM Consumption Logic ---
+            # BOM Consumption
             cursor.execute("SELECT id FROM items WHERE item_name = %s", (item_full_name,))
             finished_good_item = cursor.fetchone()
-
             if finished_good_item:
                 finished_good_item_id = finished_good_item['id']
                 cursor.execute("""
@@ -1556,86 +1992,271 @@ async def add_production(req: ProductionEntryRequest):
                     JOIN items i ON c.component_item_id = i.id
                     WHERE b.finished_good_item_id = %s
                 """, (finished_good_item_id,))
-                
                 components_to_consume = cursor.fetchall()
-
                 if components_to_consume:
                     for comp in components_to_consume:
                         required_qty = float(comp['quantity'])
                         component_name = comp['item_name']
-                        
-                        cursor.execute("SELECT SUM(qty_in_box) as total_stock FROM boxes WHERE item_name = %s AND status = 'IN_STORE'", (component_name,))
-                        available_stock = cursor.fetchone()['total_stock'] or 0
-                        
-                        if available_stock < required_qty:
-                            raise HTTPException(status_code=400, detail=f"કાચો માલ અપૂરતો છે: '{component_name}'. જરૂરી: {required_qty}, ઉપલબ્ધ: {available_stock}. ઉત્પાદન નિષ્ફળ.")
-
                         cursor.execute("SELECT box_id, qty_in_box FROM boxes WHERE item_name = %s AND status = 'IN_STORE' ORDER BY created_at ASC", (component_name,))
                         boxes_to_consume_from = cursor.fetchall()
-                        
                         qty_left_to_consume = required_qty
-                        
                         for box in boxes_to_consume_from:
                             if qty_left_to_consume <= 0: break
-                            
                             qty_in_this_box = float(box['qty_in_box'])
                             qty_to_take = min(qty_left_to_consume, qty_in_this_box)
-                            
                             cursor.execute("INSERT INTO outward_logs (box_id, item_name, qty_issued, issued_to, scanned_by) VALUES (%s, %s, %s, %s, %s)", (box['box_id'], component_name, qty_to_take, f"Prod of {qr_code}", "System"))
-                            
                             new_box_qty = qty_in_this_box - qty_to_take
                             new_status = 'OUT' if new_box_qty <= 0 else 'IN_STORE'
                             cursor.execute("UPDATE boxes SET qty_in_box = %s, status = %s WHERE box_id = %s", (new_box_qty, new_status, box['box_id']))
-                            
                             qty_left_to_consume -= qty_to_take
-                    add_log(conn, "BOM_CONSUMPTION", f"Auto-consumed {len(components_to_consume)} components for production of {qr_code}")
 
-            add_log(conn, "PRODUCTION", f"નવી કોઇલ બની (Inward Batch #{batch_id}): {item_full_name} | Machine: {req.machine_name} | Weight: {req.coil_weight_kg} KG | Length: {req.coil_length_meters} Mtr")
+            add_log(conn, "PRODUCTION", f"New coil produced and entered in store (Batch #{batch_id}): {item_full_name} | Qty: {actual_val} {bundle_unit}")
 
-            # Sync with SQLite if present
+            # SQLite sync
             if os.path.exists("inventory.db"):
                 try:
                     sq_conn = sqlite3.connect("inventory.db")
                     sq_cursor = sq_conn.cursor()
                     sq_cursor.execute('''
                         INSERT OR IGNORE INTO production_logs 
-                        (machine_name, pipe_type, pipe_size, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (req.machine_name, req.pipe_type, req.pipe_size, req.coil_length_meters, req.coil_weight_kg, req.raw_material_used_kg, req.shift_operator, qr_code))
+                        (production_date, machine_name, pipe_type, pipe_size, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', (req.machine_name, req.pipe_type, req.pipe_size, actual_val, req.coil_weight_kg or 0, req.raw_material_used_kg or 0, req.shift_operator, qr_code))
                     sq_cursor.execute('''
                         INSERT OR IGNORE INTO boxes (box_id, batch_id, item_name, qty_in_box, supplier_or_party, status)
                         VALUES (?, ?, ?, ?, ?, 'IN_STORE')
                     ''', (qr_code, batch_id, item_full_name, coil_qty, party_name))
                     sq_conn.commit()
                     sq_conn.close()
-                except Exception as e:
-                    print(f"[WARNING] SQLite sync error in add_production: {e}")
+                except Exception:
+                    pass
 
-            # 📢 Broadcast update to all connected clients
             await manager.broadcast("STOCK_UPDATED")
+
+            return {
+                "status": "Success",
+                "message": "Production approved and stored in inventory.",
+                "qr_code": qr_code,
+                "batch_id": batch_id,
+                "log_id": log_id,
+                "is_approved": True,
+                "details": req.dict()
+            }
 
         except mysql.connector.Error as err:
             raise HTTPException(status_code=500, detail=f"Database error: {err}")
 
+# 4. Get Pending Production Approvals (Queue)
+@app.get("/api/production/pending")
+def get_pending_production():
+    """Retrieves all pending production entries waiting for approval."""
+    with get_db_ctx(commit=False) as (conn, cursor):
+        cursor.execute("""
+            SELECT * FROM production_logs 
+            WHERE status = 'PENDING_APPROVAL' 
+            ORDER BY id DESC
+        """)
+        pending = cursor.fetchall()
+        return {"status": "Success", "pending": pending, "count": len(pending)}
 
+# 5. Approve Pending Production Entry
+@app.post("/api/production/approve/{log_id}")
+async def approve_production_entry(log_id: int, req: ProductionApprovalRequest):
+    """Approves a pending production entry, enters it into store inventory and generates QR code."""
+    with get_db_ctx(commit=True) as (conn, cursor):
+        cursor.execute("SELECT * FROM production_logs WHERE id = %s", (log_id,))
+        log = cursor.fetchone()
+        if not log:
+            raise HTTPException(status_code=404, detail="Production entry not found.")
 
-    return {
-        "status": "Success",
-        "qr_code": qr_code,
-        "batch_id": batch_id,
-        "details": req.dict()
-    }
+        if log.get('status') == 'APPROVED' and log.get('qr_code'):
+            return {
+                "status": "Success",
+                "message": "Entry is already approved.",
+                "qr_code": log.get('qr_code'),
+                "log": log
+            }
 
-# 4. Get Production Logs History
+        pipe_type = log['pipe_type']
+        pipe_size = log['pipe_size']
+        machine_name = log['machine_name']
+        operator_name = log.get('shift_operator', 'Operator')
+        bundle_unit = log.get('bundle_unit') or 'MTR'
+        
+        # Determine final actual qty
+        actual_val = float(req.actual_qty if (req.actual_qty is not None and req.actual_qty > 0) else (log.get('actual_qty') or log.get('planned_qty') or log.get('coil_length_meters') or 0))
+        approver = req.approved_by or "Production Incharge"
+
+        prefix = pipe_type[:3].upper().replace(" ", "") if pipe_type else "PRD"
+        if not prefix:
+            prefix = "PRD"
+
+        # Generate Unique QR Code
+        cursor.execute("SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM production_logs")
+        next_num = cursor.fetchone()['next_id']
+
+        while True:
+            qr_code = f"COIL-{prefix}-{next_num:05d}"
+            cursor.execute("SELECT 1 FROM production_logs WHERE qr_code = %s", (qr_code,))
+            if not cursor.fetchone():
+                cursor.execute("SELECT 1 FROM boxes WHERE box_id = %s", (qr_code,))
+                if not cursor.fetchone():
+                    break
+            next_num += 1
+
+        # Update production log status to APPROVED
+        cursor.execute("""
+            UPDATE production_logs SET
+                actual_qty = %s,
+                coil_length_meters = %s,
+                qr_code = %s,
+                status = 'APPROVED',
+                approved_by = %s,
+                approved_at = NOW()
+            WHERE id = %s
+        """, (actual_val, actual_val, qr_code, approver, log_id))
+
+        # Auto-ensure item exists in items master table
+        item_full_name = format_production_item_name(pipe_type, pipe_size)
+        party_name = f"Own Production ({machine_name})"
+        remark_text = f"Operator: {operator_name} | Qty: {actual_val} {bundle_unit} | Approved by {approver}"
+        coil_qty = int(actual_val)
+        item_code_gen = f"ITM-{prefix}-{pipe_size.replace(' ', '')[:10]}"
+
+        cursor.execute("SELECT id, unit FROM items WHERE item_name = %s", (item_full_name,))
+        existing_item = cursor.fetchone()
+        if not existing_item:
+            try:
+                cursor.execute('''
+                    INSERT INTO items (item_code, item_name, item_group, hsn_code, unit, rate, image_url, is_own_production)
+                    VALUES (%s, %s, 'Own Production', '', %s, 0, '', 1)
+                ''', (item_code_gen, item_full_name, bundle_unit))
+            except mysql.connector.Error:
+                pass
+        else:
+            if bundle_unit:
+                cursor.execute("UPDATE items SET unit = %s, is_own_production = 1 WHERE id = %s", (bundle_unit, existing_item['id']))
+
+        # Insert into Inward Batches table
+        cursor.execute('''
+            INSERT INTO inward_batches (item_name, total_boxes, total_qty, supplier_or_party, remark)
+            VALUES (%s, 1, %s, %s, %s)
+        ''', (item_full_name, coil_qty, party_name, remark_text))
+        batch_id = cursor.lastrowid
+
+        # Insert into boxes table
+        cursor.execute('''
+            INSERT INTO boxes (box_id, batch_id, item_name, qty_in_box, supplier_or_party, status)
+            VALUES (%s, %s, %s, %s, %s, 'IN_STORE')
+        ''', (qr_code, batch_id, item_full_name, coil_qty, party_name))
+
+        # BOM Consumption
+        cursor.execute("SELECT id FROM items WHERE item_name = %s", (item_full_name,))
+        finished_good_item = cursor.fetchone()
+        if finished_good_item:
+            finished_good_item_id = finished_good_item['id']
+            cursor.execute("""
+                SELECT c.quantity, i.item_name
+                FROM bom_components c
+                JOIN boms b ON c.bom_id = b.id
+                JOIN items i ON c.component_item_id = i.id
+                WHERE b.finished_good_item_id = %s
+            """, (finished_good_item_id,))
+            components_to_consume = cursor.fetchall()
+            if components_to_consume:
+                for comp in components_to_consume:
+                    required_qty = float(comp['quantity'])
+                    component_name = comp['item_name']
+                    cursor.execute("SELECT box_id, qty_in_box FROM boxes WHERE item_name = %s AND status = 'IN_STORE' ORDER BY created_at ASC", (component_name,))
+                    boxes_to_consume_from = cursor.fetchall()
+                    qty_left_to_consume = required_qty
+                    for box in boxes_to_consume_from:
+                        if qty_left_to_consume <= 0: break
+                        qty_in_this_box = float(box['qty_in_box'])
+                        qty_to_take = min(qty_left_to_consume, qty_in_this_box)
+                        cursor.execute("INSERT INTO outward_logs (box_id, item_name, qty_issued, issued_to, scanned_by) VALUES (%s, %s, %s, %s, %s)", (box['box_id'], component_name, qty_to_take, f"Prod of {qr_code}", "System"))
+                        new_box_qty = qty_in_this_box - qty_to_take
+                        new_status = 'OUT' if new_box_qty <= 0 else 'IN_STORE'
+                        cursor.execute("UPDATE boxes SET qty_in_box = %s, status = %s WHERE box_id = %s", (new_box_qty, new_status, box['box_id']))
+                        qty_left_to_consume -= qty_to_take
+
+        add_log(conn, "PRODUCTION_APPROVED", f"Production Entry #{log_id} approved ({qr_code} - {item_full_name}): Qty {actual_val} {bundle_unit} entered into store.")
+
+        # SQLite sync
+        if os.path.exists("inventory.db"):
+            try:
+                sq_conn = sqlite3.connect("inventory.db")
+                sq_cursor = sq_conn.cursor()
+                sq_cursor.execute('''
+                    INSERT OR IGNORE INTO boxes (box_id, batch_id, item_name, qty_in_box, supplier_or_party, status)
+                    VALUES (?, ?, ?, ?, ?, 'IN_STORE')
+                ''', (qr_code, batch_id, item_full_name, coil_qty, party_name))
+                sq_conn.commit()
+                sq_conn.close()
+            except Exception:
+                pass
+
+        await manager.broadcast("STOCK_UPDATED")
+
+        # Prepare response data
+        log['qr_code'] = qr_code
+        log['actual_qty'] = actual_val
+        log['status'] = 'APPROVED'
+
+        return {
+            "status": "Success",
+            "message": f"Production entry #{log_id} approved! Added to store inventory.",
+            "qr_code": qr_code,
+            "batch_id": batch_id,
+            "log": log
+        }
+
+# 6. Plan vs Actual Analytics Summary
+@app.get("/api/production/plan-vs-actual-summary")
+def get_plan_vs_actual_summary():
+    """Returns aggregated KPIs for Plan vs Actual production."""
+    with get_db_ctx(commit=False) as (conn, cursor):
+        cursor.execute("""
+            SELECT 
+                COUNT(*) as total_entries,
+                COALESCE(SUM(CASE WHEN status = 'PENDING_APPROVAL' THEN 1 ELSE 0 END), 0) as pending_count,
+                COALESCE(SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END), 0) as approved_count,
+                COALESCE(SUM(planned_qty), 0) as total_planned_qty,
+                COALESCE(SUM(CASE WHEN status = 'APPROVED' THEN actual_qty ELSE 0 END), 0) as total_actual_qty
+            FROM production_logs
+        """)
+        summary = cursor.fetchone() or {}
+        
+        total_entries = int(summary.get('total_entries') or 0)
+        pending_count = int(summary.get('pending_count') or 0)
+        approved_count = int(summary.get('approved_count') or 0)
+        planned = float(summary.get('total_planned_qty') or 0.0)
+        actual = float(summary.get('total_actual_qty') or 0.0)
+        achievement_rate = round((actual / planned * 100), 1) if planned > 0 else 100.0
+
+        return {
+            "status": "Success",
+            "summary": {
+                "total_entries": total_entries,
+                "pending_count": pending_count,
+                "approved_count": approved_count,
+                "total_planned_qty": planned,
+                "total_actual_qty": actual,
+                "achievement_rate": achievement_rate
+            }
+        }
+
+# 7. Get Production Logs History (All or Approved)
 @app.get("/api/production/logs")
-def get_production_logs():
-    """તાજેતરના Production Logs મેળવે છે."""
-    conn = get_db()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM production_logs ORDER BY id DESC LIMIT 200")
-    logs = cursor.fetchall()
-    conn.close()
-    return {"status": "Success", "logs": logs}
+def get_production_logs(status: Optional[str] = None):
+    """Retrieves recent production logs (optionally filtered by status)."""
+    with get_db_ctx(commit=False) as (conn, cursor):
+        if status:
+            cursor.execute("SELECT * FROM production_logs WHERE status = %s ORDER BY id DESC LIMIT 200", (status,))
+        else:
+            cursor.execute("SELECT * FROM production_logs ORDER BY id DESC LIMIT 200")
+        logs = cursor.fetchall()
+        return {"status": "Success", "logs": logs}
 
 # -----------------------------------------------
 # 🚚 Dispatch Plan PDF/Excel Parser & APIs
@@ -1917,16 +2538,16 @@ def parse_dp_plan_pdf_bytes_pdfplumber(file_bytes: bytes, filename: str):
 @app.post("/api/dp-plan/upload-pdf")
 async def upload_dp_plan_pdf(file: UploadFile = File(...)):
     if not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="⚠️ ફક્ત PDF (.pdf) ફાઈલ જ અપલોડ કરી શકાશે!")
+        raise HTTPException(status_code=400, detail="⚠️ Only PDF (.pdf) files can be uploaded!")
 
     file_bytes = await file.read()
     try:
         parsed_data = parse_dp_plan_pdf_bytes_pdfplumber(file_bytes, file.filename)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"⚠️ PDF પ્રોસેસ કરવામાં ભૂલ આવી: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"⚠️ Error processing PDF: {str(e)}")
 
     if not parsed_data["items"]:
-        raise HTTPException(status_code=400, detail="⚠️ PDF માંથી કોઈ પણ આઈટમ રેકોર્ડ મળી શક્યો નથી! કૃપા કરીને DP Plan PDF ફોર્મેટ ચેક કરો.")
+        raise HTTPException(status_code=400, detail="⚠️ No item records found in PDF! Please check the DP Plan file format.")
 
     dp_number = parsed_data["dp_number"]
     so_numbers = parsed_data["so_numbers"]
@@ -1957,7 +2578,7 @@ async def upload_dp_plan_pdf(file: UploadFile = File(...)):
                 VALUES (%s, %s, %s, %s, %s, 0.0)
             """, (dp_number, item["item_name"], item["planned_qty"], item["unit"], item["weight_per_pc"]))
 
-        add_log(conn, "DP_PLAN_PDF", f"નવો DP Plan PDF અપલોડ થયો: {dp_number} (SO: {so_numbers}) | Items: {total_items}")
+        add_log(conn, "DP_PLAN_PDF", f"New DP Plan PDF uploaded: {dp_number} (SO: {so_numbers}) | Items: {total_items}")
 
     # 2. Update SQLite database (inventory.db)
     if os.path.exists("inventory.db"):
@@ -1993,7 +2614,7 @@ async def upload_dp_plan_pdf(file: UploadFile = File(...)):
 
     return {
         "status": "Success",
-        "message": f"✅ DP Plan PDF '{dp_number}' સફળતાપૂર્વક અપલોડ થઈ ગયો!",
+        "message": f"✅ DP Plan PDF '{dp_number}' uploaded successfully!",
         "dp_number": dp_number,
         "so_numbers": so_numbers,
         "total_items": total_items,
@@ -2034,7 +2655,7 @@ async def auto_connect_so_dp(
     into dispatch_verification with DIRECT_DISPATCH & STORE_KIT tags.
     """
     if not dp_pdf and not so_excel and not dp_number:
-        raise HTTPException(status_code=400, detail="⚠️ કૃપા કરીને ઓછામાં ઓછી ૧ DP Plan PDF ફાઈલ અથવા SO Excel ફાઈલ અપલોડ કરો!")
+        raise HTTPException(status_code=400, detail="⚠️ Please select at least 1 DP Plan PDF or SO Excel file!")
 
     extracted_dp_number = (dp_number or "").strip()
     extracted_so_number = (so_number or "").strip()
@@ -2147,7 +2768,7 @@ async def auto_connect_so_dp(
     all_mapped_items = direct_items + store_kit_items
 
     if not all_mapped_items:
-        raise HTTPException(status_code=400, detail="⚠️ PDF અથવા Excel માંથી કોઈ આઈટમો શોધી શકાઈ નથી! કૃપા કરીને ફાઈલ ફોર્મેટ ચેક કરો.")
+        raise HTTPException(status_code=400, detail="⚠️ No items found in PDF or Excel! Please check the file format.")
 
     # 3. Save into MySQL dispatch_verification table
     with get_db_ctx(commit=True) as (conn, cursor):
@@ -2220,7 +2841,7 @@ async def auto_connect_so_dp(
 
     return {
         "status": "Success",
-        "message": f"✅ DP Plan '{extracted_dp_number}' અને SO '{extracted_so_number}' સફળતાપૂર્વક કનેક્ટ થયા!",
+        "message": f"✅ DP Plan '{extracted_dp_number}' and SO '{extracted_so_number}' connected successfully!",
         "dp_number": extracted_dp_number,
         "so_number": extracted_so_number,
         "direct_dispatch_count": len(direct_items),
@@ -2229,6 +2850,379 @@ async def auto_connect_so_dp(
         "items": all_mapped_items
     }
 
+
+def process_excel_in_background(file_bytes: bytes, filename: str):
+    """
+    This function runs in the background. It contains the original heavy processing logic.
+    """
+    try:
+        # Use io.BytesIO to read the file from in-memory bytes instead of disk
+        df = pd.read_excel(io.BytesIO(file_bytes))
+        df.columns = [str(c).strip() for c in df.columns]
+    except Exception as e:
+        # Since this is a background task, we log the error instead of returning an HTTPException
+        print(f"BACKGROUND_TASK_ERROR: Failed to read Excel file {filename}: {e}")
+        return
+
+    col_map = {
+        'plan_no': next((c for c in df.columns if 'disp. plan no' in c.lower()), None),
+        'so_no': next((c for c in df.columns if 'so no' in c.lower()), None),
+        'item_name': next((c for c in df.columns if 'item' in c.lower()), None),
+        'item_code': next((c for c in df.columns if 'code' in c.lower()), None),
+        'planned_qty': next((c for c in df.columns if 'pend. qty' in c.lower()), None),
+        'unit': next((c for c in df.columns if 'unit' in c.lower()), None),
+    }
+
+    if not all(col_map.values()):
+        missing = [k for k, v in col_map.items() if v is None]
+        print(f"BACKGROUND_TASK_ERROR: Missing required columns in {filename}: {', '.join(missing)}")
+        return
+
+    grouped = df.groupby([col_map['plan_no'], col_map['so_no']])
+    processed_plans_count = 0
+
+    with get_db_ctx(commit=True) as (conn, cursor):
+        for (plan_no, so_no), group in grouped:
+            if not plan_no or pd.isna(plan_no):
+                continue
+
+            plan_no = str(plan_no).strip()
+            so_no = str(so_no).strip() if pd.notna(so_no) else 'N/A'
+            
+            items = []
+            for _, row in group.iterrows():
+                item_code = str(row[col_map['item_code']]).strip().upper()
+                item_name = str(row[col_map['item_name']]).strip()
+                planned_qty = pd.to_numeric(row[col_map['planned_qty']], errors='coerce')
+                unit = str(row[col_map['unit']]).strip()
+
+                if not item_name or pd.isna(planned_qty) or planned_qty <= 0:
+                    continue
+
+                fitting_prefixes = ('PVF', 'NOZ', 'VLV', 'PFT', 'GI', 'FAC', 'HEA', 'MAP')
+                item_type = 'STORE_KIT' if item_code.startswith(fitting_prefixes) else 'DIRECT_DISPATCH'
+                
+                items.append({
+                    "item_name": item_name,
+                    "planned_qty": planned_qty,
+                    "unit": unit,
+                    "item_type": item_type
+                })
+
+            if not items:
+                continue
+
+            cursor.execute("SELECT id FROM dispatch_plans WHERE plan_no = %s", (plan_no,))
+            existing_plan = cursor.fetchone()
+
+            if existing_plan:
+                plan_id = existing_plan['id']
+                cursor.execute("UPDATE dispatch_plans SET so_no = %s, status = 'ACTIVE' WHERE id = %s", (so_no, plan_id))
+                cursor.execute("DELETE FROM dispatch_plan_items WHERE dispatch_plan_id = %s", (plan_id,))
+            else:
+                cursor.execute("INSERT INTO dispatch_plans (plan_no, so_no, status) VALUES (%s, %s, 'ACTIVE')", (plan_no, so_no))
+                plan_id = cursor.lastrowid
+
+            for item in items:
+                cursor.execute(
+                    "INSERT INTO dispatch_plan_items (dispatch_plan_id, item_name, planned_qty, unit, item_type) VALUES (%s, %s, %s, %s, %s)",
+                    (plan_id, item['item_name'], item['planned_qty'], item['unit'], item['item_type'])
+                )
+            
+            processed_plans_count += 1
+
+        add_log(conn, "EXCEL_PLAN_UPLOAD", f"Processed {processed_plans_count} dispatch plans from Excel file: {filename}")
+
+    # Explicitly free up memory
+    del df
+    del grouped
+    gc.collect()
+    print(f"BACKGROUND_TASK_SUCCESS: Successfully processed {filename}.")
+
+
+@app.post("/api/dispatch/upload-excel-plan")
+async def upload_excel_dispatch_plan(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+    """
+    Accepts an Excel file, validates it, and passes it to a background task for processing.
+    Returns an immediate response to the user.
+    """
+    if not file.filename.lower().endswith((".xlsx", ".xls")):
+        raise HTTPException(status_code=400, detail="Only Excel files (.xlsx, .xls) are supported.")
+
+    # Read file into memory to pass to the background task
+    file_bytes = await file.read()
+
+    # Add the heavy processing function to the background tasks
+    background_tasks.add_task(process_excel_in_background, file_bytes, file.filename)
+
+    return {
+        "status": "Processing",
+        "message": f"File '{file.filename}' has been received and is being processed in the background. The UI will update automatically upon completion."
+    }
+
+def process_loading_entry_excel(file_bytes: bytes, filename: str):
+    """
+    Background task to process 'Pending Loading Entry' Excel file.
+    It inserts or updates records in the `pending_loading_entries` table.
+    """
+    try:
+        df = pd.read_excel(io.BytesIO(file_bytes))
+        df.columns = [str(c).strip().lower() for c in df.columns]
+    except Exception as e:
+        print(f"BACKGROUND_TASK_ERROR: Failed to read loading entry Excel file {filename}: {e}")
+        return
+
+    # Map columns based on expected names
+    col_map = {
+        'disp_plan_no': next((c for c in df.columns if 'disp. plan no' in c), None),
+        'disp_plan_date': next((c for c in df.columns if 'disp. plan date' in c), None),
+        'so_no': next((c for c in df.columns if 'so no' in c), None),
+        'so_date': next((c for c in df.columns if 'so date' in c), None),
+        'customer_location': next((c for c in df.columns if 'cust./location' in c), None),
+        'dealer': next((c for c in df.columns if 'dealer' in c), None),
+        'village': next((c for c in df.columns if 'village' in c), None),
+        'district': next((c for c in df.columns if 'district' in c), None),
+        'item_name': next((c for c in df.columns if 'item' in c), None),
+        'item_code': next((c for c in df.columns if 'code' in c), None),
+        'pending_qty': next((c for c in df.columns if 'pend. qty' in c), None),
+        'unit': next((c for c in df.columns if 'unit' in c), None),
+    }
+
+    required_cols = ['disp_plan_no', 'so_no', 'item_name', 'item_code', 'pending_qty', 'unit']
+    missing = [k for k in required_cols if col_map[k] is None]
+    if missing:
+        print(f"BACKGROUND_TASK_ERROR: Missing required columns in {filename}: {', '.join(missing)}")
+        return
+
+    inserted_count = 0
+    updated_count = 0
+    skipped_count = 0
+    error_count = 0
+
+    with get_db_ctx(commit=True) as (conn, cursor):
+        for _, row in df.iterrows():
+            try:
+                disp_plan_no = str(row[col_map['disp_plan_no']]).strip()
+                so_no = str(row[col_map['so_no']]).strip()
+                item_code = str(row[col_map['item_code']]).strip()
+                pending_qty = pd.to_numeric(row[col_map['pending_qty']], errors='coerce')
+
+                if not all([disp_plan_no, so_no, item_code]) or pd.isna(pending_qty):
+                    skipped_count += 1
+                    continue
+
+                # Prepare data for insertion/update
+                data = {
+                    "disp_plan_no": disp_plan_no,
+                    "so_no": so_no,
+                    "item_code": item_code,
+                    "pending_qty": float(pending_qty),
+                    "item_name": str(row.get(col_map['item_name'], '')).strip(),
+                    "unit": str(row.get(col_map['unit'], '')).strip(),
+                    "disp_plan_date": pd.to_datetime(row.get(col_map['disp_plan_date']), errors='coerce').date() if col_map.get('disp_plan_date') and pd.notna(row.get(col_map['disp_plan_date'])) else None,
+                    "so_date": pd.to_datetime(row.get(col_map['so_date']), errors='coerce').date() if col_map.get('so_date') and pd.notna(row.get(col_map['so_date'])) else None,
+                    "customer_location": str(row.get(col_map['customer_location'], '')).strip(),
+                    "dealer": str(row.get(col_map['dealer'], '')).strip(),
+                    "village": str(row.get(col_map['village'], '')).strip(),
+                    "district": str(row.get(col_map['district'], '')).strip(),
+                }
+
+                # Use INSERT ... ON DUPLICATE KEY UPDATE for atomicity
+                insert_query = """
+                    INSERT INTO pending_loading_entries (disp_plan_no, so_no, item_code, pending_qty, item_name, unit, disp_plan_date, so_date, customer_location, dealer, village, district)
+                    VALUES (%(disp_plan_no)s, %(so_no)s, %(item_code)s, %(pending_qty)s, %(item_name)s, %(unit)s, %(disp_plan_date)s, %(so_date)s, %(customer_location)s, %(dealer)s, %(village)s, %(district)s)
+                    ON DUPLICATE KEY UPDATE
+                        pending_qty = VALUES(pending_qty),
+                        item_name = VALUES(item_name),
+                        unit = VALUES(unit),
+                        disp_plan_date = VALUES(disp_plan_date),
+                        so_date = VALUES(so_date),
+                        customer_location = VALUES(customer_location),
+                        dealer = VALUES(dealer),
+                        village = VALUES(village),
+                        district = VALUES(district)
+                """
+                cursor.execute(insert_query, data)
+                
+                if cursor.rowcount == 1:
+                    inserted_count += 1
+                elif cursor.rowcount == 2: # 2 rows affected means an update occurred
+                    updated_count += 1
+                else:
+                    skipped_count += 1
+
+            except Exception as e:
+                error_count += 1
+                print(f"Error processing row: {row.to_dict()}. Error: {e}")
+
+        log_message = f"Processed '{filename}': {inserted_count} inserted, {updated_count} updated, {skipped_count} skipped, {error_count} errors."
+        add_log(conn, "LOADING_ENTRY_UPLOAD", log_message)
+
+    print(f"BACKGROUND_TASK_SUCCESS: {log_message}")
+    # Optionally, broadcast a message to the frontend to refresh the DP list
+    # await manager.broadcast("LOADING_ENTRIES_UPDATED")
+    return {
+        "inserted": inserted_count,
+        "updated": updated_count,
+        "skipped": skipped_count,
+        "errors": error_count,
+        "filename": filename
+    }
+
+@app.post("/api/dispatch/upload-loading-entry")
+async def upload_loading_entry_excel(file: UploadFile = File(...)):
+    """
+    Accepts a 'Pending Loading Entry' Excel file and processes it synchronously.
+    """
+    if not file.filename.lower().endswith((".xlsx", ".xls")):
+        raise HTTPException(status_code=400, detail="Only Excel files (.xlsx, .xls) are supported.")
+
+    file_bytes = await file.read()
+    result = process_loading_entry_excel(file_bytes, file.filename)
+    
+    return {
+        "status": "Success",
+        "message": f"Processed '{result['filename']}': {result['inserted']} inserted, {result['updated']} updated, {result['skipped']} skipped, {result['errors']} errors.",
+        "details": result
+    }
+
+@app.get("/api/loading-entry/dp-plans")
+def get_loading_entry_dp_plans():
+    """Return unique Dispatch Plan numbers from pending_loading_entries."""
+    with get_db_ctx() as (conn, cursor):
+        cursor.execute("""
+            SELECT DISTINCT disp_plan_no
+            FROM pending_loading_entries
+            ORDER BY disp_plan_no
+        """)
+        plans = [row["disp_plan_no"] for row in cursor.fetchall()]
+
+    return {
+        "status": "Success",
+        "dp_plans": plans
+    }
+
+@app.get("/api/loading-entry/so-numbers/{dp_plan_no:path}")
+def get_loading_entry_so_numbers(dp_plan_no: str):
+    """Return unique SO numbers for the selected Dispatch Plan."""
+    with get_db_ctx() as (conn, cursor):
+        cursor.execute(
+            """
+            SELECT DISTINCT so_no
+            FROM pending_loading_entries
+            WHERE disp_plan_no = %s
+            ORDER BY so_no
+            """,
+            (dp_plan_no,)
+        )
+
+        so_numbers = [row["so_no"] for row in cursor.fetchall()]
+
+    return {
+        "status": "Success",
+        "so_numbers": so_numbers
+    }
+
+@app.get("/api/loading-entry/items")
+def get_loading_entry_items(dp_plan_no: str, so_numbers: str):
+    """
+    Return pending loading items for the selected Dispatch Plan
+    and comma-separated SO numbers.
+    """
+
+    so_list = [s.strip() for s in so_numbers.split(",") if s.strip()]
+
+    if not so_list:
+        return {
+            "status": "Success",
+            "items": []
+        }
+
+    placeholders = ",".join(["%s"] * len(so_list))
+
+    query = f"""
+        SELECT
+            item_name,
+            item_code,
+            pending_qty,
+            unit
+        FROM pending_loading_entries
+        WHERE disp_plan_no = %s
+          AND so_no IN ({placeholders})
+        ORDER BY item_name
+    """
+
+    params = [dp_plan_no] + so_list
+
+    with get_db_ctx() as (conn, cursor):
+        cursor.execute(query, tuple(params))
+        items = cursor.fetchall()
+
+    return {
+        "status": "Success",
+        "items": items
+    }
+
+@app.post("/api/dispatch/create-from-loading-entry")
+async def create_dispatch_plan_from_loading_entry(req: CreatePlanFromLoadingEntryRequest):
+    """
+    Creates a permanent dispatch plan in `dispatch_plans` from the temporary
+    `pending_loading_entries` table based on user selection.
+    """
+    if not req.disp_plan_no or not req.so_numbers:
+        raise HTTPException(status_code=400, detail="Dispatch Plan number and SO numbers are required.")
+
+    so_placeholders = ",".join(["%s"] * len(req.so_numbers))
+    query = f"""
+        SELECT item_name, item_code, SUM(pending_qty) as total_qty, unit
+        FROM pending_loading_entries
+        WHERE disp_plan_no = %s AND so_no IN ({so_placeholders})
+        GROUP BY item_name, item_code, unit
+    """
+    params = [req.disp_plan_no] + req.so_numbers
+
+    with get_db_ctx(commit=True) as (conn, cursor):
+        cursor.execute(query, tuple(params))
+        items_to_add = cursor.fetchall()
+
+        if not items_to_add:
+            raise HTTPException(status_code=404, detail="No items found for the selected DP and SOs.")
+
+        plan_no = req.disp_plan_no
+        so_no_str = ", ".join(req.so_numbers)
+
+        # Check if a plan with this plan_no already exists
+        cursor.execute("SELECT id FROM dispatch_plans WHERE plan_no = %s", (plan_no,))
+        existing_plan = cursor.fetchone()
+
+        if existing_plan:
+            plan_id = existing_plan['id']
+            # Update SO number and reset items
+            cursor.execute("UPDATE dispatch_plans SET so_no = %s, status = 'ACTIVE' WHERE id = %s", (so_no_str, plan_id))
+            cursor.execute("DELETE FROM dispatch_plan_items WHERE dispatch_plan_id = %s", (plan_id,))
+        else:
+            # Create a new plan
+            cursor.execute(
+                "INSERT INTO dispatch_plans (plan_no, so_no, status) VALUES (%s, %s, 'ACTIVE')",
+                (plan_no, so_no_str)
+            )
+            plan_id = cursor.lastrowid
+
+        # Add items to the plan
+        for item in items_to_add:
+            cursor.execute(
+                """
+                INSERT INTO dispatch_plan_items (dispatch_plan_id, item_name, planned_qty, unit, item_type)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (plan_id, item['item_name'], item['total_qty'], item['unit'], classify_item_type(item['item_name']))
+            )
+
+        add_log(conn, "PLAN_CREATED_FROM_EXCEL", f"Plan '{plan_no}' created for SO(s) '{so_no_str}' with {len(items_to_add)} items.")
+
+    await manager.broadcast("STOCK_UPDATED") # To refresh the plan list on the UI
+
+    return {"status": "Success", "message": f"Dispatch Plan '{plan_no}' created successfully and is now available for scanning."}
 
 # 🎁 Store Kit QR Generation & Management APIs
 @app.get("/api/store-kit/so-list")
@@ -2274,7 +3268,7 @@ def get_store_kit_so_items(so_number: str):
 def generate_store_kit(req: StoreKitGenerateRequest):
     so_num = req.so_number.strip()
     if not so_num:
-        raise HTTPException(status_code=400, detail="⚠️ SO Number આપવો ફરજિયાત છે!")
+        raise HTTPException(status_code=400, detail="⚠️ SO Number is required!")
 
     clean_so = re.sub(r"[^\w\-]", "", so_num)
     if clean_so.upper().startswith("SO-"):
@@ -2301,7 +3295,7 @@ def generate_store_kit(req: StoreKitGenerateRequest):
             kit_items = cursor.fetchall()
 
         if not kit_items:
-            raise HTTPException(status_code=404, detail=f"SO Number '{so_num}' ના કોઈ ફિટિંગ્સ મળી શક્યા નથી!")
+            raise HTTPException(status_code=404, detail=f"No fittings found for SO Number '{so_num}'!")
 
         dp_num = req.dp_number or (kit_items[0].get('dp_number', '') if kit_items else '')
 
@@ -2355,7 +3349,7 @@ def generate_store_kit(req: StoreKitGenerateRequest):
 
     return {
         "status": "Success",
-        "message": f"✅ Store Kit QR '{kit_code}' સફળતાપૂર્વક જનરેટ થઈ ગયો!",
+        "message": f"✅ Store Kit QR '{kit_code}' generated successfully!",
         "kit_code": kit_code,
         "so_number": so_num,
         "dp_number": dp_num,
@@ -2369,13 +3363,13 @@ def generate_store_kit(req: StoreKitGenerateRequest):
 @app.post("/api/dispatch-plan/upload")
 async def upload_dispatch_plan(file: UploadFile = File(...)):
     if not file.filename.lower().endswith((".pdf", ".xlsx", ".xls")):
-        raise HTTPException(status_code=400, detail="⚠️ ફક્ત PDF અથવા Excel (.xlsx, .xls) ફાઈલ જ અપલોડ કરી શકાશે!")
+        raise HTTPException(status_code=400, detail="⚠️ Only PDF or Excel (.xlsx, .xls) files can be uploaded!")
         
     file_bytes = await file.read()
     parsed_data = parse_dispatch_plan_bytes(file_bytes, file.filename)
     
     if not parsed_data["items"]:
-        raise HTTPException(status_code=400, detail="⚠️ ફાઈલમાંથી કોઈ પણ આઈટમ રેકોર્ડ મળી શક્યો નથી! કૃપા કરીને ડિસ્પેચ પ્લાન ફોર્મેટ ચેક કરો.")
+        raise HTTPException(status_code=400, detail="⚠️ No item records found in file! Please check the dispatch plan format.")
         
     with get_db_ctx(commit=True) as (conn, cursor):
         cursor.execute("SELECT id FROM dispatch_plans WHERE plan_no = %s", (parsed_data["plan_no"],))
@@ -2398,11 +3392,11 @@ async def upload_dispatch_plan(file: UploadFile = File(...)):
                 VALUES (%s, %s, %s, 0.0, %s, %s)
             """, (plan_id, item["item_name"], item["planned_qty"], item["unit"], item["weight_per_pc"]))
             
-        add_log(conn, "DISPATCH_PLAN", f"નવો Dispatch Plan અપલોડ થયો: {parsed_data['plan_no']} (SO: {parsed_data['so_no']}) | Items: {len(parsed_data['items'])}")
+        add_log(conn, "DISPATCH_PLAN", f"New Dispatch Plan uploaded: {parsed_data['plan_no']} (SO: {parsed_data['so_no']}) | Items: {len(parsed_data['items'])}")
 
     return {
         "status": "Success",
-        "message": f"✅ Dispatch Plan '{parsed_data['plan_no']}' સફળતાપૂર્વક અપલોડ થઈ ગયો!",
+        "message": f"✅ Dispatch Plan '{parsed_data['plan_no']}' uploaded successfully!",
         "plan_id": plan_id,
         "plan_no": parsed_data["plan_no"],
         "so_no": parsed_data["so_no"],
@@ -2474,7 +3468,7 @@ def get_dispatch_plan_details(plan_id: int):
         cursor.execute("SELECT * FROM dispatch_plans WHERE id = %s", (plan_id,))
         plan = cursor.fetchone()
         if not plan:
-            raise HTTPException(status_code=404, detail="Dispatch Plan મળ્યો નથી!")
+            raise HTTPException(status_code=404, detail="Dispatch Plan not found!")
             
         cursor.execute("SELECT * FROM dispatch_plan_items WHERE dispatch_plan_id = %s", (plan_id,))
         plan["items"] = cursor.fetchall()
@@ -2487,12 +3481,12 @@ def delete_dispatch_plan(plan_id: int):
         cursor.execute("SELECT plan_no FROM dispatch_plans WHERE id = %s", (plan_id,))
         plan = cursor.fetchone()
         if not plan:
-            raise HTTPException(status_code=404, detail="Dispatch Plan મળ્યો નથી!")
+            raise HTTPException(status_code=404, detail="Dispatch Plan not found!")
             
         cursor.execute("DELETE FROM dispatch_plans WHERE id = %s", (plan_id,))
-        add_log(conn, "DISPATCH_PLAN", f"Dispatch Plan ડીલીટ થયો: {plan['plan_no']}")
+        add_log(conn, "DISPATCH_PLAN", f"Dispatch Plan deleted: {plan['plan_no']}")
         
-    return {"status": "Success", "message": f"🗑️ Dispatch Plan '{plan['plan_no']}' ડીલીટ કરી દેવાયો છે."}
+    return {"status": "Success", "message": f"🗑️ Dispatch Plan '{plan['plan_no']}' deleted successfully."}
 
 @app.put("/api/dispatch-plan/{plan_id}")
 def update_dispatch_plan(plan_id: int, plan_data: DispatchPlanUpdate):
@@ -2655,7 +3649,7 @@ def get_delivery_challan(plan_id: str):
             cursor.execute("SELECT * FROM dp_plans WHERE dp_number = %s", (plan_id,))
             plan = cursor.fetchone()
             if not plan:
-                raise HTTPException(status_code=404, detail=f"Delivery Challan માટે DP Plan '{plan_id}' મળી શક્યો નથી!")
+                raise HTTPException(status_code=404, detail=f"DP Plan '{plan_id}' not found for Delivery Challan!")
 
             cursor.execute("SELECT * FROM dp_plan_items WHERE dp_number = %s", (plan_id,))
             dpi_items = cursor.fetchall()
@@ -2797,18 +3791,18 @@ def update_vehicle_info(req: VehicleInfoUpdateRequest):
         except Exception as e:
             print(f"[WARNING] SQLite vehicle sync error: {e}")
 
-    return {"status": "Success", "message": "✅ ગાડી અને ટ્રાન્સપોર્ટર વિગત સેવ થઈ ગઈ છે!"}
+    return {"status": "Success", "message": "✅ Vehicle and transporter details saved successfully!"}
 
 
 @app.get("/api/health-check")
 def health_check():
     """
-    સર્વર અને ડેટાબેઝ કનેક્શનનું સ્ટેટસ ચેક કરે છે.
+    Checks server and database connection status.
     """
     db_status = "error"
     try:
-        # get_db_ctx કનેક્શન પુલમાંથી કનેક્શન મેળવવાનો પ્રયાસ કરશે.
-        # જો સફળ થશે, તો ડેટાબેઝ કનેક્ટેડ છે.
+        # Attempts to acquire database connection from pool.
+        # If successful, database is connected.
         with get_db_ctx() as (conn, cursor):
             cursor.execute("SELECT 1")
             if cursor.fetchone():
@@ -2817,4 +3811,5 @@ def health_check():
         print(f"Health Check DB Error: {e}")
         db_status = "error"
 
+    return {"server_status": "connected", "db_status": db_status}
     return {"server_status": "connected", "db_status": db_status}

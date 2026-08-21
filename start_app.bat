@@ -9,10 +9,10 @@ echo Store Inventory System - Auto Starter
 echo ===================================================
 echo.
 
-echo 🔍 Checking MySQL Database Status on Port 3307...
+echo Checking MySQL Database Status on Port 3307...
 netstat -ano | findstr ":3307" >nul 2>&1
 if %errorlevel% neq 0 (
-    echo ⚡ MySQL Server is NOT running! Auto-starting XAMPP MySQL...
+    echo MySQL Server is NOT running! Auto-starting XAMPP MySQL...
     if exist "C:\xampp\mysql_start.bat" (
         start /b C:\xampp\mysql_start.bat >nul 2>&1
     ) else if exist "C:\xampp\mysql\bin\mysqld.exe" (
@@ -20,18 +20,18 @@ if %errorlevel% neq 0 (
     )
     timeout /t 3 >nul
 ) else (
-    echo ✅ MySQL Server is already running on port 3307.
+    echo MySQL Server is already running on port 3307.
 )
 
 echo.
-echo 🚀 Starting Application...
+echo Starting Application...
 echo.
 
 python start_tunnels.py
 
 if %errorlevel% neq 0 (
     echo.
-    echo ❌ Python Execution Error Detected!
+    echo Python Execution Error Detected!
     echo.
 )
 

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="gu">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BOM Master | Store System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         /* 🌓 Global Dark / Light Theme System */
         :root {
@@ -38,20 +40,26 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        .glass-card, .card {
+        .glass-card,
+        .card {
             background-color: var(--bg-card) !important;
             border: 1px solid var(--border-color) !important;
             color: var(--text-main) !important;
             box-shadow: 0 8px 24px var(--shadow-glow) !important;
         }
 
-        .form-control, .form-select, .form-control-dark, .form-select-dark {
+        .form-control,
+        .form-select,
+        .form-control-dark,
+        .form-select-dark {
             background-color: var(--input-bg) !important;
             color: var(--input-text) !important;
             border-color: var(--border-color) !important;
         }
 
-        .table, .table td, .table th {
+        .table,
+        .table td,
+        .table th {
             color: var(--text-main) !important;
         }
 
@@ -84,7 +92,8 @@
             white-space: nowrap !important;
         }
 
-        .nav-pill-custom:hover, .nav-pill-custom:focus {
+        .nav-pill-custom:hover,
+        .nav-pill-custom:focus {
             color: #ffffff !important;
             background: rgba(255, 255, 255, 0.16) !important;
             border-color: rgba(255, 255, 255, 0.25) !important;
@@ -223,181 +232,211 @@
     </style>
 
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/page-loader.css">
 </head>
+
 <body>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
-            <span class="fs-4 text-warning">📦</span> 
-            <span>STORE MANAGEMENT SYSTEM</span>
-        </a>
-        
-        <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#topNavbarMenu">
-            <i class="bi bi-list fs-2"></i>
-        </button>
+    <!-- 📦 Global Page Loader Elements -->
+    <div id="page-progress-bar"></div>
+    <div id="page-loader-overlay">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
 
-        <div class="collapse navbar-collapse" id="topNavbarMenu">
-            <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
-                
-                <!-- 1. Inward & Factory Dropdown -->
-                <div class="nav-item dropdown">
-                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-box-seam me-1 text-info"></i> આવક અને ઉત્પાદન
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                        <li><a class="dropdown-item dropdown-item-custom" href="/dashboard"><i class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
-                    </ul>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
+                <span class="fs-4 text-warning">📦</span>
+                <span>STORE MANAGEMENT SYSTEM</span>
+            </a>
+
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse"
+                data-bs-target="#topNavbarMenu">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="topNavbarMenu">
+                <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+
+                    <!-- 1. Inward & Factory Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-box-seam me-1 text-info"></i> Inward & Production
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/inward-page"><i
+                                        class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i
+                                        class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 2. Dispatch & Yard Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-truck me-1 text-success"></i> Dispatch & Scanning
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i
+                                        class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i
+                                        class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i
+                                        class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 3. Master Controls Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle active" href="#" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-sliders me-1 text-warning"></i> Master Control
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/bom-page">
+                                    <i class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i
+                                        class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 4. Reports & Logs Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-bar-chart-line me-1 text-primary"></i> Reports & Logs
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i
+                                        class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a>
+                            </li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i
+                                        class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 🌓 Global Theme Toggle Button -->
+                    <button id="globalThemeBtn" onclick="toggleGlobalTheme()"
+                        class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
+                        <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+                        <span id="themeText">Dark Mode</span>
+                    </button>
                 </div>
-
-                <!-- 2. Dispatch & Yard Dropdown -->
-                <div class="nav-item dropdown">
-                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-truck me-1 text-success"></i> ડિસ્પેચ અને સ્કેનિંગ
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                        <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a></li>
-                    </ul>
-                </div>
-
-                <!-- 3. Master Controls Dropdown -->
-                <div class="nav-item dropdown">
-                    <a class="nav-pill-custom dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-sliders me-1 text-warning"></i> માસ્ટર કંટ્રોલ
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                        <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
-                    </ul>
-                </div>
-
-                <!-- 4. Reports & Logs Dropdown -->
-                <div class="nav-item dropdown">
-                    <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-bar-chart-line me-1 text-primary"></i> રિપોર્ટ્સ અને લોગ
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                        <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a></li>
-                        <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
-                    </ul>
-                </div>
-
-                <!-- 🌓 Global Theme Toggle Button -->
-                <button id="globalThemeBtn" onclick="toggleGlobalTheme()" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
-                    <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
-                    <span id="themeText">Dark Mode</span>
-                </button>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<div class="container my-4">
-    <!-- Header Title -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <h3 class="fw-bold text-white m-0"><i class="bi bi-diagram-3-fill text-warning me-2"></i> Bill of Materials (BOM) Master</h3>
-            <p class="text-muted small m-0 mt-1">ફિનિશ્ડ પ્રોડક્ટ બનાવવા માટે વપરાતા કાચા માલ (Components) ની યાદી મેનેજ કરો.</p>
-        </div>
-    </div>
-
-    <div class="row g-4">
-        <!-- Left Column: Create/Edit BOM -->
-        <div class="col-lg-5">
-            <div class="glass-card p-4 position-sticky" style="top: 100px;">
-                <h5 class="fw-bold text-warning mb-3"><i class="bi bi-plus-circle-fill me-2"></i> Create / Edit BOM</h5>
-                <form id="bomForm" onsubmit="saveBOM(event)">
-                    <div class="mb-3">
-                        <label for="finishedGood" class="form-label small text-muted">1. Finished Good (બનાવટની મુખ્ય આઈટમ)</label>
-                        <input class="form-control form-control-dark" list="finishedGoodsList" id="finishedGood" placeholder="🔍 Own Production આઈટમ શોધો..." required autocomplete="off">
-                        <datalist id="finishedGoodsList"></datalist>
-                    </div>
-
-                    <hr class="border-secondary">
-
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <label class="form-label small text-muted mb-0">2. Components (વપરાતો કાચો માલ)</label>
-                        <button type="button" class="btn btn-sm btn-outline-info py-0" onclick="addComponentRow()">
-                            <i class="bi bi-plus"></i> Add Component
-                        </button>
-                    </div>
-
-                    <div id="componentsContainer" class="d-grid gap-2" style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
-                        <!-- Component rows will be added here by JS -->
-                    </div>
-
-                    <div class="d-grid gap-2 mt-4">
-                         <button type="submit" class="btn btn-warning fw-bold">
-                            <i class="bi bi-save-fill me-1"></i> Save BOM
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" onclick="clearForm()">
-                            Clear Form
-                        </button>
-                    </div>
-                </form>
+    <div class="container my-4">
+        <!-- Header Title -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h3 class="fw-bold text-white m-0"><i class="bi bi-diagram-3-fill text-warning me-2"></i> Bill of
+                    Materials (BOM) Master</h3>
+                <p class="text-muted small m-0 mt-1">Manage bill of materials, raw materials and component specifications for finished goods.</p>
             </div>
         </div>
 
-        <!-- Right Column: Existing BOMs List -->
-        <div class="col-lg-7">
-            <div class="glass-card p-4">
-                 <h5 class="fw-bold text-warning mb-3"><i class="bi bi-list-check me-2"></i> Existing BOMs</h5>
-                 <div id="bomsListContainer" class="d-grid gap-3">
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-warning" role="status"></div>
-                        <p class="text-muted mt-2">BOMs લોડ થઈ રહ્યા છે...</p>
+        <div class="row g-4">
+            <!-- Left Column: Create/Edit BOM -->
+            <div class="col-lg-5">
+                <div class="glass-card p-4 position-sticky" style="top: 100px;">
+                    <h5 class="fw-bold text-warning mb-3"><i class="bi bi-plus-circle-fill me-2"></i> Create / Edit BOM
+                    </h5>
+                    <form id="bomForm" onsubmit="saveBOM(event)">
+                        <div class="mb-3">
+                            <label for="finishedGood" class="form-label small text-muted">1. Finished Good (Output Product)</label>
+                            <input class="form-control form-control-dark" list="finishedGoodsList" id="finishedGood"
+                                placeholder="🔍 Search Own Production Item..." required autocomplete="off">
+                            <datalist id="finishedGoodsList"></datalist>
+                        </div>
+
+                        <hr class="border-secondary">
+
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label small text-muted mb-0">2. Components (Raw Materials & Quantities)</label>
+                            <button type="button" class="btn btn-sm btn-outline-info py-0" onclick="addComponentRow()">
+                                <i class="bi bi-plus"></i> Add Component
+                            </button>
+                        </div>
+
+                        <div id="componentsContainer" class="d-grid gap-2"
+                            style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
+                            <!-- Component rows will be added here by JS -->
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-warning fw-bold">
+                                <i class="bi bi-save-fill me-1"></i> Save BOM
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearForm()">
+                                Clear Form
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Existing BOMs List -->
+            <div class="col-lg-7">
+                <div class="glass-card p-4">
+                    <h5 class="fw-bold text-warning mb-3"><i class="bi bi-list-check me-2"></i> Existing BOMs</h5>
+                    <div id="bomsListContainer" class="d-grid gap-3">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-warning" role="status"></div>
+                            <p class="text-muted mt-2">Loading BOM definitions...</p>
+                        </div>
                     </div>
-                 </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    const API_URL = "";
-    let allItems = [];
-    let finishedGoods = [];
-    let rawMaterials = [];
-    let currentEditingBomId = null;
+    <script>
+        const API_URL = "";
+        let allItems = [];
+        let finishedGoods = [];
+        let rawMaterials = [];
+        let currentEditingBomId = null;
 
-    document.addEventListener("DOMContentLoaded", () => {
-        loadAllItems();
-        loadBOMs();
-    });
+        document.addEventListener("DOMContentLoaded", () => {
+            loadAllItems();
+            loadBOMs();
+        });
 
-    async function loadAllItems() {
-        try {
-            const res = await fetch(`${API_URL}/api/items/list?limit=0`);
-            const data = await res.json();
-            allItems = data.items || [];
-            
-            finishedGoods = allItems.filter(i => i.is_own_production === 1 || i.item_group === 'Own Production');
-            rawMaterials = allItems.filter(i => i.is_own_production === 0 && i.item_group !== 'Own Production');
+        async function loadAllItems() {
+            try {
+                const res = await fetch(`${API_URL}/api/items/list?limit=0`);
+                const data = await res.json();
+                allItems = data.items || [];
 
-            const fgDatalist = document.getElementById('finishedGoodsList');
-            fgDatalist.innerHTML = finishedGoods.map(i => `<option value="${i.item_name}" data-id="${i.id}"></option>`).join('');
+                finishedGoods = allItems.filter(i => i.is_own_production === 1 || i.item_group === 'Own Production');
+                rawMaterials = allItems.filter(i => i.is_own_production === 0 && i.item_group !== 'Own Production');
 
-        } catch (err) {
-            console.error("Error loading items for BOM:", err);
-        }
-    }
+                const fgDatalist = document.getElementById('finishedGoodsList');
+                fgDatalist.innerHTML = finishedGoods.map(i => `<option value="${i.item_name}" data-id="${i.id}"></option>`).join('');
 
-    async function loadBOMs() {
-        const container = document.getElementById('bomsListContainer');
-        try {
-            const res = await fetch(`${API_URL}/api/boms/list`);
-            const data = await res.json();
-
-            if (!data.boms || data.boms.length === 0) {
-                container.innerHTML = `<div class="text-center text-muted p-4"><i class="bi bi-diagram-2 fs-1"></i><p>કોઈ BOM બનાવેલ નથી.</p></div>`;
-                return;
+            } catch (err) {
+                console.error("Error loading items for BOM:", err);
             }
+        }
 
-            container.innerHTML = data.boms.map(bom => `
+        async function loadBOMs() {
+            const container = document.getElementById('bomsListContainer');
+            try {
+                const res = await fetch(`${API_URL}/api/boms/list`);
+                const data = await res.json();
+
+                if (!data.boms || data.boms.length === 0) {
+                    container.innerHTML = `<div class="text-center text-muted p-4"><i class="bi bi-diagram-2 fs-1"></i><p>No BOM definitions found.</p></div>`;
+                    return;
+                }
+
+                container.innerHTML = data.boms.map(bom => `
                 <div class="glass-card p-3" style="background: #0f172a;">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="fw-bold text-white mb-0">${bom.finished_good_name}</h6>
@@ -421,25 +460,25 @@
                 </div>
             `).join('');
 
-        } catch (err) {
-            console.error("Error loading BOMs:", err);
-            container.innerHTML = `<div class="alert alert-danger">BOMs લોડ કરવામાં એરર આવી.</div>`;
+            } catch (err) {
+                console.error("Error loading BOMs:", err);
+                container.innerHTML = `<div class="alert alert-danger">Error loading BOM definitions.</div>`;
+            }
         }
-    }
 
-    function addComponentRow(component = null) {
-        const container = document.getElementById('componentsContainer');
-        const row = document.createElement('div');
-        row.className = 'row g-2 align-items-center component-row';
+        function addComponentRow(component = null) {
+            const container = document.getElementById('componentsContainer');
+            const row = document.createElement('div');
+            row.className = 'row g-2 align-items-center component-row';
 
-        const componentId = component ? component.component_item_id : '';
-        const componentName = component ? component.component_name : '';
-        const quantity = component ? component.quantity : '';
+            const componentId = component ? component.component_item_id : '';
+            const componentName = component ? component.component_name : '';
+            const quantity = component ? component.quantity : '';
 
-        const rmOptionsId = `rawMaterialsList_${Date.now()}`;
-        row.innerHTML = `
+            const rmOptionsId = `rawMaterialsList_${Date.now()}`;
+            row.innerHTML = `
             <div class="col-7">
-                <input class="form-control form-control-sm form-control-dark component-item" list="${rmOptionsId}" placeholder="કાચો માલ શોધો..." value="${componentName}" required autocomplete="off">
+                <input class="form-control form-control-sm form-control-dark component-item" list="${rmOptionsId}" placeholder="Search raw material item..." value="${componentName}" required autocomplete="off">
                 <datalist id="${rmOptionsId}">
                     ${rawMaterials.map(i => `<option value="${i.item_name}" data-id="${i.id}"></option>`).join('')}
                 </datalist>
@@ -453,196 +492,199 @@
                 </button>
             </div>
         `;
-        container.appendChild(row);
-    }
-
-    function clearForm() {
-        document.getElementById('bomForm').reset();
-        document.getElementById('componentsContainer').innerHTML = '';
-        currentEditingBomId = null;
-    }
-
-    function editBOM(bom) {
-        clearForm();
-        document.getElementById('finishedGood').value = bom.finished_good_name;
-        currentEditingBomId = bom.bom_id;
-
-        bom.components.forEach(c => {
-            addComponentRow(c);
-        });
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    async function deleteBOM(bomId) {
-        if (!confirm("શું તમે ખરેખર આ BOM ડિલીટ કરવા માંગો છો?")) return;
-
-        try {
-            const res = await fetch(`${API_URL}/api/boms/delete/${bomId}`, { method: 'DELETE' });
-            const data = await res.json();
-            alert(data.message || data.detail);
-            if (res.ok) {
-                loadBOMs();
-            }
-        } catch (err) {
-            alert("❌ Server Error");
-        }
-    }
-
-    function findOptionId(datalistId, value) {
-        const datalist = document.getElementById(datalistId);
-        for (const option of datalist.options) {
-            if (option.value === value) {
-                return parseInt(option.getAttribute('data-id'));
-            }
-        }
-        return null;
-    }
-
-    async function saveBOM(e) {
-        e.preventDefault();
-
-        const fgInput = document.getElementById('finishedGood');
-        const finishedGoodId = findOptionId('finishedGoodsList', fgInput.value);
-
-        if (!finishedGoodId) {
-            alert("⚠️ કૃપા કરીને 'Finished Good' લિસ્ટમાંથી પસંદ કરો.");
-            return;
+            container.appendChild(row);
         }
 
-        const components = [];
-        const componentRows = document.querySelectorAll('.component-row');
-        let validationFailed = false;
-
-        componentRows.forEach(row => {
-            const itemNameInput = row.querySelector('.component-item');
-            const qtyInput = row.querySelector('.component-qty');
-            const datalistId = itemNameInput.getAttribute('list');
-            
-            const componentId = findOptionId(datalistId, itemNameInput.value);
-
-            if (!componentId || !qtyInput.value) {
-                validationFailed = true;
-            } else {
-                components.push({
-                    component_item_id: componentId,
-                    quantity: parseFloat(qtyInput.value)
-                });
-            }
-        });
-
-        if (validationFailed) {
-            alert("⚠️ કૃપા કરીને બધા components અને તેમનો જથ્થો બરાબર ભરો.");
-            return;
+        function clearForm() {
+            document.getElementById('bomForm').reset();
+            document.getElementById('componentsContainer').innerHTML = '';
+            currentEditingBomId = null;
         }
 
-        if (components.length === 0) {
-            alert("⚠️ કૃપા કરીને ઓછામાં ઓછો એક component ઉમેરો.");
-            return;
-        }
+        function editBOM(bom) {
+            clearForm();
+            document.getElementById('finishedGood').value = bom.finished_good_name;
+            currentEditingBomId = bom.bom_id;
 
-        const payload = {
-            finished_good_item_id: finishedGoodId,
-            components: components
-        };
-
-        try {
-            const res = await fetch(`${API_URL}/api/boms/save`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            bom.components.forEach(c => {
+                addComponentRow(c);
             });
 
-            const data = await res.json();
-            alert(data.message || data.detail);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-            if (res.ok) {
-                clearForm();
-                loadBOMs();
+        async function deleteBOM(bomId) {
+            if (!confirm("Are you sure you want to delete this BOM?")) return;
+
+            try {
+                const res = await fetch(`${API_URL}/api/boms/delete/${bomId}`, { method: 'DELETE' });
+                const data = await res.json();
+                alert(data.message || data.detail);
+                if (res.ok) {
+                    loadBOMs();
+                }
+            } catch (err) {
+                alert("❌ Server Error");
             }
-        } catch (err) {
-            alert("❌ Server Error");
         }
-    }
 
-    // 🌓 Global Dark / Light Theme Management
-    function applyGlobalTheme() {
-        const theme = localStorage.getItem('theme_preference') || 'dark';
-        document.documentElement.setAttribute('data-theme', theme);
-        updateThemeBtn(theme);
-    }
-    function toggleGlobalTheme() {
-        const current = document.documentElement.getAttribute('data-theme') || 'dark';
-        const next = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('theme_preference', next);
-        updateThemeBtn(next);
-    }
-    function updateThemeBtn(theme) {
-        const btn = document.getElementById('globalThemeBtn');
-        const icon = document.getElementById('themeIcon');
-        const text = document.getElementById('themeText');
-        if (!btn || !icon || !text) return;
-        if (theme === 'light') {
-            icon.className = 'bi bi-sun-fill text-warning';
-            text.innerText = 'Light Mode';
-            btn.className = 'btn btn-light text-dark border-secondary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-        } else {
-            icon.className = 'bi bi-moon-stars-fill text-warning';
-            text.innerText = 'Dark Mode';
-            btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+        function findOptionId(datalistId, value) {
+            const datalist = document.getElementById(datalistId);
+            for (const option of datalist.options) {
+                if (option.value === value) {
+                    return parseInt(option.getAttribute('data-id'));
+                }
+            }
+            return null;
         }
-    }
 
-    applyGlobalTheme();
-</script>
+        async function saveBOM(e) {
+            e.preventDefault();
 
-<script>
-// Global Theme Switcher Logic
-function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('user-theme', newTheme);
-    localStorage.setItem('theme_preference', newTheme);
-    updateThemeBtnUI(newTheme);
-}
+            const fgInput = document.getElementById('finishedGood');
+            const finishedGoodId = findOptionId('finishedGoodsList', fgInput.value);
 
-function updateThemeBtnUI(theme) {
-    const btn = document.getElementById('globalThemeBtn');
-    const icon = document.getElementById('themeIcon');
-    const text = document.getElementById('themeText');
-    if (!btn) return;
-    
-    if (theme === 'dark') {
-        if (icon) icon.className = 'bi bi-moon-stars-fill text-warning';
-        if (text) text.innerText = 'Dark';
-        btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-    } else {
-        if (icon) icon.className = 'bi bi-sun-fill text-warning';
-        if (text) text.innerText = 'Light';
-        btn.className = 'btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-    }
-}
+            if (!finishedGoodId) {
+                alert("⚠️ Please select a Finished Good from the list.");
+                return;
+            }
 
-// Global Theme Auto-Apply Functions
-function toggleGlobalTheme() { toggleTheme(); }
-function applyGlobalTheme() {
-    const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeBtnUI(savedTheme);
-}
+            const components = [];
+            const componentRows = document.querySelectorAll('.component-row');
+            let validationFailed = false;
 
-// Page Load Auto-Apply Saved Theme
-(function () {
-    const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    document.addEventListener('DOMContentLoaded', function () {
-        updateThemeBtnUI(savedTheme);
-    });
-})();
-</script>
+            componentRows.forEach(row => {
+                const itemNameInput = row.querySelector('.component-item');
+                const qtyInput = row.querySelector('.component-qty');
+                const datalistId = itemNameInput.getAttribute('list');
 
+                const componentId = findOptionId(datalistId, itemNameInput.value);
+
+                if (!componentId || !qtyInput.value) {
+                    validationFailed = true;
+                } else {
+                    components.push({
+                        component_item_id: componentId,
+                        quantity: parseFloat(qtyInput.value)
+                    });
+                }
+            });
+
+            if (validationFailed) {
+                alert("⚠️ Please fill in all components and their quantities correctly.");
+                return;
+            }
+
+            if (components.length === 0) {
+                alert("⚠️ Please add at least one component.");
+                return;
+            }
+
+            const payload = {
+                finished_good_item_id: finishedGoodId,
+                components: components
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/api/boms/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                alert(data.message || data.detail);
+
+                if (res.ok) {
+                    clearForm();
+                    loadBOMs();
+                }
+            } catch (err) {
+                alert("❌ Server Error");
+            }
+        }
+
+        // 🌓 Global Dark / Light Theme Management
+        function applyGlobalTheme() {
+            const theme = localStorage.getItem('theme_preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeBtn(theme);
+        }
+        function toggleGlobalTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme_preference', next);
+            updateThemeBtn(next);
+        }
+        function updateThemeBtn(theme) {
+            const btn = document.getElementById('globalThemeBtn');
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (!btn || !icon || !text) return;
+            if (theme === 'light') {
+                icon.className = 'bi bi-sun-fill text-warning';
+                text.innerText = 'Light Mode';
+                btn.className = 'btn btn-light text-dark border-secondary btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+            } else {
+                icon.className = 'bi bi-moon-stars-fill text-warning';
+                text.innerText = 'Dark Mode';
+                btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+            }
+        }
+
+        applyGlobalTheme();
+    </script>
+
+    <script>
+        // Global Theme Switcher Logic
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('user-theme', newTheme);
+            localStorage.setItem('theme_preference', newTheme);
+            updateThemeBtnUI(newTheme);
+        }
+
+        function updateThemeBtnUI(theme) {
+            const btn = document.getElementById('globalThemeBtn');
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (!btn) return;
+
+            if (theme === 'dark') {
+                if (icon) icon.className = 'bi bi-moon-stars-fill text-warning';
+                if (text) text.innerText = 'Dark';
+                btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+            } else {
+                if (icon) icon.className = 'bi bi-sun-fill text-warning';
+                if (text) text.innerText = 'Light';
+                btn.className = 'btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
+            }
+        }
+
+        // Global Theme Auto-Apply Functions
+        function toggleGlobalTheme() { toggleTheme(); }
+        function applyGlobalTheme() {
+            const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeBtnUI(savedTheme);
+        }
+
+        // Page Load Auto-Apply Saved Theme
+        (function () {
+            const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.addEventListener('DOMContentLoaded', function () {
+                updateThemeBtnUI(savedTheme);
+            });
+        })();
+    </script>
+
+    <script src="/static/js/english-ui.js"></script>
+    <script src="/static/js/page-loader.js"></script>
 </body>
+
 </html>

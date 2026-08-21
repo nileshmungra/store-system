@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="gu">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -9,173 +9,42 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 🌓 Global Dark / Light Theme System */
-        :root {
-            --bg-main: #0f172a;
-            --bg-card: #1e293b;
-            --border-color: #334155;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --input-bg: #0f172a;
-            --input-text: #f8fafc;
-            --shadow-glow: rgba(0, 0, 0, 0.3);
-        }
+        /* 🖨️ Dispatch Plan Print Styling */
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
 
-        [data-theme="light"] {
-            --bg-main: #f1f5f9;
-            --bg-card: #ffffff;
-            --border-color: #cbd5e1;
-            --text-main: #0f172a;
-            --text-muted: #475569;
-            --input-bg: #ffffff;
-            --input-text: #0f172a;
-            --shadow-glow: rgba(0, 0, 0, 0.08);
-        }
+            #print-area,
+            #print-area * {
+                visibility: visible !important;
+            }
 
-        body {
-            background-color: var(--bg-main) !important;
-            color: var(--text-main) !important;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
+            #print-area {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+            }
 
-        .glass-card,
-        .card {
-            background-color: var(--bg-card) !important;
-            border: 1px solid var(--border-color) !important;
-            color: var(--text-main) !important;
-            box-shadow: 0 10px 25px var(--shadow-glow) !important;
-        }
-
-        .form-control,
-        .form-select {
-            background-color: var(--input-bg) !important;
-            color: var(--input-text) !important;
-            border-color: var(--border-color) !important;
-        }
-
-        .table-custom,
-        .table-custom td {
-            color: var(--text-main) !important;
-            border-bottom-color: var(--border-color) !important;
-        }
-
-        [data-theme="light"] .text-white,
-        [data-theme="light"] .text-slate-300,
-        [data-theme="light"] .text-slate-400 {
-            color: #0f172a !important;
-        }
-
-        /* 🚀 High-End Pill Navigation Buttons */
-        .navbar-custom {
-            background-color: rgba(15, 23, 42, 0.95) !important;
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-        }
-
-        .nav-pill-custom {
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-            padding: 8px 16px !important;
-            border-radius: 12px !important;
-            font-size: 13.5px !important;
-            font-weight: 600 !important;
-            color: #cbd5e1 !important;
-            text-decoration: none !important;
-            background: rgba(255, 255, 255, 0.06) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            transition: all 0.2s ease-in-out !important;
-            white-space: nowrap !important;
-        }
-
-        .nav-pill-custom:hover,
-        .nav-pill-custom:focus {
-            color: #ffffff !important;
-            background: rgba(255, 255, 255, 0.16) !important;
-            border-color: rgba(255, 255, 255, 0.25) !important;
-            transform: translateY(-1.5px) !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
-            text-decoration: none !important;
-        }
-
-        .nav-pill-custom.active {
-            color: #ffffff !important;
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-            border-color: #818cf8 !important;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45) !important;
-            font-weight: 700 !important;
-            text-decoration: none !important;
-        }
-
-        .dropdown-menu-custom {
-            background-color: var(--bg-card) !important;
-            border: 1px solid var(--border-color) !important;
-            border-radius: 12px !important;
-            box-shadow: 0 10px 30px var(--shadow-glow) !important;
-            padding: 8px !important;
-            margin-top: 8px !important;
-        }
-
-        .dropdown-item-custom {
-            color: var(--text-main) !important;
-            border-radius: 8px !important;
-            padding: 9px 14px !important;
-            font-size: 13.5px !important;
-            font-weight: 600 !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            transition: all 0.2s ease !important;
-        }
-
-        .dropdown-item-custom:hover {
-            background-color: rgba(99, 102, 241, 0.15) !important;
-            color: #818cf8 !important;
-            transform: translateX(3px) !important;
-        }
-
-        [data-theme="light"] .navbar-custom {
-            background-color: #ffffff !important;
-            border-bottom: 1px solid #cbd5e1 !important;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
-        }
-
-        [data-theme="light"] .nav-pill-custom {
-            color: #334155 !important;
-            background: #f1f5f9 !important;
-            border-color: #cbd5e1 !important;
-        }
-
-        [data-theme="light"] .nav-pill-custom:hover {
-            color: #0f172a !important;
-            background: #e2e8f0 !important;
-            border-color: #94a3b8 !important;
-        }
-
-        [data-theme="light"] .nav-pill-custom.active {
-            color: #ffffff !important;
-            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
-            border-color: #4338ca !important;
-            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
-        }
-
-        [data-theme="light"] .dropdown-menu-custom {
-            background-color: #ffffff !important;
-            border-color: #cbd5e1 !important;
-        }
-
-        [data-theme="light"] .dropdown-item-custom:hover {
-            background-color: #e2e8f0 !important;
-            color: #0f172a !important;
+            @page {
+                size: A4 portrait;
+                margin: 20mm;
+            }
         }
     </style>
-
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/page-loader.css">
 </head>
 
 <body>
+
+    <!-- 📦 Global Page Loader Elements -->
+    <div id="page-progress-bar"></div>
+    <div id="page-loader-overlay">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
@@ -197,10 +66,10 @@
                     <div class="nav-item dropdown">
                         <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            <i class="bi bi-box-seam me-1 text-info"></i> આવક અને ઉત્પાદન
+                            <i class="bi bi-box-seam me-1 text-info"></i> Inward & Production
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                            <li><a class="dropdown-item dropdown-item-custom" href="/dashboard"><i
+                            <li><a class="dropdown-item dropdown-item-custom" href="/inward-page"><i
                                         class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
                             <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i
                                         class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
@@ -211,7 +80,7 @@
                     <div class="nav-item dropdown">
                         <a class="nav-pill-custom dropdown-toggle active" href="#" role="button"
                             data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-truck me-1 text-success"></i> ડિસ્પેચ અને સ્કેનિંગ
+                            <i class="bi bi-truck me-1 text-success"></i> Dispatch & Scanning
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
                             <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i
@@ -228,7 +97,7 @@
                     <div class="nav-item dropdown">
                         <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            <i class="bi bi-sliders me-1 text-warning"></i> માસ્ટર કંટ્રોલ
+                            <i class="bi bi-sliders me-1 text-warning"></i> Master Control
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
                             <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i
@@ -242,7 +111,7 @@
                     <div class="nav-item dropdown">
                         <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                             aria-expanded="false">
-                            <i class="bi bi-bar-chart-line me-1 text-primary"></i> રિપોર્ટ્સ અને લોગ
+                            <i class="bi bi-bar-chart-line me-1 text-primary"></i> Reports & Logs
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
                             <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i
@@ -268,20 +137,63 @@
         <!-- Header Title -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <div>
-                <h3 class="fw-bold text-white m-0"><i class="bi bi-truck text-warning me-2"></i> ડિસ્પેચ પ્લાન
-                    મેનેજમેન્ટ (Dispatch Plan Control)</h3>
-                <p class="text-muted small m-0 mt-1">PDF / Excel Dispatch Plan અપલોડ કરી લાઈન-વાઈઝ માલ આઉટ કંટ્રોલ કરો.
+                <h3 class="fw-bold text-white m-0"><i class="bi bi-truck text-warning me-2"></i> Dispatch Plan
+                    Management</h3>
+                <p class="text-muted small m-0 mt-1">Upload Pending Dispatch Plan Excel to select DP No, SO No, and
+                    track outward dispatch.
                 </p>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-warning text-dark fw-bold rounded-pill px-4" data-bs-toggle="modal"
-                    data-bs-target="#autoConnectModal">
-                    <i class="bi bi-link-45deg me-1"></i> 🔗 Auto-Connect SO & DP Plan
-                </button>
                 <button class="btn btn-primary fw-bold rounded-pill px-4" data-bs-toggle="modal"
-                    data-bs-target="#uploadPlanModal">
-                    <i class="bi bi-file-earmark-arrow-up-fill me-1"></i> નવો Dispatch Plan Upload કરો
+                    data-bs-target="#uploadLoadingEntryModal">
+                    <i class="bi bi-file-earmark-excel-fill me-1"></i> Upload Pending DP Plan Excel
                 </button>
+            </div>
+        </div>
+
+        <!-- 🎯 Interactive DP & SO Selection Section -->
+        <div class="glass-card p-4 mb-4" style="background-color: var(--bg-card) !important;">
+            <h5 class="fw-bold text-warning mb-3"><i class="bi bi-funnel-fill me-2"></i> Dispatch Selection & Item
+                Summary</h5>
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label fw-bold text-info">1. Select DP Plan Number:</label>
+                    <select id="loadingDpSelect" class="form-select bg-dark text-white border-secondary"
+                        onchange="handleLoadingDpSelect()">
+                        <option value="">-- Upload Excel First --</option>
+                    </select>
+                </div>
+                <div class="col-md-7">
+                    <label class="form-label fw-bold text-info">2. Select Multiple SO Numbers (Checkboxes):</label>
+                    <div id="soNumberContainer"
+                        class="p-2 border border-secondary rounded bg-dark text-white d-flex flex-wrap gap-3"
+                        style="min-height: 42px; display: none;">
+                        <!-- SO Checkboxes will appear dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Table Preview -->
+            <div id="loading-items-container" class="mt-4" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h6 class="fw-bold text-success m-0"><i class="bi bi-list-check me-1"></i> Consolidated Item List
+                        (Multi-SO Aggregated)</h6>
+                    <div>
+                        <span class="badge bg-secondary me-2" id="totalItemsCount">0 Items</span>
+                        <button id="createPlanBtn" class="btn btn-success btn-sm fw-bold px-3"
+                            onclick="createDispatchPlan()" disabled>
+                            <i class="bi bi-check-circle-fill me-1"></i> Create Dispatch Plan
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover align-middle mb-0">
+                        <thead>
+                        </thead>
+                        <tbody id="loadingItemsTbody">
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -289,91 +201,41 @@
         <div id="plansListArea">
             <div class="text-center py-5">
                 <div class="spinner-border text-primary" role="status"></div>
-                <p class="text-muted mt-2">Dispatch Plans લોડ થઈ રહ્યા છે...</p>
+                <p class="text-muted mt-2">Loading Saved Dispatch Plans...</p>
             </div>
         </div>
     </div>
 
-    <!-- Upload Modal -->
-    <div class="modal fade" id="uploadPlanModal" tabindex="-1" aria-hidden="true">
+    <!-- Upload Loading Entry Excel Modal -->
+    <div class="modal fade" id="uploadLoadingEntryModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content glass-card text-white">
                 <div class="modal-header border-secondary py-3">
-                    <h5 class="modal-title fw-bold text-warning"><i class="bi bi-upload me-2"></i> Dispatch Plan PDF /
-                        Excel Upload</h5>
+                    <h5 class="modal-title fw-bold text-info"><i class="bi bi-file-earmark-excel me-2"></i> Upload
+                        Pending Loading Entry Excel</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body py-4">
-                    <form id="uploadPlanForm" onsubmit="submitDispatchPlan(event)">
-                        <div class="dropzone" id="dropzone" onclick="document.getElementById('planFile').click()">
-                            <i class="bi bi-cloud-arrow-up-fill text-primary display-4 mb-2 d-block"></i>
-                            <h6 class="fw-bold">અહીં Dispatch Plan PDF અથવા Excel ફાઈલ ડ્રેગ / સિલેક્ટ કરો</h6>
-                            <small class="text-muted">Bhumi Polymers Dispatch PDF અથવા Order Excel (.pdf, .xlsx,
-                                .xls)</small>
-                            <input type="file" id="planFile" accept=".pdf,.xlsx,.xls" class="d-none"
-                                onchange="fileSelected(this)">
-                            <div id="fileNameDisplay" class="mt-3 text-warning fw-bold small"></div>
+                    <form id="uploadLoadingEntryForm" onsubmit="submitLoadingEntryExcel(event)">
+                        <div class="dropzone" id="loadingEntryDropzone"
+                            onclick="document.getElementById('loadingEntryFile').click()">
+                            <i class="bi bi-cloud-arrow-up-fill text-info display-4 mb-2 d-block"></i>
+                            <h6 class="fw-bold">Drag & drop or browse Excel file</h6>
+                            <small class="text-muted">Upload "Pending Dispatch Plan for Loading Entry.xlsx"</small>
+                            <input type="file" id="loadingEntryFile" accept=".xlsx,.xls" class="d-none"
+                                onchange="fileSelected(this, 'loadingEntryFileNameDisplay')">
+                            <div id="loadingEntryFileNameDisplay" class="mt-3 text-info fw-bold small"></div>
+                        </div>
+                        <div id="loading-upload-progress" class="progress mt-3" style="height: 10px; display: none;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-info"
+                                role="progressbar" style="width: 100%"></div>
                         </div>
                         <div class="mt-3 text-end">
                             <button type="button" class="btn btn-outline-light btn-sm me-2"
-                                data-bs-dismiss="modal">કન્સલ</button>
-                            <button type="submit" class="btn btn-success fw-bold px-4" id="uploadSubmitBtn">
-                                <i class="bi bi-check-circle-fill me-1"></i> Upload & Process
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Auto-Connect SO & DP Plan Modal -->
-    <div class="modal fade" id="autoConnectModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content glass-card text-white">
-                <div class="modal-header border-secondary py-3">
-                    <h5 class="modal-title fw-bold text-warning">
-                        <i class="bi bi-link-45deg me-2"></i> Auto-Connect DP Plan PDF & Pending SO Excel
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body py-4">
-                    <form id="autoConnectForm" onsubmit="submitAutoConnect(event)">
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-warning">1. DP Plan PDF File (Direct Items:
-                                    Pipes, Filters)</label>
-                                <input type="file" id="connectDpPdf" accept=".pdf"
-                                    class="form-control bg-dark text-white border-secondary">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-warning">2. Pending SO Excel File (Store Kit
-                                    Items: Fittings, Valves)</label>
-                                <input type="file" id="connectSoExcel" accept=".xlsx,.xls,.csv"
-                                    class="form-control bg-dark text-white border-secondary">
-                            </div>
-                        </div>
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label small text-muted">DP Plan No. (Optional override)</label>
-                                <input type="text" id="connectDpNumber"
-                                    class="form-control bg-dark text-white border-secondary"
-                                    placeholder="ઉદા. RJT/DP/1296/26-27">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small text-muted">Sales Order SO No. (Optional
-                                    override)</label>
-                                <input type="text" id="connectSoNumber"
-                                    class="form-control bg-dark text-white border-secondary" placeholder="ઉદા. SO-4501">
-                            </div>
-                        </div>
-                        <div class="mt-4 text-end">
-                            <button type="button" class="btn btn-outline-light btn-sm me-2"
                                 data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-warning text-dark fw-bold px-4" id="connectSubmitBtn">
-                                <i class="bi bi-link-45deg me-1"></i> Connect & Map Verification Items
+                            <button type="submit" class="btn btn-info fw-bold px-4" id="loadingEntrySubmitBtn">
+                                <i class="bi bi-check-circle-fill me-1"></i> Upload & Process
                             </button>
                         </div>
                     </form>
@@ -432,22 +294,19 @@
                     <form id="editItemForm" onsubmit="submitItemUpdate(event)">
                         <input type="hidden" id="editItemId">
                         <div class="mb-3">
-                            <label for="editItemName" class="form-label small text-muted">Item Name (આઈટમનું
-                                નામ)</label>
+                            <label for="editItemName" class="form-label small text-muted">Item Name</label>
                             <input type="text" class="form-control bg-dark text-white border-secondary"
-                                id="editItemName" list="itemsDatalist" required autocomplete="off"
-                                placeholder="આઇટમનું નામ શોધો અથવા ટાઇપ કરો...">
+                                id="editItemName" list="itemsDatalist" required autocomplete="off">
                             <datalist id="itemsDatalist"></datalist>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="editPlannedQty" class="form-label small text-muted">Planned Qty
-                                    (જથ્થો)</label>
+                                <label for="editPlannedQty" class="form-label small text-muted">Planned Quantity</label>
                                 <input type="number" step="any" class="form-control bg-dark text-white border-secondary"
                                     id="editPlannedQty" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="editUnit" class="form-label small text-muted">Unit (એકમ)</label>
+                                <label for="editUnit" class="form-label small text-muted">Unit</label>
                                 <input type="text" class="form-control bg-dark text-white border-secondary"
                                     id="editUnit" required>
                             </div>
@@ -465,119 +324,72 @@
         </div>
     </div>
 
-    <!-- Add Item to Plan Modal -->
-    <div class="modal fade" id="addItemModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content glass-card text-white">
-                <div class="modal-header border-secondary py-3">
-                    <h5 class="modal-title fw-bold text-warning"><i class="bi bi-plus-circle-fill me-2"></i> Add New
-                        Item to Plan</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body py-4">
-                    <form id="addItemForm" onsubmit="submitNewItem(event)">
-                        <input type="hidden" id="addItemPlanId">
-                        <div class="mb-3">
-                            <label for="newItemName" class="form-label small text-muted">Item Name (આઈટમનું નામ)</label>
-                            <input type="text" class="form-control bg-dark text-white border-secondary" id="newItemName"
-                                list="itemsDatalist" required autocomplete="off"
-                                placeholder="આઇટમનું નામ શોધો અથવા ટાઇપ કરો...">
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="newPlannedQty" class="form-label small text-muted">Planned Qty
-                                    (જથ્થો)</label>
-                                <input type="number" step="any" class="form-control bg-dark text-white border-secondary"
-                                    id="newPlannedQty" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="newUnit" class="form-label small text-muted">Unit (એકમ)</label>
-                                <input type="text" class="form-control bg-dark text-white border-secondary" id="newUnit"
-                                    value="Pcs" required>
-                            </div>
-                        </div>
-                        <div class="mt-3 text-end">
-                            <button type="button" class="btn btn-outline-light btn-sm me-2"
-                                data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-success fw-bold px-4">
-                                <i class="bi bi-plus-lg"></i> Add Item
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Hidden Print Area -->
     <div id="print-area" class="d-none"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_URL = "";
-        let allPlansData = []; // To store all plan data for printing
+        let allPlansData = [];
+        let editItemModal, editPlanModal;
 
         document.addEventListener("DOMContentLoaded", () => {
-            loadDispatchPlans();
-            setupDropzone();
-        });
-
-        function setupDropzone() {
-            const dropzone = document.getElementById('dropzone');
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropzone.addEventListener(eventName, preventDefaults, false);
-            });
+            const loadingDropzone = document.getElementById('loadingEntryDropzone');
+            if (loadingDropzone) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => {
+                    loadingDropzone.addEventListener(eName, preventDefaults, false);
+                });
+                ['dragenter', 'dragover'].forEach(eName => {
+                    loadingDropzone.addEventListener(eName, () => loadingDropzone.classList.add('dragover'), false);
+                });
+                ['dragleave', 'drop'].forEach(eName => {
+                    loadingDropzone.addEventListener(eName, () => loadingDropzone.classList.remove('dragover'), false);
+                });
+                loadingDropzone.addEventListener('drop', function (e) {
+                    const dt = e.dataTransfer;
+                    if (dt.files && dt.files.length > 0) {
+                        document.getElementById('loadingEntryFile').files = dt.files;
+                        fileSelected(document.getElementById('loadingEntryFile'), 'loadingEntryFileNameDisplay');
+                    }
+                });
+            }
 
             function preventDefaults(e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
 
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
-            });
+            loadLoadingEntryDpPlans();
+            loadDispatchPlans();
+        });
 
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
-            });
-
-            dropzone.addEventListener('drop', (e) => {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                if (files.length > 0) {
-                    document.getElementById('planFile').files = files;
-                    fileSelected(document.getElementById('planFile'));
-                }
-            });
-        }
-
-        function fileSelected(input) {
-            const display = document.getElementById('fileNameDisplay');
+        function fileSelected(input, displayId = 'loadingEntryFileNameDisplay') {
+            const display = document.getElementById(displayId);
             if (input.files && input.files[0]) {
-                display.innerText = `📄 પસંદ થયેલ ફાઈલ: ${input.files[0].name}`;
+                display.innerText = `📄 Selected File: ${input.files[0].name}`;
             } else {
                 display.innerText = '';
             }
         }
 
-        async function submitDispatchPlan(e) {
+        async function submitLoadingEntryExcel(e) {
             e.preventDefault();
-            const fileInput = document.getElementById('planFile');
+            const fileInput = document.getElementById('loadingEntryFile');
             if (!fileInput.files || !fileInput.files[0]) {
-                alert("⚠️ કૃપા કરીને PDF અથવા Excel ફાઈલ પસંદ કરો!");
+                alert("⚠️ Please select the Pending Loading Entry Excel file!");
                 return;
             }
 
-            const btn = document.getElementById('uploadSubmitBtn');
+            const btn = document.getElementById('loadingEntrySubmitBtn');
+            const progress = document.getElementById('loading-upload-progress');
             btn.disabled = true;
             btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Processing...`;
+            progress.style.display = 'block';
 
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
 
             try {
-                const res = await fetch(`${API_URL}/api/dispatch-plan/upload`, {
+                const res = await fetch(`${API_URL}/api/dispatch/upload-loading-entry`, {
                     method: 'POST',
                     headers: { 'Bypass-Tunnel-Reminder': 'true' },
                     body: formData
@@ -585,29 +397,176 @@
 
                 const data = await res.json();
                 if (res.ok) {
-                    alert(data.message);
-                    bootstrap.Modal.getInstance(document.getElementById('uploadPlanModal')).hide();
-                    document.getElementById('uploadPlanForm').reset();
-                    document.getElementById('fileNameDisplay').innerText = '';
-                    editItemModal = new bootstrap.Modal(document.getElementById('editItemModal'));
-                    editPlanModal = new bootstrap.Modal(document.getElementById('editPlanModal'));
-                    addItemModal = new bootstrap.Modal(document.getElementById('addItemModal'));
+                    alert(data.message || "Excel Uploaded Successfully!");
+                    bootstrap.Modal.getInstance(document.getElementById('uploadLoadingEntryModal')).hide();
+                    document.getElementById('uploadLoadingEntryForm').reset();
+                    document.getElementById('loadingEntryFileNameDisplay').innerText = '';
+                    await loadLoadingEntryDpPlans();
                     loadDispatchPlans();
                 } else {
-                    alert("❌ " + (data.detail || "Error uploading plan"));
+                    alert("❌ " + (data.detail || "Error uploading file"));
                 }
             } catch (err) {
-                alert("❌ Server સાથે કનેક્શન થઈ શક્યું નથી.");
+                alert("❌ Unable to connect to server.");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Upload & Process`;
+                progress.style.display = 'none';
             }
         }
 
+        async function loadLoadingEntryDpPlans() {
+            const select = document.getElementById('loadingDpSelect');
+            try {
+                const res = await fetch(`${API_URL}/api/loading-entry/dp-plans`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+                const data = await res.json();
+                if (res.ok && data.dp_plans) {
+                    select.innerHTML = '<option value="">-- Select DP Plan Number --</option>';
+                    data.dp_plans.forEach(dp => {
+                        select.innerHTML += `<option value="${dp}">${dp}</option>`;
+                    });
+                }
+            } catch (e) {
+                console.error("Error loading DP plans", e);
+            }
+        }
+
+        async function handleLoadingDpSelect() {
+            const dpPlanNo = document.getElementById('loadingDpSelect').value;
+            const soContainer = document.getElementById('soNumberContainer');
+            const itemsContainer = document.getElementById('loading-items-container');
+            soContainer.innerHTML = '';
+            soContainer.style.display = 'none';
+            itemsContainer.style.display = 'none';
+
+            if (!dpPlanNo) return;
+
+            try {
+                const res = await fetch(`${API_URL}/api/loading-entry/so-numbers/${encodeURIComponent(dpPlanNo)}`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+                const data = await res.json();
+                if (res.ok && data.so_numbers && data.so_numbers.length > 0) {
+                    soContainer.style.display = 'flex';
+                    data.so_numbers.forEach(so => { // By default, check all SOs
+                        soContainer.innerHTML += `
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="${so}" id="so-${so.replace(/[\/\s]/g, '-')}" onchange="handleSoSelection()" checked>
+                                <label class="form-check-label fw-bold cursor-pointer" for="so-${so.replace(/[\/\s]/g, '-')}">
+                                    ${so}
+                                </label>
+                            </div>
+                        `;
+                    });
+                    // After checking all SOs by default, automatically trigger the item loading.
+                    handleSoSelection();
+                }
+            } catch (e) {
+                console.error("Error fetching SO numbers", e);
+            }
+        }
+
+        async function handleSoSelection() {
+            const dpPlanNo = document.getElementById('loadingDpSelect').value;
+            const soCheckboxes = document.querySelectorAll('#soNumberContainer input[type="checkbox"]:checked');
+            const selectedSoNumbers = Array.from(soCheckboxes).map(cb => cb.value);
+            const itemsContainer = document.getElementById('loading-items-container');
+            const itemsTbody = document.getElementById('loadingItemsTbody');
+
+            document.getElementById('createPlanBtn').disabled = true;
+            let finalItemList = [];
+            if (!dpPlanNo || selectedSoNumbers.length === 0) {
+                itemsTbody.innerHTML = '';
+                itemsContainer.style.display = 'none';
+                return;
+            }
+
+            itemsContainer.style.display = 'block';
+            itemsTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Loading items...</td></tr>';
+
+            try {
+                const res = await fetch(`${API_URL}/api/loading-entry/items?dp_plan_no=${encodeURIComponent(dpPlanNo)}&so_numbers=${encodeURIComponent(selectedSoNumbers.join(','))}`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+                const data = await res.json();
+                if (res.ok && data.items) {
+                    if (data.items.length === 0) {
+                        itemsTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No items found for selection.</td></tr>';
+                        return;
+                    }
+
+                    const aggregatedItems = {};
+                    data.items.forEach(item => {
+                        const key = `${item.item_name}_${item.item_code || ''}_${item.unit}`;
+                        if (!aggregatedItems[key]) {
+                            aggregatedItems[key] = {
+                                item_name: item.item_name,
+                                item_code: item.item_code || 'N/A',
+                                pending_qty: 0,
+                                unit: item.unit || 'Nos'
+                            };
+                        }
+                        const parsedQty = parseFloat(item.pending_qty || item.planned_qty || 0);
+                        aggregatedItems[key].pending_qty += isNaN(parsedQty) ? 0 : parsedQty;
+                    });
+
+                    finalItemList = Object.values(aggregatedItems);
+                    document.getElementById('totalItemsCount').innerText = `${finalItemList.length} Items`;
+
+                    itemsTbody.innerHTML = finalItemList.map((item, index) => `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td class="fw-bold text-slate-200">${item.item_name}</td>
+                            <td><span class="badge bg-secondary">${item.item_code}</span></td>
+                            <td class="text-center"><span class="badge bg-info text-dark fs-6">${Number(item.pending_qty.toFixed(2))}</span></td>
+                            <td class="text-center">${item.unit}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error("Error fetching items", e);
+                itemsTbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-3">Error loading items.</td></tr>';
+            }
+            document.getElementById('createPlanBtn').disabled = !(finalItemList && finalItemList.length > 0);
+        }
+
+        async function createDispatchPlan() {
+            const dpPlanNo = document.getElementById('loadingDpSelect').value;
+            const soCheckboxes = document.querySelectorAll('#soNumberContainer input[type="checkbox"]:checked');
+            const selectedSoNumbers = Array.from(soCheckboxes).map(cb => cb.value);
+
+            if (!dpPlanNo || selectedSoNumbers.length === 0) {
+                alert("Please select a DP Plan and at least one SO number.");
+                return;
+            }
+
+            const btn = document.getElementById('createPlanBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Creating...`;
+
+            try {
+                const res = await fetch(`${API_URL}/api/dispatch/create-from-loading-entry`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Bypass-Tunnel-Reminder': 'true'
+                    },
+                    body: JSON.stringify({
+                        disp_plan_no: dpPlanNo,
+                        so_numbers: selectedSoNumbers
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message || "Dispatch Plan created successfully!");
+                    window.location.reload(); // Reload the page to clear selections and refresh lists
+                } else {
+                    alert("❌ " + (data.detail || "Error creating dispatch plan."));
+                }
+            } catch (e) {
+                alert("❌ Server error while creating plan.");
+            }
+            btn.disabled = false;
+            btn.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Create Dispatch Plan`;
+        }
+
         async function loadDispatchPlans() {
-            if (!editItemModal) editItemModal = new bootstrap.Modal(document.getElementById('editItemModal'));
-            if (!editPlanModal) editPlanModal = new bootstrap.Modal(document.getElementById('editPlanModal'));
-            if (!addItemModal) addItemModal = new bootstrap.Modal(document.getElementById('addItemModal'));
             populateItemsDatalist();
             const container = document.getElementById('plansListArea');
             try {
@@ -615,38 +574,34 @@
                     headers: { 'Bypass-Tunnel-Reminder': 'true' }
                 });
                 const data = await res.json();
-                allPlansData = data.plans || []; // Store for printing
+                allPlansData = data.plans || [];
 
                 if (!data.plans || data.plans.length === 0) {
                     container.innerHTML = `
                     <div class="glass-card p-5 text-center text-muted">
                         <i class="bi bi-truck display-1 text-slate-600 mb-3 d-block"></i>
-                        <h5>કોઈપણ Dispatch Plan ઉપલબ્ધ નથી.</h5>
-                        <p class="small">નવો ડિસ્પેચ પ્લાન PDF અથવા Excel માંથી અપલોડ કરવા ઉપર 'Upload' બટન પર ક્લિક કરો.</p>
-                    </div>
-                `;
+                        <h5>No Active Dispatch Plans Loaded.</h5>
+                        <p class="small">Click 'Upload Pending DP Plan Excel' to process loading entries.</p>
+                    </div>`;
                     return;
                 }
 
                 container.innerHTML = data.plans.map(plan => {
                     const isCompleted = plan.status === 'COMPLETED';
                     return `
-                    <div class="glass-card mb-4 overflow-hidden">
-                        <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center flex-wrap gap-2" style="background: #1e293b;">
+                    <div class="glass-card mb-4 overflow-hidden" style="background-color: var(--bg-card) !important;">
+                        <div class="p-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2" style="border-color: var(--border-color) !important;">
                             <div>
                                 <span class="badge ${isCompleted ? 'bg-success' : 'bg-warning text-dark'} me-2 fs-6">
                                     ${isCompleted ? '✔ COMPLETED' : '🟢 ACTIVE PLAN'}
                                 </span>
-                                <strong class="fs-5 text-white font-monospace me-2">${plan.plan_no}</strong>
-                                <span class="text-muted small"><i class="bi bi-receipt me-1"></i> SO No: ${plan.so_no || 'N/A'}</span>
+                                <strong class="fs-5 font-monospace me-2" style="color: var(--text-main);">${plan.plan_no}</strong>
+                                <span class="small text-muted"><i class="bi bi-receipt me-1"></i> SO No: ${plan.so_no || 'N/A'}</span>
                                 <button onclick='openEditPlanModal(${plan.id}, ${JSON.stringify(plan.plan_no)}, ${JSON.stringify(plan.so_no)})' class="btn btn-sm btn-outline-info ms-2 py-0 px-2" title="Edit Plan Details"><i class="bi bi-pencil"></i></button>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <a href="/challan-page?plan_id=${plan.id}" target="_blank" class="btn btn-sm btn-outline-warning fw-bold" title="Print Delivery Challan">
-                                    <i class="bi bi-file-earmark-pdf me-1"></i> 📄 Challan
-                                </a>
                                 <a href="/scanner?plan_id=${plan.id}" class="btn btn-sm btn-success fw-bold">
-                                    <i class="bi bi-qr-code-scan me-1"></i> 📲 આ પ્લાન માટે સ્કેન કરો
+                                    <i class="bi bi-qr-code-scan me-1"></i> 📲 Scan for this Plan
                                 </a>
                                 <button onclick="printPlan(${plan.id})" class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-printer"></i> Print
@@ -658,18 +613,6 @@
                         </div>
 
                         <div class="p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2 small text-muted">
-                                <span>કુલ આઈટમો: ${plan.items ? plan.items.length : 0} | બનાવેલ તારીખ: ${new Date(plan.created_at).toLocaleDateString()}</span>
-                                <span class="fw-bold text-info">${plan.progress_pct}% Dispatched</span>
-                            </div>
-                            <div class="progress progress-sm mb-3">
-                                <div class="progress-bar ${isCompleted ? 'bg-success' : 'bg-info'}" style="width: ${plan.progress_pct}%"></div>
-                            </div>
-
-                            <div class="mb-3 text-end">
-                                <button onclick="openAddItemModal(${plan.id})" class="btn btn-sm btn-outline-success"><i class="bi bi-plus-circle"></i> Add Item</button>
-                            </div>
-
                             <div class="table-responsive">
                                 <table class="table table-custom table-hover align-middle mb-0">
                                     <thead>
@@ -690,26 +633,15 @@
                         return `
                                                 <tr>
                                                     <td>${idx + 1}</td>
-                                                    <td class="fw-bold text-slate-200">
-                                                        ${item.item_name}
-                                                        <div class="small text-muted fw-normal mt-1"><i class="bi bi-geo-alt-fill text-info"></i> Location: <span class="text-warning">${item.locations || 'N/A'}</span></div>
-                                                    </td>
+                                                    <td class="fw-bold text-slate-200">${item.item_name}</td>
                                                     <td class="text-center"><span class="badge bg-secondary fs-6">${item.planned_qty} ${item.unit}</span></td>
                                                     <td class="text-center"><span class="badge bg-info text-dark fs-6">${item.dispatched_qty} ${item.unit}</span></td>
                                                     <td class="text-center"><span class="badge ${rem === 0 ? 'bg-success' : 'bg-warning text-dark'} fs-6">${rem} ${item.unit}</span></td>
-                                                    <td class="text-center">
-                                                        <span class="badge ${done ? 'bg-success' : 'bg-outline-warning'}">
-                                                            ${done ? '✔ DONE' : '⏳ PENDING'}
-                                                        </span>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <button onclick='openEditItemModal(${item.id}, ${JSON.stringify(item.item_name)}, ${item.planned_qty}, ${JSON.stringify(item.unit)})' class="btn btn-sm btn-outline-primary py-0 px-2">
-                                                            <i class="bi bi-pencil"></i> Edit
-                                                        </button>
-                                                    </td>
+                                                    <td class="text-center"><span class="badge ${done ? 'bg-success' : 'border border-warning text-warning'}">${done ? '✔ DONE' : '⏳ PENDING'}</span></td>
+                                                    <td class="text-center"><button onclick='openEditItemModal(${item.id}, ${JSON.stringify(item.item_name)}, ${item.planned_qty}, ${JSON.stringify(item.unit)})' class="btn btn-sm btn-outline-primary py-0 px-2"><i class="bi bi-pencil"></i> Edit</button></td>
                                                 </tr>
                                             `;
-                    }).join('')}
+                    }).join('') || `<tr><td colspan="7" class="text-center text-muted py-3">No items in this plan.</td></tr>`}
                                     </tbody>
                                 </table>
                             </div>
@@ -719,7 +651,7 @@
                 }).join('');
             } catch (err) {
                 console.error("Error loading plans:", err);
-                container.innerHTML = `<div class="alert alert-danger text-center">❌ Dispatch Plans લોડ કરવામાં એરર આવી છે.</div>`;
+                container.innerHTML = `<div class="alert alert-danger text-center">❌ Error loading Dispatch Plans.</div>`;
             }
         }
 
@@ -758,13 +690,7 @@
                         `).join('')}
                     </tbody>
                 </table>
-                <div style="margin-top: 50px; padding-top: 20px; border-top: 1px solid #ccc; display: flex; justify-content: space-between; font-size: 0.9rem;">
-                    <div><strong>Prepared By:</strong> _______________</div>
-                    <div><strong>Checked By:</strong> _______________</div>
-                    <div><strong>Authorized By:</strong> _______________</div>
-                </div>
-            </div>
-        `;
+            </div>`;
 
             const printArea = document.getElementById('print-area');
             printArea.innerHTML = printContent;
@@ -774,7 +700,7 @@
         }
 
         async function deletePlan(id, planNo) {
-            if (!confirm(`શું તમે Dispatch Plan '${planNo}' ખરેખર ડીલીટ કરવા માંગો છો?`)) return;
+            if (!confirm(`Are you sure you want to delete Dispatch Plan '${planNo}' ?`)) return;
 
             try {
                 const res = await fetch(`${API_URL}/api/dispatch-plan/${id}`, { method: 'DELETE' });
@@ -788,7 +714,7 @@
 
         async function populateItemsDatalist() {
             try {
-                const res = await fetch(`${API_URL}/api/items/list?limit=0`); // limit=0 for all items
+                const res = await fetch(`${API_URL}/api/items/list?limit=0`);
                 const data = await res.json();
                 const datalist = document.getElementById('itemsDatalist');
                 if (!datalist) return;
@@ -869,86 +795,6 @@
             }
         }
 
-        function openAddItemModal(planId) {
-            document.getElementById('addItemPlanId').value = planId;
-            document.getElementById('addItemForm').reset();
-            addItemModal.show();
-        }
-
-        async function submitNewItem(e) {
-            e.preventDefault();
-            const planId = document.getElementById('addItemPlanId').value;
-            const itemData = {
-                item_name: document.getElementById('newItemName').value,
-                planned_qty: parseFloat(document.getElementById('newPlannedQty').value),
-                unit: document.getElementById('newUnit').value,
-            };
-
-            try {
-                const res = await fetch(`${API_URL}/api/dispatch-plan/${planId}/add-item`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(itemData)
-                });
-                const result = await res.json();
-                alert(result.message || result.detail);
-                if (res.ok) {
-                    addItemModal.hide();
-                    loadDispatchPlans();
-                }
-            } catch (err) {
-                alert("❌ Server Error");
-            }
-        }
-
-        async function submitAutoConnect(e) {
-            e.preventDefault();
-            const pdfFile = document.getElementById('connectDpPdf').files[0];
-            const excelFile = document.getElementById('connectSoExcel').files[0];
-            const dpNum = document.getElementById('connectDpNumber').value.trim();
-            const soNum = document.getElementById('connectSoNumber').value.trim();
-
-            if (!pdfFile && !excelFile && !dpNum) {
-                alert("⚠️ કૃપા કરીને ઓછામાં ઓછી ૧ DP Plan PDF ફાઈલ અથવા SO Excel ફાઈલ પસંદ કરો!");
-                return;
-            }
-
-            const formData = new FormData();
-            if (pdfFile) formData.append('dp_pdf', pdfFile);
-            if (excelFile) formData.append('so_excel', excelFile);
-            if (dpNum) formData.append('dp_number', dpNum);
-            if (soNum) formData.append('so_number', soNum);
-
-            const submitBtn = document.getElementById('connectSubmitBtn');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Connecting & Mapping...`;
-
-            try {
-                const res = await fetch(`${API_URL}/api/dispatch/auto-connect-so-dp`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    alert(`✅ ${data.message}\n\n• Direct Dispatch Items: ${data.direct_dispatch_count}\n• Store Kit Items: ${data.store_kit_count}\n• Total Mapped Verification Items: ${data.total_mapped_items}`);
-                    const modalEl = document.getElementById('autoConnectModal');
-                    const modal = bootstrap.Modal.getInstance(modalEl);
-                    if (modal) modal.hide();
-                    loadDispatchPlans();
-                } else {
-                    alert("❌ Error: " + (data.detail || "Connect થઈ શક્યું નથી"));
-                }
-            } catch (err) {
-                alert("❌ Connection Error");
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = `<i class="bi bi-link-45deg me-1"></i> Connect & Map Verification Items`;
-            }
-            add_log_client("Auto-Connect Process Failed: " + (err.message || err));
-        }
-
-        // 🌓 Global Dark / Light Theme Management
         function applyGlobalTheme() {
             const theme = localStorage.getItem('theme_preference') || 'dark';
             document.documentElement.setAttribute('data-theme', theme);
@@ -978,78 +824,20 @@
         }
 
         applyGlobalTheme();
-
-        // --- WebSocket for Real-Time Updates ---
-        function connectWebSocket() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
-
-            ws.onopen = function () {
-                console.log("Dispatch WebSocket: Connected for live updates.");
-            };
-
-            ws.onmessage = function (event) {
-                if (event.data === "STOCK_UPDATED") {
-                    console.log("Dispatch WebSocket: Received STOCK_UPDATED signal. Refreshing plans...");
-                    if (typeof loadDispatchPlans === 'function') loadDispatchPlans();
-                }
-            };
-
-            ws.onclose = function () {
-                console.log("Dispatch WebSocket: Disconnected. Reconnecting in 5 seconds...");
-                setTimeout(connectWebSocket, 5000);
-            }
-        }
-        connectWebSocket();
     </script>
 
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Global Theme Switcher Logic
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('user-theme', newTheme);
-            localStorage.setItem('theme_preference', newTheme);
-            updateThemeBtnUI(newTheme);
-        }
-
-        function updateThemeBtnUI(theme) {
-            const btn = document.getElementById('globalThemeBtn');
-            const icon = document.getElementById('themeIcon');
-            const text = document.getElementById('themeText');
-            if (!btn) return;
-
-            if (theme === 'dark') {
-                if (icon) icon.className = 'bi bi-moon-stars-fill text-warning';
-                if (text) text.innerText = 'Dark';
-                btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-            } else {
-                if (icon) icon.className = 'bi bi-sun-fill text-warning';
-                if (text) text.innerText = 'Light';
-                btn.className = 'btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-            }
-        }
-
-        // Global Theme Auto-Apply Functions
-        function toggleGlobalTheme() { toggleTheme(); }
-        function applyGlobalTheme() {
-            const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeBtnUI(savedTheme);
-        }
-
-        // Page Load Auto-Apply Saved Theme
-        (function () {
-            const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            document.addEventListener('DOMContentLoaded', function () {
-                updateThemeBtnUI(savedTheme);
-            });
-        })();
+        document.addEventListener("DOMContentLoaded", () => {
+            editItemModal = new bootstrap.Modal(document.getElementById('editItemModal'));
+            editPlanModal = new bootstrap.Modal(document.getElementById('editPlanModal'));
+        });
     </script>
-
+    <script src="/static/js/security.js"></script>
+    <script src="/static/js/theme.js"></script>
+    <script src="/static/js/english-ui.js"></script>
+    <script src="/static/js/page-loader.js"></script>
 </body>
 
 </html>
