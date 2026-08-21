@@ -2970,7 +2970,14 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
         df.columns = [str(c).strip().lower() for c in df.columns]
     except Exception as e:
         print(f"BACKGROUND_TASK_ERROR: Failed to read loading entry Excel file {filename}: {e}")
-        return
+        return {
+            "inserted": 0,
+            "updated": 0,
+            "skipped": 0,
+            "errors": 0,
+            "filename": filename,
+            "fatal_error": f"Failed to read Excel file: {e}"
+        }
 
     # Map columns based on expected names
     col_map = {
@@ -2991,10 +2998,16 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
     required_cols = ['disp_plan_no', 'so_no', 'item_name', 'item_code', 'pending_qty', 'unit']
     missing = [k for k in required_cols if col_map[k] is None]
     if missing:
-        print(f"BACKGROUND_TASK_ERROR: Missing required columns in {filename}: {', '.join(missing)}")
-        print(f"BACKGROUND_TASK_DEBUG: Detected columns: {df.columns.tolist()}")
-        print(f"BACKGROUND_TASK_DEBUG: Column map: {col_map}")
-        return
+        error_msg = f"Missing required columns in {filename}: {', '.join(missing)}. Detected columns: {df.columns.tolist()}. Column map: {col_map}"
+        print(f"BACKGROUND_TASK_ERROR: {error_msg}")
+        return {
+            "inserted": 0,
+            "updated": 0,
+            "skipped": 0,
+            "errors": 0,
+            "filename": filename,
+            "fatal_error": error_msg
+        }
 
     inserted_count = 0
     updated_count = 0
@@ -3085,7 +3098,10 @@ async def upload_loading_entry_excel(file: UploadFile = File(...)):
 
     file_bytes = await file.read()
     result = process_loading_entry_excel(file_bytes, file.filename)
-    
+
+    if result.get("fatal_error"):
+        raise HTTPException(status_code=400, detail=result["fatal_error"])
+
     return {
         "status": "Success",
         "message": f"Processed '{result['filename']}': {result['inserted']} inserted, {result['updated']} updated, {result['skipped']} skipped, {result['errors']} errors.",

@@ -404,10 +404,11 @@
                     await loadLoadingEntryDpPlans();
                     loadDispatchPlans();
                 } else {
-                    alert("❌ " + (data.detail || "Error uploading file"));
+                    alert("❌ " + (data.detail || data.message || "Error uploading file"));
                 }
             } catch (err) {
-                alert("❌ Unable to connect to server.");
+                console.error("Upload error:", err);
+                alert("❌ Unable to connect to server: " + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> Upload & Process`;
