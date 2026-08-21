@@ -11,7 +11,7 @@ from contextlib import contextmanager
 # MySQL connection configuration
 MYSQL_CONFIG = {
     'host': os.getenv('MYSQL_HOST') or os.getenv('MYSQLHOST', 'localhost'),
-    'port': int(os.getenv('MYSQL_PORT') or os.getenv('MYSQLPORT', 3306)),
+    'port': int(os.getenv('MYSQL_PORT') or os.getenv('MYSQLPORT', 3307)),
     'user': os.getenv('MYSQL_USER') or os.getenv('MYSQLUSER', 'root'),
     'password': os.getenv('MYSQL_PASSWORD') or os.getenv('MYSQLPASSWORD', ''),
     'database': os.getenv('MYSQL_DATABASE') or os.getenv('MYSQLDATABASE', 'inventory_db'),

@@ -9,8 +9,8 @@ echo Store Inventory System - Auto Starter
 echo ===================================================
 echo.
 
-echo Checking MySQL Database Status on Port 3306...
-netstat -ano | findstr ":3306" >nul 2>&1
+echo Checking MySQL Database Status on Port 3307...
+netstat -ano | findstr ":3307" >nul 2>&1
 if %errorlevel% neq 0 (
     echo MySQL Server is NOT running! Auto-starting XAMPP MySQL...
     if exist "C:\xampp\mysql_start.bat" (
@@ -20,7 +20,7 @@ if %errorlevel% neq 0 (
     )
     timeout /t 3 >nul
 ) else (
-    echo MySQL Server is already running on port 3306.
+    echo MySQL Server is already running on port 3307.
 )
 
 echo.
