@@ -190,11 +190,11 @@
                     <table class="table table-custom table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th class="text-center">#</th>
-                                <th>Item Name</th>
-                                <th>Item Code</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-center">Unit</th>
+                                <th class="text-center" style="color: #000000;">#</th>
+                                <th style="color: #000000;">Item Name</th>
+                                <th style="color: #000000;">Item Code</th>
+                                <th class="text-center" style="color: #000000;">Qty</th>
+                                <th class="text-center" style="color: #000000;">Unit</th>
                             </tr>
                         </thead>
                         <tbody id="loadingItemsTbody">
@@ -519,11 +519,11 @@
 
                     itemsTbody.innerHTML = finalItemList.map((item, index) => `
                         <tr>
-                            <td class="text-center text-dark">${index + 1}</td>
-                            <td class="fw-bold text-dark">${item.item_name}</td>
+                            <td class="text-center" style="color: #000000;">${index + 1}</td>
+                            <td class="fw-bold" style="color: #000000;">${item.item_name}</td>
                             <td><span class="badge bg-secondary text-dark">${item.item_code}</span></td>
                             <td class="text-center"><span class="badge bg-info text-dark fs-6">${Number(item.pending_qty.toFixed(2))}</span></td>
-                            <td class="text-center text-dark">${item.unit}</td>
+                            <td class="text-center" style="color: #000000;">${item.unit}</td>
                         </tr>
                     `).join('');
                 }
