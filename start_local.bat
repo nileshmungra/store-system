@@ -61,16 +61,16 @@ echo [OK] SSL certificates found.
 echo.
 
 :: ===================================================
-:: STEP 3 - CHECK MYSQL PORT 3307
+:: STEP 3 - CHECK MYSQL PORT 3306
 :: ===================================================
-echo [3/6] Checking MySQL Database Status on Port 3307...
+echo [3/6] Checking MySQL Database Status on Port 3306...
 echo.
 
-netstat -ano | findstr /R /C:":3307 .*LISTENING" >nul 2>&1
+netstat -ano | findstr /R /C:":3306 .*LISTENING" >nul 2>&1
 
 if %errorlevel% neq 0 (
 
-    echo MySQL Server is NOT running on port 3307.
+    echo MySQL Server is NOT running on port 3306.
     echo Attempting to start XAMPP MySQL...
     echo.
 
@@ -104,7 +104,7 @@ if %errorlevel% neq 0 (
 
         timeout /t 1 >nul
 
-        netstat -ano | findstr /R /C:":3307 .*LISTENING" >nul 2>&1
+        netstat -ano | findstr /R /C:":3306 .*LISTENING" >nul 2>&1
 
         if not errorlevel 1 (
             set "mysql_ready=1"
@@ -116,7 +116,7 @@ if %errorlevel% neq 0 (
 
     if "%mysql_ready%"=="0" (
         echo.
-        echo [ERROR] MySQL could not be detected on port 3307.
+        echo [ERROR] MySQL could not be detected on port 3306.
         echo.
         echo Please open XAMPP and check MySQL.
         echo.
@@ -126,7 +126,7 @@ if %errorlevel% neq 0 (
 
 ) else (
 
-    echo [OK] MySQL Server is already running on port 3307.
+    echo [OK] MySQL Server is already running on port 3306.
 )
 
 :MYSQL_STARTED
@@ -246,7 +246,7 @@ echo   Mobile/PC must be connected to the SAME Wi-Fi network.
 echo.
 echo =================================================================
 echo.
-echo   MySQL  : PORT 3307
+echo   MySQL  : PORT 3306
 echo   FastAPI: PORT 8000
 echo   HTTPS  : ENABLED
 echo   Wi-Fi IP: %local_ip%
