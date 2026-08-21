@@ -1,0 +1,47 @@
+# Render Deployment Blueprint
+# Deploy karta sudhi upyog na commands:
+# 1. GitHub par code push karo
+# 2. Render Dashboard -> New -> Blueprint
+# 3. Repository connect karo
+# 4. Render automatically detect kare render.yaml ane deploy kare
+
+services:
+  # Backend API Service
+  - type: web
+    name: store-system-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2
+    envVars:
+      - key: MYSQL_HOST
+        fromDatabase:
+          name: store-system-db
+          property: host
+      - key: MYSQL_PORT
+        fromDatabase:
+          name: store-system-db
+          property: port
+      - key: MYSQL_USER
+        fromDatabase:
+          name: store-system-db
+          property: user
+      - key: MYSQL_PASSWORD
+        fromDatabase:
+          name: store-system-db
+          property: password
+      - key: MYSQL_DATABASE
+        value: inventory_db
+      - key: API_SECRET_KEY
+        generateValue: true
+    disk:
+      name: uploads
+      mountPath: /app/static/uploads
+      sizeGB: 1
+
+  # MySQL Database
+  - type: mysql
+    name: store-system-db
+    plan: free
+    databaseName: inventory_db
+    user: root

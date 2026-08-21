@@ -10,11 +10,11 @@ from contextlib import contextmanager
 
 # MySQL connection configuration
 MYSQL_CONFIG = {
-    'host': 'localhost',
-    'port': 3307, # MySQL port number (default: 3306)
-    'user': 'root', # MySQL username (default: root)
-    'password': '', # MySQL password (default: empty)
-    'database': 'inventory_db' # Database name
+    'host': os.getenv('MYSQL_HOST', 'localhost'),
+    'port': int(os.getenv('MYSQL_PORT', 3306)),
+    'user': os.getenv('MYSQL_USER', 'root'),
+    'password': os.getenv('MYSQL_PASSWORD', ''),
+    'database': os.getenv('MYSQL_DATABASE', 'inventory_db'),
 }
 
 # Global connection pool object
