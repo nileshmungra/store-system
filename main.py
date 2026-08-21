@@ -2974,24 +2974,26 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
 
     # Map columns based on expected names
     col_map = {
-        'disp_plan_no': next((c for c in df.columns if 'disp. plan no' in c), None),
-        'disp_plan_date': next((c for c in df.columns if 'disp. plan date' in c), None),
-        'so_no': next((c for c in df.columns if 'so no' in c), None),
-        'so_date': next((c for c in df.columns if 'so date' in c), None),
-        'customer_location': next((c for c in df.columns if 'cust./location' in c), None),
+        'disp_plan_no': next((c for c in df.columns if 'disp. plan no' in c or 'dispatch plan no' in c or 'dp no' in c), None),
+        'disp_plan_date': next((c for c in df.columns if 'disp. plan date' in c or 'dispatch plan date' in c or 'dp date' in c), None),
+        'so_no': next((c for c in df.columns if 'so no' in c or 'sales order no' in c), None),
+        'so_date': next((c for c in df.columns if 'so date' in c or 'sales order date' in c), None),
+        'customer_location': next((c for c in df.columns if 'cust./location' in c or 'customer' in c and 'location' in c), None),
         'dealer': next((c for c in df.columns if 'dealer' in c), None),
         'village': next((c for c in df.columns if 'village' in c), None),
         'district': next((c for c in df.columns if 'district' in c), None),
-        'item_name': next((c for c in df.columns if 'item' in c), None),
-        'item_code': next((c for c in df.columns if 'code' in c), None),
-        'pending_qty': next((c for c in df.columns if 'pend. qty' in c), None),
-        'unit': next((c for c in df.columns if 'unit' in c), None),
+        'item_name': next((c for c in df.columns if 'item' in c and 'name' in c), None),
+        'item_code': next((c for c in df.columns if 'item' in c and 'code' in c), None),
+        'pending_qty': next((c for c in df.columns if 'pend. qty' in c or 'pending qty' in c or 'pending' in c and 'qty' in c), None),
+        'unit': next((c for c in df.columns if 'unit' == c or c == 'uom' or 'unit' in c), None),
     }
 
     required_cols = ['disp_plan_no', 'so_no', 'item_name', 'item_code', 'pending_qty', 'unit']
     missing = [k for k in required_cols if col_map[k] is None]
     if missing:
         print(f"BACKGROUND_TASK_ERROR: Missing required columns in {filename}: {', '.join(missing)}")
+        print(f"BACKGROUND_TASK_DEBUG: Detected columns: {df.columns.tolist()}")
+        print(f"BACKGROUND_TASK_DEBUG: Column map: {col_map}")
         return
 
     inserted_count = 0
@@ -3000,7 +3002,7 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
     error_count = 0
 
     with get_db_ctx(commit=True) as (conn, cursor):
-        for _, row in df.iterrows():
+        for idx, (_, row) in enumerate(df.iterrows(), start=1):
             try:
                 disp_plan_no = str(row[col_map['disp_plan_no']]).strip()
                 so_no = str(row[col_map['so_no']]).strip()
@@ -3009,6 +3011,8 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
 
                 if not all([disp_plan_no, so_no, item_code]) or pd.isna(pending_qty):
                     skipped_count += 1
+                    print(f"[LOADING_ENTRY] Skipped row {idx}: missing required values "
+                          f"disp_plan_no='{disp_plan_no}', so_no='{so_no}', item_code='{item_code}', pending_qty={pending_qty}")
                     continue
 
                 # Prepare data for insertion/update
@@ -3043,24 +3047,26 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
                         district = VALUES(district)
                 """
                 cursor.execute(insert_query, data)
-                
+
+                # MySQL Connector rowcount behavior for ON DUPLICATE KEY UPDATE:
+                # 1 = new row inserted
+                # 2 = existing row updated
+                # 0 = duplicate with identical values (no-op, still counts as processed)
                 if cursor.rowcount == 1:
                     inserted_count += 1
-                elif cursor.rowcount == 2: # 2 rows affected means an update occurred
+                elif cursor.rowcount >= 2:
                     updated_count += 1
                 else:
-                    skipped_count += 1
+                    updated_count += 1
 
             except Exception as e:
                 error_count += 1
-                print(f"Error processing row: {row.to_dict()}. Error: {e}")
+                print(f"[LOADING_ENTRY] Error processing row {idx}: {row.to_dict()}. Error: {e}")
 
         log_message = f"Processed '{filename}': {inserted_count} inserted, {updated_count} updated, {skipped_count} skipped, {error_count} errors."
         add_log(conn, "LOADING_ENTRY_UPLOAD", log_message)
 
     print(f"BACKGROUND_TASK_SUCCESS: {log_message}")
-    # Optionally, broadcast a message to the frontend to refresh the DP list
-    # await manager.broadcast("LOADING_ENTRIES_UPDATED")
     return {
         "inserted": inserted_count,
         "updated": updated_count,
