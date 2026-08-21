@@ -10,11 +10,11 @@ from contextlib import contextmanager
 
 # MySQL connection configuration
 MYSQL_CONFIG = {
-    'host': os.getenv('MYSQL_HOST', 'localhost'),
-    'port': int(os.getenv('MYSQL_PORT', 3306)),
-    'user': os.getenv('MYSQL_USER', 'root'),
-    'password': os.getenv('MYSQL_PASSWORD', ''),
-    'database': os.getenv('MYSQL_DATABASE', 'inventory_db'),
+    'host': os.getenv('MYSQL_HOST') or os.getenv('MYSQLHOST', 'localhost'),
+    'port': int(os.getenv('MYSQL_PORT') or os.getenv('MYSQLPORT', 3306)),
+    'user': os.getenv('MYSQL_USER') or os.getenv('MYSQLUSER', 'root'),
+    'password': os.getenv('MYSQL_PASSWORD') or os.getenv('MYSQLPASSWORD', ''),
+    'database': os.getenv('MYSQL_DATABASE') or os.getenv('MYSQLDATABASE', 'inventory_db'),
 }
 
 # Global connection pool object
@@ -88,7 +88,10 @@ def get_db():
     Initializes the pool on the first call.
     """
     global db_pool
-    ensure_mysql_running(host=MYSQL_CONFIG.get('host', '127.0.0.1'), port=MYSQL_CONFIG.get('port', 3307))
+    db_host = MYSQL_CONFIG.get('host', '127.0.0.1')
+    db_port = MYSQL_CONFIG.get('port', 3307)
+    if db_host in ('localhost', '127.0.0.1'):
+        ensure_mysql_running(host=db_host, port=db_port)
     if db_pool is None:
         try:
             print("[INFO] Initializing MySQL Connection Pool...")
@@ -135,7 +138,10 @@ def get_db_ctx(commit=False, dictionary=True):
             pass
 
 def init_db():
-    ensure_mysql_running(host=MYSQL_CONFIG.get('host', '127.0.0.1'), port=MYSQL_CONFIG.get('port', 3307))
+    db_host = MYSQL_CONFIG.get('host', '127.0.0.1')
+    db_port = MYSQL_CONFIG.get('port', 3307)
+    if db_host in ('localhost', '127.0.0.1'):
+        ensure_mysql_running(host=db_host, port=db_port)
     # Connect to server to create database if not exists
     try:
         # Create a connection config without the 'database' key to check/create the DB
