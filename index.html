@@ -1364,9 +1364,17 @@
             showOwnToggle.addEventListener('change', loadItems);
         }
 
-        loadDashboardDpPlans();
-        loadStoreKitSoList();
-        searchOldQrs(true); // Initial load of search results
+        (async function () {
+            await Promise.all([
+                loadDashboardDpPlans(),
+                loadStoreKitSoList(),
+                searchOldQrs(true)
+            ]);
+
+            if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                window.PageLoader.hide();
+            }
+        })();
 
         // --- WebSocket for Real-Time Updates ---
         function connectWebSocket() {

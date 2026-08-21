@@ -1585,8 +1585,14 @@
         }
 
         // Initialize on load
-        loadMachines();
-        refreshAllProductionData();
+        (async function () {
+            await loadMachines();
+            await refreshAllProductionData();
+
+            if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                window.PageLoader.hide();
+            }
+        })();
     </script>
 
     <script>

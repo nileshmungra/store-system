@@ -721,7 +721,7 @@
         let currentPlanId = null;
         let currentMode = 'challan'; // 'challan' or 'packing'
 
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
             currentPlanId = urlParams.get('plan_id') || urlParams.get('dp_number');
             const modeParam = urlParams.get('mode');
@@ -733,13 +733,17 @@
             }
 
             if (currentPlanId) {
-                loadChallanData(currentPlanId);
+                await loadChallanData(currentPlanId);
             } else {
                 alert("⚠️ Please provide a valid DP Plan ID or DP Number!");
             }
 
             document.getElementById('modeBtnChallan').addEventListener('click', () => setMode('challan'));
             document.getElementById('modeBtnPacking').addEventListener('click', () => setMode('packing'));
+
+            if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                window.PageLoader.hide();
+            }
         });
 
         function setMode(mode) {

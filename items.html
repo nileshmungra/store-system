@@ -943,8 +943,11 @@
                     const protContent = document.getElementById("protected-content");
                     protContent.style.setProperty("display", "block", "important");
                     document.getElementById("error-msg").style.display = "none";
-                    loadItems();
-                    loadMachines();
+                    Promise.all([loadItems(), loadMachines()]).then(() => {
+                        if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                            window.PageLoader.hide();
+                        }
+                    });
                 } else {
                     document.getElementById("error-msg").style.display = "block";
                 }

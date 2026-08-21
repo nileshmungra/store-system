@@ -339,7 +339,7 @@
         let allPlansData = [];
         let editItemModal, editPlanModal;
 
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", async () => {
             const loadingDropzone = document.getElementById('loadingEntryDropzone');
             if (loadingDropzone) {
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => {
@@ -365,8 +365,14 @@
                 e.stopPropagation();
             }
 
-            loadLoadingEntryDpPlans();
-            loadDispatchPlans();
+            await Promise.all([
+                loadLoadingEntryDpPlans(),
+                loadDispatchPlans()
+            ]);
+
+            if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                window.PageLoader.hide();
+            }
         });
 
         function fileSelected(input, displayId = 'loadingEntryFileNameDisplay') {

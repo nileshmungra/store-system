@@ -576,9 +576,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initial load
-    loadDateWiseStock();
-    loadReports();
-    loadEndToEndSummary();
+    Promise.all([
+        loadDateWiseStock(),
+        loadReports(),
+        loadEndToEndSummary()
+    ]).finally(() => {
+        if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+            window.PageLoader.hide();
+        }
+    });
     connectWebSocket();
 });
 

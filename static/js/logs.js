@@ -111,7 +111,11 @@ document.addEventListener('DOMContentLoaded', () => {
         refreshBtn.addEventListener('click', loadLogs);
     }
 
-    loadLogs();
+    loadLogs().then(() => {
+        if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+            window.PageLoader.hide();
+        }
+    });
     connectWebSocket();
 });
 

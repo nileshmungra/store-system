@@ -403,9 +403,15 @@
         let rawMaterials = [];
         let currentEditingBomId = null;
 
-        document.addEventListener("DOMContentLoaded", () => {
-            loadAllItems();
-            loadBOMs();
+        document.addEventListener("DOMContentLoaded", async () => {
+            await Promise.all([
+                loadAllItems(),
+                loadBOMs()
+            ]);
+
+            if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                window.PageLoader.hide();
+            }
         });
 
         async function loadAllItems() {

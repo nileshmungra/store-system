@@ -1,10 +1,10 @@
 /**
  * 📦 Page Loader / Progress Bar Module
  * Store Management System
- * 
+ *
  * Usage:
- *   PageLoader.show()          - Show full overlay + start progress bar
- *   PageLoader.hide()          - Hide full overlay + complete progress bar
+ *   PageLoader.show()          - Show full overlay + start/reset progress bar
+ *   PageLoader.hide()          - Finish progress, then hide overlay
  *   PageLoader.start()         - Start progress bar only (for AJAX)
  *   PageLoader.complete()      - Complete progress bar only (for AJAX)
  *   PageLoader.setProgress(n)  - Set progress bar to n% (0-100)
@@ -15,6 +15,9 @@ const PageLoader = (function () {
     let overlay = null;
     let isVisible = false;
     let progressInterval = null;
+    let fallbackTimer = null;
+
+    const FALLBACK_DELAY = 8000;
 
     function init() {
         progressBar = document.getElementById('page-progress-bar');
@@ -27,8 +30,22 @@ const PageLoader = (function () {
         return true;
     }
 
+    function resetProgress() {
+        clearInterval(progressInterval);
+        progressInterval = null;
+        clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+
+        if (progressBar) {
+            progressBar.classList.remove('complete');
+            progressBar.style.width = '0%';
+        }
+    }
+
     function show() {
         if (!init()) return;
+
+        resetProgress();
 
         if (overlay) {
             overlay.classList.add('active');
@@ -39,11 +56,18 @@ const PageLoader = (function () {
             progressBar.style.width = '0%';
             simulateProgress();
         }
+
         isVisible = true;
+        scheduleFallback();
     }
 
     function hide() {
         if (!progressBar && !overlay) init();
+
+        clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+        clearInterval(progressInterval);
+        progressInterval = null;
 
         if (progressBar) {
             progressBar.style.width = '100%';
@@ -54,14 +78,13 @@ const PageLoader = (function () {
                     progressBar.classList.remove('active', 'complete');
                     progressBar.style.width = '0%';
                 }
-            }, 600);
+            }, 500);
         }
 
         if (overlay) {
             overlay.classList.remove('active');
         }
 
-        clearInterval(progressInterval);
         isVisible = false;
     }
 
@@ -79,6 +102,11 @@ const PageLoader = (function () {
     function complete() {
         if (!progressBar && !overlay) init();
 
+        clearInterval(progressInterval);
+        progressInterval = null;
+        clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+
         if (progressBar) {
             progressBar.style.width = '100%';
             progressBar.classList.add('complete');
@@ -88,9 +116,14 @@ const PageLoader = (function () {
                     progressBar.classList.remove('active', 'complete');
                     progressBar.style.width = '0%';
                 }
-            }, 600);
+            }, 500);
         }
-        clearInterval(progressInterval);
+
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
+
+        isVisible = false;
     }
 
     function setProgress(percent) {
@@ -103,18 +136,29 @@ const PageLoader = (function () {
 
     function simulateProgress() {
         clearInterval(progressInterval);
-        let width = 0;
+        let width = 5;
         progressInterval = setInterval(function () {
-            if (width >= 90) {
+            if (width >= 88) {
                 clearInterval(progressInterval);
+                progressInterval = null;
                 return;
             }
-            width += Math.random() * 15;
-            if (width > 90) width = 90;
+            width += Math.random() * 12;
+            if (width > 88) width = 88;
             if (progressBar) {
                 progressBar.style.width = width + '%';
             }
-        }, 200);
+        }, 180);
+    }
+
+    function scheduleFallback() {
+        clearTimeout(fallbackTimer);
+        fallbackTimer = setTimeout(function () {
+            if (isVisible) {
+                console.warn('[PageLoader] Fallback auto-hide triggered.');
+                hide();
+            }
+        }, FALLBACK_DELAY);
     }
 
     // Auto-initialize on DOM ready
@@ -128,16 +172,13 @@ const PageLoader = (function () {
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {
             show();
-            window.addEventListener('load', function () {
-                hide();
-            });
         });
     } else {
         show();
-        window.addEventListener('load', function () {
-            hide();
-        });
     }
+
+    // Do NOT auto-hide on window.load.
+    // Pages should call PageLoader.hide() when they are actually ready.
 
     // Expose public API
     return {

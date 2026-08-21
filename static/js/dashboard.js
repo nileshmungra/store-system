@@ -150,9 +150,13 @@ function connectWebSocket() {
 }
 
 // Initialize on DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-    loadDashboardStats();
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadDashboardStats();
     connectWebSocket();
+
+    if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+        window.PageLoader.hide();
+    }
 });
 
 window.loadDashboardStats = loadDashboardStats;

@@ -454,10 +454,14 @@
         let html5QrcodeScanner = null;
         let approvalModal = new bootstrap.Modal(document.getElementById('approvalModal'));
 
-        document.addEventListener('DOMContentLoaded', function () {
-            loadDispatchPlans();
+        document.addEventListener('DOMContentLoaded', async function () {
+            await loadDispatchPlans();
             document.getElementById('dispatchPlanSelect').addEventListener('change', handleDpSelection);
             initCameraScanner();
+
+            if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                window.PageLoader.hide();
+            }
         });
 
         // Safe Scanner Initialization & Permission Handlers
