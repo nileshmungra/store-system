@@ -2989,8 +2989,8 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
         'dealer': next((c for c in df.columns if 'dealer' in c), None),
         'village': next((c for c in df.columns if 'village' in c), None),
         'district': next((c for c in df.columns if 'district' in c), None),
-        'item_name': next((c for c in df.columns if 'item' in c and 'name' in c), None),
-        'item_code': next((c for c in df.columns if 'item' in c and 'code' in c), None),
+        'item_name': next((c for c in df.columns if c == 'item' or 'item' in c and 'name' in c or 'product' in c and 'name' in c), None),
+        'item_code': next((c for c in df.columns if c == 'code' or 'item' in c and 'code' in c or 'product' in c and 'code' in c or 'item code' in c or 'product code' in c), None),
         'pending_qty': next((c for c in df.columns if 'pend. qty' in c or 'pending qty' in c or 'pending' in c and 'qty' in c), None),
         'unit': next((c for c in df.columns if 'unit' == c or c == 'uom' or 'unit' in c), None),
     }
