@@ -311,10 +311,11 @@ def init_db():
             vehicle_no VARCHAR(255),
             transporter_name VARCHAR(255),
             driver_info VARCHAR(255),
+            pan_number VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     ''')
-    for col in ["vehicle_no", "transporter_name", "driver_info"]:
+    for col in ["vehicle_no", "transporter_name", "driver_info", "pan_number"]:
         try:
             cursor.execute(f"ALTER TABLE dispatch_plans ADD COLUMN {col} VARCHAR(255)")
         except Exception:
@@ -328,9 +329,15 @@ def init_db():
             so_numbers TEXT,
             total_items INT DEFAULT 0,
             status VARCHAR(50) DEFAULT 'ACTIVE',
+            pan_number VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     ''')
+    for col in ["pan_number"]:
+        try:
+            cursor.execute(f"ALTER TABLE dp_plans ADD COLUMN {col} VARCHAR(255)")
+        except Exception:
+            pass
 
 
     # Dispatch Plan Items Table

@@ -4035,6 +4035,7 @@ def get_delivery_challan(plan_id: str):
             vehicle_no = plan.get('vehicle_no', '')
             transporter_name = plan.get('transporter_name', '')
             driver_info = plan.get('driver_info', '')
+            pan_number = plan.get('pan_number', '') or ''
             created_at = str(plan.get('created_at', ''))
         else:
             # 2. Try finding in dp_plans by dp_number
@@ -4051,6 +4052,7 @@ def get_delivery_challan(plan_id: str):
             vehicle_no = plan.get('vehicle_no', '')
             transporter_name = plan.get('transporter_name', '')
             driver_info = plan.get('driver_info', '')
+            pan_number = plan.get('pan_number', '') or ''
             created_at = str(plan.get('created_at', ''))
 
         # Process item list & calculate weights
@@ -4122,6 +4124,7 @@ def get_delivery_challan(plan_id: str):
         "plan_no": plan_no,
         "so_no": so_no,
         "plan_status": plan_status,
+        "pan_number": pan_number or '',
         "vehicle_no": vehicle_no or "",
         "transporter_name": transporter_name or "",
         "driver_info": driver_info or "",

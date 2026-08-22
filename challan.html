@@ -522,6 +522,21 @@
             </button>
         </div>
 
+        <!-- DP Plan Selector -->
+        <div class="card glass-card p-3 mb-4 no-print" id="planSelectorCard">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-dark small mb-1">Select Dispatch Plan</label>
+                    <select id="planSelector" class="form-select form-control-custom">
+                        <option value="">-- Select DP Plan --</option>
+                    </select>
+                </div>
+                <div class="col-md-6 text-md-end text-muted small" id="planSelectorStatus">
+                    Loading available plans...
+                </div>
+            </div>
+        </div>
+
 
         <div class="challan-card" id="challanPrintArea">
 
@@ -549,6 +564,12 @@
                 </div>
                 <div class="col-md-3 col-6">
                     <div class="info-block">
+                        <div class="info-label">DP PAN Number</div>
+                        <div class="info-value text-warning" id="lbl_pan_number">-</div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="info-block">
                         <div class="info-label">Sales Order (SO No)</div>
                         <div class="info-value" id="lbl_so_no">-</div>
                     </div>
@@ -557,12 +578,6 @@
                     <div class="info-block">
                         <div class="info-label">Challan Date & Time</div>
                         <div class="info-value" id="lbl_challan_date">-</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="info-block">
-                        <div class="info-label">Dispatch Status</div>
-                        <div class="info-value text-success" id="lbl_status">READY</div>
                     </div>
                 </div>
             </div>
@@ -732,11 +747,29 @@
                 setMode('challan');
             }
 
+            await loadPlanSelector();
+
             if (currentPlanId) {
+                document.getElementById('planSelector').value = String(currentPlanId);
                 await loadChallanData(currentPlanId);
-            } else {
-                alert("⚠️ Please provide a valid DP Plan ID or DP Number!");
             }
+
+            document.getElementById('planSelector').addEventListener('change', async (e) => {
+                const selectedPlanId = e.target.value;
+                if (selectedPlanId) {
+                    currentPlanId = selectedPlanId;
+                    await loadChallanData(currentPlanId);
+                } else {
+                    currentPlanId = null;
+                    document.getElementById('challanItemsTbody').innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">Please select a DP Plan to generate Challan / Packing List.</td></tr>`;
+                    document.getElementById('lbl_plan_no').innerText = '-';
+                    document.getElementById('lbl_pan_number').innerText = '-';
+                    document.getElementById('lbl_so_no').innerText = '-';
+                    document.getElementById('lbl_challan_date').innerText = '-';
+                    document.getElementById('lbl_status').innerText = '-';
+                    document.getElementById('lbl_status_badge').innerText = 'STATUS: -';
+                }
+            });
 
             document.getElementById('modeBtnChallan').addEventListener('click', () => setMode('challan'));
             document.getElementById('modeBtnPacking').addEventListener('click', () => setMode('packing'));
@@ -745,6 +778,26 @@
                 window.PageLoader.hide();
             }
         });
+
+        async function loadPlanSelector() {
+            const selectEl = document.getElementById('planSelector');
+            const statusEl = document.getElementById('planSelectorStatus');
+            try {
+                const res = await fetch(`/api/dispatch-plans/list`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+                const data = await res.json();
+                if (res.ok && data.plans) {
+                    const activePlans = data.plans.filter(p => p.status !== 'COMPLETED');
+                    selectEl.innerHTML = '<option value="">-- Select DP Plan --</option>' +
+                        activePlans.map(plan => `<option value="${plan.id}">${plan.plan_no} (SO: ${plan.so_no || 'N/A'})</option>`).join('');
+                    statusEl.innerText = `${activePlans.length} active plan(s) available.`;
+                } else {
+                    statusEl.innerText = 'No active DP Plans found.';
+                }
+            } catch (e) {
+                console.error("Error loading DP plans:", e);
+                statusEl.innerText = 'Failed to load DP Plans.';
+            }
+        }
 
         function setMode(mode) {
             currentMode = mode;
@@ -802,6 +855,7 @@
                 }
 
                 document.getElementById('lbl_plan_no').innerText = data.plan_no;
+                document.getElementById('lbl_pan_number').innerText = data.pan_number || '-';
                 document.getElementById('lbl_so_no').innerText = data.so_no || 'N/A';
                 document.getElementById('lbl_status').innerText = data.plan_status;
                 document.getElementById('lbl_status_badge').innerText = `STATUS: ${data.plan_status}`;
