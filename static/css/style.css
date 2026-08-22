@@ -539,6 +539,30 @@ select option {
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25) !important;
 }
 
+.btn-gradient-indigo {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: #ffffff !important;
+    border: 2px solid #4f46e5 !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25) !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-gradient-indigo:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+    border-color: #3730a3 !important;
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35) !important;
+    transform: translateY(-1px);
+    color: #ffffff !important;
+}
+
+.btn-gradient-indigo:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* --- Toast Notification System --- */
 .toast-container-custom {
     position: fixed;
