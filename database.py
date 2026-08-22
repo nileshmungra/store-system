@@ -339,6 +339,19 @@ def init_db():
     except Exception:
         pass # Column already exists
 
+    # Legacy Dispatch Plan Items Table (keyed by dp_number)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS dp_plan_items (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            dp_number VARCHAR(255) NOT NULL,
+            item_name VARCHAR(255) NOT NULL,
+            planned_qty DECIMAL(10, 2) NOT NULL,
+            unit VARCHAR(50),
+            weight_per_pc DECIMAL(10, 3) DEFAULT 0.0,
+            dispatched_qty DECIMAL(10, 2) DEFAULT 0.0
+        );
+    ''')
+
 
     # Bill of Materials (BOM) Tables
     cursor.execute('''
