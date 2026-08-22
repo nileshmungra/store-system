@@ -298,9 +298,57 @@
                 break-inside: avoid !important;
             }
 
-            @page {
-                size: 100mm 100mm;
-                margin: 0;
+            /* --- Bulk QR Print Grid --- */
+            .print-bulk-qr #qr-bulk-print-area,
+            .print-bulk-qr #qr-bulk-print-area * {
+                visibility: visible !important;
+            }
+
+            .print-bulk-qr #qr-bulk-print-area {
+                display: block !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                padding: 15mm !important;
+                background: #fff !important;
+            }
+
+            .print-bulk-qr .qr-bulk-grid {
+                display: grid !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 15px !important;
+            }
+
+            .print-bulk-qr .qr-bulk-grid .qr-card-printable {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+
+            .print-bulk-qr .qr-bulk-grid .glass-card {
+                border: 1px solid #ccc !important;
+                padding: 10px !important;
+                text-align: center !important;
+                background: #fff !important;
+                box-shadow: none !important;
+                color: #000 !important;
+            }
+
+            .print-bulk-qr .qr-bulk-grid .badge {
+                background-color: #ddd !important;
+                color: #000 !important;
+                border: 1px solid #999 !important;
+            }
+
+            .print-bulk-qr .qr-bulk-grid .fw-bold,
+            .print-bulk-qr .qr-bulk-grid .text-indigo,
+            .print-bulk-qr .qr-bulk-grid .text-muted,
+            .print-bulk-qr .qr-bulk-grid .text-slate-800 {
+                color: #000 !important;
+            }
+
+            .print-bulk-qr .qr-bulk-grid .btn {
+                display: none !important;
             }
         }
     </style>
@@ -1075,17 +1123,33 @@
         }
 
         function printAllQRCodes() {
-            // 1. Check if QR cards are present on screen
-            const qrCards = document.querySelectorAll('.qr-card-printable'); // or your QR class name
+            const qrCards = document.querySelectorAll('.qr-card-printable');
             if (qrCards.length === 0) {
                 alert("⚠️ No QR codes found to print! Please search first.");
                 return;
             }
 
-            // 2. Add print-bulk class to body
-            document.body.classList.add('print-bulk');
+            const grid = document.querySelector('#qr-bulk-print-area .qr-bulk-grid');
+            grid.innerHTML = '';
 
-            // 2. Open browser print window
+            const cardsHTML = Array.from(qrCards).map(card => {
+                const clone = card.cloneNode(true);
+                clone.querySelectorAll('.btn').forEach(btn => btn.remove());
+                clone.querySelectorAll('canvas').forEach(canvas => {
+                    const img = document.createElement('img');
+                    img.src = canvas.toDataURL('image/png');
+                    img.style.maxWidth = '100%';
+                    img.style.height = 'auto';
+                    img.alt = 'QR Code';
+                    canvas.parentNode.replaceChild(img, canvas);
+                });
+                return clone.outerHTML;
+            }).join('');
+
+            grid.innerHTML = cardsHTML;
+            document.body.classList.add('print-bulk-qr');
+            document.getElementById('qr-bulk-print-area').style.display = 'block';
+
             window.print();
         }
         async function loadDashboardDpPlans() {
@@ -1332,10 +1396,16 @@
 
         // Add an event listener to remove the print class after printing
         window.onafterprint = () => {
-            document.body.classList.remove('print-bulk', 'print-single');
+            document.body.classList.remove('print-bulk', 'print-single', 'print-bulk-qr');
             document.body.classList.remove('print-sticker');
             document.getElementById('label-print-area').style.display = 'none';
             document.getElementById('single-qr-print-area').style.display = 'none';
+            const qrBulkArea = document.getElementById('qr-bulk-print-area');
+            if (qrBulkArea) {
+                qrBulkArea.style.display = 'none';
+                const grid = qrBulkArea.querySelector('.qr-bulk-grid');
+                if (grid) grid.innerHTML = '';
+            }
         };
 
         // 🌓 Global Dark / Light Theme Management
@@ -1428,6 +1498,11 @@
                 <p id="single-qr-date" class="print-date"></p>
             </div>
         </div>
+    </div>
+
+    <!-- Printable Bulk QR Area -->
+    <div id="qr-bulk-print-area" style="display:none;">
+        <div class="qr-bulk-grid"></div>
     </div>
 
     <style>
