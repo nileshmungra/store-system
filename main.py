@@ -1566,6 +1566,16 @@ def reprint_batch_qrs(batch_id: int):
 # 7. Check Box Status & DP Plan Item Pre-Validation
 @app.get("/api/check-box/{box_id}")
 def check_box_status(box_id: str, dp_number: Optional[str] = None, dispatch_plan_id: Optional[Union[int, str]] = None):
+    try:
+        return _check_box_status_impl(box_id, dp_number, dispatch_plan_id)
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[CHECK_BOX_ERROR] box_id={box_id} dp={dp_number} dispatch_plan_id={dispatch_plan_id} error={e}")
+        raise HTTPException(status_code=500, detail=f"Server error while checking box status: {str(e)}")
+
+
+def _check_box_status_impl(box_id: str, dp_number: Optional[str] = None, dispatch_plan_id: Optional[Union[int, str]] = None):
     # Store Kit QR Code Check
     if box_id.startswith("KIT-") or "KIT-" in box_id:
         with get_db_ctx() as (conn, cursor):

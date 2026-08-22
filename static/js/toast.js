@@ -44,6 +44,14 @@ const Toast = (function () {
 
     function showToast(message, type = 'info', title = null, duration = 3500) {
         const c = getContainer();
+
+        // Remove any existing toast immediately so only one toast is visible at a time
+        const existing = c.querySelectorAll('.toast-card-custom');
+        existing.forEach(el => {
+            if (el._timer) clearTimeout(el._timer);
+            if (el.parentNode) el.parentNode.removeChild(el);
+        });
+
         const conf = typeConfig[type] || typeConfig.info;
         const toastTitle = title || conf.title;
 
@@ -67,12 +75,10 @@ const Toast = (function () {
 
         c.appendChild(toastEl);
 
-        // Animate entrance
         requestAnimationFrame(() => {
             toastEl.classList.add('show');
         });
 
-        // Auto dismiss
         const timer = setTimeout(() => {
             removeToast(toastEl);
         }, duration);
