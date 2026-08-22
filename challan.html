@@ -53,6 +53,7 @@
                 background: #ffffff !important;
                 color: #000000 !important;
                 padding: 0 !important;
+                margin: 0 !important;
             }
 
             .no-print {
@@ -63,79 +64,69 @@
                 box-shadow: none !important;
                 border: 2px solid #000000 !important;
                 margin: 0 !important;
+                padding: 10mm !important;
                 width: 100% !important;
                 max-width: 100% !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
 
             @page {
                 size: A4;
-                margin: 8mm;
-                /* Reduced margin for more content space */
+                margin: 10mm;
             }
 
             .table-custom th,
             .table-custom td {
                 border-color: #000000 !important;
                 color: #000000 !important;
+                font-size: 9pt !important;
             }
 
             .challan-card {
-                display: flex;
-                flex-direction: column;
-                height: 100%;
-                /* Ensure it fills the page height */
+                display: block;
+                height: auto;
                 border-color: #000000 !important;
                 color: #000000 !important;
             }
 
-            /* A4 Print Specific Adjustments */
-            .challan-card {
-                padding: 0 !important;
-            }
-
-            .challan-card>* {
-                flex-shrink: 0;
-                /* Prevent sections from shrinking */
-            }
-
             .company-header {
                 padding-bottom: 8px;
-                margin-bottom: 15px;
+                margin-bottom: 12px;
+                border-bottom: 2px solid #000000 !important;
             }
 
             .company-title {
-                font-size: 18pt !important;
+                font-size: 16pt !important;
             }
 
             .challan-badge {
-                font-size: 11pt !important;
+                font-size: 10pt !important;
                 padding: 4px 12px !important;
             }
 
             .info-block,
             .card-body {
-                padding: 8px !important;
+                padding: 6px !important;
             }
 
             .table-custom th,
             .table-custom td,
             .summary-box span,
             .summary-box strong {
-                font-size: 8pt !important;
-                /* Further reduced font size */
+                font-size: 9pt !important;
                 padding: 4px 6px !important;
-                /* Tighter padding */
             }
 
             .table-responsive {
-                flex-grow: 1;
-                /* Allow table to take up remaining space */
+                overflow: visible !important;
             }
 
             .signature-section {
-                margin-top: auto !important;
-                /* Push to the bottom */
-                padding-top: 15px !important;
+                margin-top: 15px !important;
+                padding-top: 10px !important;
+                page-break-inside: avoid;
+                break-inside: avoid;
             }
         }
 
@@ -786,12 +777,22 @@
                 const res = await fetch(`/api/dispatch-plans/list`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
                 const data = await res.json();
                 if (res.ok && data.plans) {
-                    const activePlans = data.plans.filter(p => p.status !== 'COMPLETED');
+                    const sortedPlans = [...data.plans].sort((a, b) => {
+                        const aCompleted = a.status === 'COMPLETED' ? 1 : 0;
+                        const bCompleted = b.status === 'COMPLETED' ? 1 : 0;
+                        if (aCompleted !== bCompleted) return aCompleted - bCompleted;
+                        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+                    });
                     selectEl.innerHTML = '<option value="">-- Select DP Plan --</option>' +
-                        activePlans.map(plan => `<option value="${plan.id}">${plan.plan_no} (SO: ${plan.so_no || 'N/A'})</option>`).join('');
-                    statusEl.innerText = `${activePlans.length} active plan(s) available.`;
+                        sortedPlans.map(plan => {
+                            const suffix = plan.status === 'COMPLETED' ? ' [COMPLETED]' : '';
+                            return `<option value="${plan.id}">${plan.plan_no} (SO: ${plan.so_no || 'N/A'})${suffix}</option>`;
+                        }).join('');
+                    const completedCount = data.plans.filter(p => p.status === 'COMPLETED').length;
+                    const activeCount = data.plans.filter(p => p.status !== 'COMPLETED').length;
+                    statusEl.innerText = `${data.plans.length} plan(s) | ${activeCount} active | ${completedCount} completed`;
                 } else {
-                    statusEl.innerText = 'No active DP Plans found.';
+                    statusEl.innerText = 'No DP Plans found.';
                 }
             } catch (e) {
                 console.error("Error loading DP plans:", e);
