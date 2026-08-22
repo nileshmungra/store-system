@@ -785,15 +785,21 @@
                 }
                 const checkRes = await fetch(checkUrl);
                 let boxData = null;
-                let parseError = null;
+                let responseText = null;
                 try {
                     boxData = await checkRes.json();
                 } catch (jsonErr) {
-                    parseError = jsonErr;
+                    try {
+                        responseText = await checkRes.text();
+                    } catch (textErr) {
+                        responseText = null;
+                    }
+                    console.error("Check-box response JSON parse failed. Status:", checkRes.status, "Body:", responseText);
                 }
 
                 if (!checkRes.ok) {
-                    const detail = (boxData && boxData.detail) ? boxData.detail : 'Box not found or server error.';
+                    const detail = (boxData && (boxData.detail || boxData.message)) ? boxData.detail || boxData.message : (responseText || `Server error (status ${checkRes.status})`);
+                    console.error("Check-box failed:", checkRes.status, boxData, responseText);
                     resultDiv.className = "mb-3 text-center fw-bold text-danger fs-6 p-2 bg-light rounded border border-danger shadow";
                     resultDiv.innerText = `❌ ${detail}`;
                     setTimeout(() => {
@@ -908,9 +914,16 @@
                 });
 
                 let data = null;
+                let responseText = null;
                 try {
                     data = await response.json();
                 } catch (jsonErr) {
+                    try {
+                        responseText = await response.text();
+                    } catch (textErr) {
+                        responseText = null;
+                    }
+                    console.error("Outward response JSON parse failed. Status:", response.status, "Body:", responseText);
                     data = {};
                 }
 
@@ -930,7 +943,8 @@
                         loadAndDisplayDpProgress(dispatchPlanId);
                     }
                 } else {
-                    const detail = data.detail || data.message || 'An error occurred';
+                    const detail = data.detail || data.message || responseText || `Server error (status ${response.status})`;
+                    console.error("Outward failed:", response.status, data, responseText);
                     if (window.showToast) window.showToast(`❌ ${detail}`, "error");
                     resultDiv.className = "mb-3 text-center fw-bold text-danger fs-6 p-3 bg-light rounded border border-danger shadow";
                     resultDiv.innerHTML = `
