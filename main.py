@@ -3185,6 +3185,40 @@ def get_loading_entry_items(dp_plan_no: str, so_numbers: str):
         "items": items
     }
 
+def ensure_items_exist(conn, items):
+    """
+    Ensures all items from the given list exist in the `items` table.
+    Missing items are inserted with sensible defaults.
+    """
+    if not items:
+        return 0
+
+    inserted_count = 0
+    cursor = conn.cursor()
+    for item in items:
+        item_code = str(item.get('item_code', '')).strip()
+        item_name = str(item.get('item_name', '')).strip()
+        unit = str(item.get('unit', 'PCS')).strip()
+
+        if not item_code or not item_name:
+            continue
+
+        try:
+            cursor.execute(
+                """
+                INSERT IGNORE INTO items (item_code, item_name, item_group, hsn_code, unit, rate, image_url, is_own_production, is_outsource)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (item_code, item_name, '', '', unit, 0.0, '', 0, 0)
+            )
+            if cursor.rowcount > 0:
+                inserted_count += 1
+        except mysql.connector.Error:
+            continue
+
+    return inserted_count
+
+
 @app.post("/api/dispatch/create-from-loading-entry")
 async def create_dispatch_plan_from_loading_entry(req: CreatePlanFromLoadingEntryRequest):
     """
@@ -3239,6 +3273,11 @@ async def create_dispatch_plan_from_loading_entry(req: CreatePlanFromLoadingEntr
                 """,
                 (plan_id, item['item_name'], item['total_qty'], item['unit'], classify_item_type(item['item_name']))
             )
+
+        # Auto-sync new items into Item Master
+        new_items_count = ensure_items_exist(conn, items_to_add)
+        if new_items_count > 0:
+            add_log(conn, "ITEM_AUTO_SYNC", f"Auto-synced {new_items_count} new items from Plan '{plan_no}' into Item Master.")
 
         add_log(conn, "PLAN_CREATED_FROM_EXCEL", f"Plan '{plan_no}' created for SO(s) '{so_no_str}' with {len(items_to_add)} items.")
 
