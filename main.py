@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import io
 import re
@@ -8,6 +9,10 @@ import json
 import sqlite3
 import pdfplumber
 from datetime import datetime
+import asyncio
+
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 import mysql.connector
 from typing import Optional, Union

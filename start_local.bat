@@ -160,7 +160,7 @@ echo.
 echo [5/6] Starting FastAPI Server with HTTPS...
 echo.
 
-start "Store System - FastAPI Server" /b "%~dp0venv\Scripts\python.exe" -m uvicorn main:app --host 0.0.0.0 --port 8000 --no-access-log --ssl-keyfile "%~dp0key.pem" --ssl-certfile "%~dp0cert.pem"
+start "Store System - FastAPI Server" /b "%~dp0venv\Scripts\python.exe" -m uvicorn main:app --host 0.0.0.0 --port 8000 --no-access-log --ssl-keyfile "%~dp0key.pem" --ssl-certfile "%~dp0cert.pem" --log-level warning
 
 echo Waiting for FastAPI to start...
 echo.
