@@ -373,6 +373,37 @@
             </div>
         </div>
 
+        <!-- FIFO Mode Card -->
+        <div class="card glass-card p-4 mb-4" style="border-left: 4px solid #4f46e5 !important;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-primary mb-0"><i class="bi bi-arrow-down-circle-fill me-2"></i> FIFO Mode (Oldest Stock First)</h6>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="fifoModeToggle" onchange="toggleFifoMode()">
+                    <label class="form-check-label small fw-bold text-dark" for="fifoModeToggle">Enable FIFO</label>
+                </div>
+            </div>
+            <div id="fifoControls" style="display: none;">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label text-dark fw-bold small mb-1">Select Item *</label>
+                        <select id="fifoItemSelect" class="form-select form-control-custom">
+                            <option value="">-- Select Item --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-dark fw-bold small mb-1">Qty to Issue *</label>
+                        <input type="number" id="fifoQty" class="form-control form-control-custom" min="1" value="1">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button onclick="processFifoOutward()" class="btn btn-primary w-100 fw-bold">
+                            <i class="bi bi-check-circle-fill me-1"></i> FIFO Issue Out
+                        </button>
+                    </div>
+                </div>
+                <div id="fifoStatus" class="mt-3"></div>
+            </div>
+        </div>
+
         <!-- DP Progress Display Area -->
         <div id="dpProgressContainer" class="mb-4 p-3 glass-card" style="display: none;"></div>
 
@@ -616,6 +647,86 @@
                 input.value = maxBoxQty;
             } else if (val < 1 || isNaN(val)) {
                 input.value = 1;
+            }
+        }
+
+        async function toggleFifoMode() {
+            const toggle = document.getElementById('fifoModeToggle');
+            const controls = document.getElementById('fifoControls');
+            const readerWrapper = document.getElementById('reader-wrapper');
+            
+            if (toggle.checked) {
+                controls.style.display = 'block';
+                readerWrapper.style.display = 'none';
+                await loadFifoItems();
+            } else {
+                controls.style.display = 'none';
+                readerWrapper.style.display = 'block';
+            }
+        }
+
+        async function loadFifoItems() {
+            const select = document.getElementById('fifoItemSelect');
+            try {
+                const res = await fetch(`${API_URL}/api/items/list?limit=0`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+                const data = await res.json();
+                if (res.ok && data.items) {
+                    select.innerHTML = '<option value="">-- Select Item --</option>';
+                    data.items.forEach(item => {
+                        select.innerHTML += `<option value="${item.item_name}">${item.item_name} (${item.item_code || 'N/A'})</option>`;
+                    });
+                }
+            } catch (e) {
+                console.error("Error loading items for FIFO:", e);
+            }
+        }
+
+        async function processFifoOutward() {
+            const itemName = document.getElementById('fifoItemSelect').value;
+            const qtyIssued = parseInt(document.getElementById('fifoQty').value);
+            const issuedTo = document.getElementById('issuedTo').value.trim();
+            const scannedBy = document.getElementById('scannedBy').value.trim();
+            const dispatchPlanId = document.getElementById('dispatchPlanSelect').value;
+            const statusDiv = document.getElementById('fifoStatus');
+
+            if (!itemName) {
+                alert("⚠️ Please select an item!");
+                return;
+            }
+            if (!qtyIssued || qtyIssued <= 0) {
+                alert("⚠️ Please enter a valid quantity!");
+                return;
+            }
+            if (!issuedTo) {
+                alert("⚠️ Please enter 'Issued To' recipient name!");
+                return;
+            }
+
+            statusDiv.innerHTML = `<div class="text-center py-2"><span class="spinner-border spinner-border-sm text-primary"></span> Processing FIFO Outward...</div>`;
+
+            try {
+                const res = await fetch(`${API_URL}/api/outward/fifo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true' },
+                    body: JSON.stringify({
+                        item_name: itemName,
+                        qty_issued: qtyIssued,
+                        issued_to: issuedTo,
+                        scanned_by: scannedBy || "Store Keeper",
+                        dispatch_plan_id: dispatchPlanId || null
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    statusDiv.innerHTML = `<div class="alert alert-success m-0"><i class="bi bi-check-circle-fill me-1"></i> ${data.message}</div>`;
+                    if (window.showToast) window.showToast(data.message, "success");
+                    document.getElementById('fifoQty').value = 1;
+                } else {
+                    statusDiv.innerHTML = `<div class="alert alert-danger m-0">❌ ${data.detail || data.message || 'FIFO Outward failed!'}</div>`;
+                }
+            } catch (e) {
+                statusDiv.innerHTML = `<div class="alert alert-danger m-0">❌ Unable to connect to server.</div>`;
             }
         }
 

@@ -7,6 +7,7 @@ import gc
 import json
 import sqlite3
 import pdfplumber
+from datetime import datetime
 
 import mysql.connector
 from typing import Optional, Union
@@ -212,6 +213,15 @@ class NonDpOutwardRequest(BaseModel):
     scanned_by: Optional[str] = "Store Keeper"
     remark: Optional[str] = ""
 
+
+class FifoOutwardRequest(BaseModel):
+    item_name: str
+    qty_issued: int
+    issued_to: str
+    scanned_by: Optional[str] = "Store Keeper"
+    dispatch_plan_id: Optional[Union[int, str]] = None
+    dp_number: Optional[str] = None
+    reason: Optional[str] = "FIFO Outward"
 
 
 
@@ -772,7 +782,17 @@ def approve_qc_request(qc_id: int, req: QcApprovalAction):
         ''', (item_name, int(qty), supplier, remark))
         batch_id = cursor.lastrowid
 
-        box_id = f"BOX-QC-{batch_id}-1"
+        # Look up item_code for meaningful box ID
+        cursor.execute("SELECT item_code FROM items WHERE item_name = %s", (item_name,))
+        item_row = cursor.fetchone()
+        item_code = item_row['item_code'] if item_row else item_name
+        abbrev = ''.join(c for c in item_code.upper() if c.isalnum())[:20]
+        date_suffix = datetime.now().strftime('%y%m%d')
+
+        cursor.execute("SELECT COUNT(*) as cnt FROM boxes WHERE item_name = %s AND DATE(created_at) = CURDATE()", (item_name,))
+        existing_count = cursor.fetchone()['cnt'] or 0
+
+        box_id = f"BOX-{abbrev}-{date_suffix}-{existing_count + 1:03d}"
         cursor.execute('''
             INSERT INTO boxes (box_id, batch_id, item_name, qty_in_box, supplier_or_party, status)
             VALUES (%s, %s, %s, %s, %s, 'IN_STORE')
@@ -896,7 +916,7 @@ def delete_inward_batch(batch_id: int):
 # 1. Material IN (Inward + Auto Log)
 @app.post("/api/inward")
 async def material_inward(data: InwardRequest):
-    with get_db_ctx(commit=True) as (conn, cursor): # Note: DB operations are sync, but the endpoint is now async
+    with get_db_ctx(commit=True) as (conn, cursor):
         total_qty = data.total_boxes * data.qty_per_box
         
         cursor.execute(
@@ -905,9 +925,28 @@ async def material_inward(data: InwardRequest):
         )
         batch_id = cursor.lastrowid
         
+        # Look up item_code for meaningful box ID
+        cursor.execute("SELECT item_code FROM items WHERE item_name = %s", (data.item_name,))
+        item_row = cursor.fetchone()
+        item_code = item_row['item_code'] if item_row else data.item_name
+        
+        # Create abbreviation: uppercase, remove special chars, max 20 chars
+        abbrev = ''.join(c for c in item_code.upper() if c.isalnum())[:20]
+        
+        # Date suffix YYMMDD
+        date_suffix = datetime.now().strftime('%y%m%d')
+        
+        # Count existing boxes for this item today to determine sequence
+        cursor.execute("""
+            SELECT COUNT(*) as cnt FROM boxes 
+            WHERE item_name = %s AND DATE(created_at) = CURDATE()
+        """, (data.item_name,))
+        existing_count = cursor.fetchone()['cnt'] or 0
+        
         generated_boxes = []
         for i in range(1, data.total_boxes + 1):
-            box_id = f"BOX-{batch_id}-{i}"
+            seq = existing_count + i
+            box_id = f"BOX-{abbrev}-{date_suffix}-{seq:03d}"
             cursor.execute(
                 "INSERT INTO boxes (box_id, batch_id, item_name, qty_in_box, location) VALUES (%s, %s, %s, %s, %s)",
                 (box_id, batch_id, data.item_name, data.qty_per_box, data.location)
@@ -1258,6 +1297,119 @@ async def process_non_dp_outward(req: NonDpOutwardRequest):
         "reason": reason_text,
         "new_status": new_status,
         "remaining_qty": new_qty
+    }
+
+
+# 🚀 FIFO Outward API - Auto-selects oldest boxes for an item
+@app.post("/api/outward/fifo")
+async def process_fifo_outward(req: FifoOutwardRequest):
+    """
+    FIFO Outward: Automatically selects oldest available boxes for the given item.
+    Useful for automatic dispatch where oldest stock should be used first.
+    """
+    if req.qty_issued <= 0:
+        raise HTTPException(status_code=400, detail="Quantity issued must be greater than 0!")
+
+    with get_db_ctx(commit=True) as (conn, cursor):
+        # Find all available boxes for this item, ordered by oldest first (FIFO)
+        cursor.execute("""
+            SELECT * FROM boxes 
+            WHERE item_name = %s AND status = 'IN_STORE' AND qty_in_box > 0 
+            ORDER BY created_at ASC, box_id ASC
+        """, (req.item_name,))
+        available_boxes = cursor.fetchall()
+
+        if not available_boxes:
+            raise HTTPException(status_code=404, detail=f"No available stock found for item '{req.item_name}'!")
+
+        # Calculate total available qty
+        total_available = sum(float(b['qty_in_box']) for b in available_boxes)
+        if total_available < req.qty_issued:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Insufficient stock! Available: {total_available}, Requested: {req.qty_issued}"
+            )
+
+        # FIFO: Distribute qty_issued across oldest boxes
+        remaining_to_issue = float(req.qty_issued)
+        updated_boxes = []
+        dp_target = req.dp_number or (str(req.dispatch_plan_id) if req.dispatch_plan_id else None)
+
+        for box in available_boxes:
+            if remaining_to_issue <= 0:
+                break
+
+            box_qty = float(box['qty_in_box'])
+            if box_qty <= 0:
+                continue
+
+            issue_from_this_box = min(box_qty, remaining_to_issue)
+            new_qty = box_qty - issue_from_this_box
+            new_status = 'DISPATCHED' if new_qty == 0 else 'IN_STORE'
+
+            cursor.execute("""
+                UPDATE boxes 
+                SET qty_in_box = %s, status = %s, dp_number = %s 
+                WHERE box_id = %s
+            """, (new_qty, new_status, dp_target, box['box_id']))
+
+            cursor.execute("""
+                INSERT INTO outward_logs (box_id, item_name, qty_issued, issued_to, scanned_by)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (box['box_id'], box['item_name'], issue_from_this_box, req.issued_to, req.scanned_by or "Store Keeper"))
+
+            updated_boxes.append({
+                "box_id": box['box_id'],
+                "issued_qty": issue_from_this_box,
+                "remaining_qty": new_qty,
+                "status": new_status
+            })
+
+            remaining_to_issue -= issue_from_this_box
+
+        # Update DP plan dispatched_qty if applicable
+        dp_item = None
+        dpi_type = None
+        if dp_target:
+            cursor.execute("SELECT * FROM dp_plan_items WHERE dp_number = %s", (dp_target,))
+            items1 = cursor.fetchall()
+            for p in items1:
+                if is_item_match(req.item_name, p['item_name']):
+                    dp_item = p
+                    dpi_type = 'dp_plan_items'
+                    break
+
+            if not dp_item and req.dispatch_plan_id:
+                try:
+                    cursor.execute("SELECT * FROM dispatch_plan_items WHERE dispatch_plan_id = %s", (int(req.dispatch_plan_id),))
+                    items2 = cursor.fetchall()
+                    for p in items2:
+                        if is_item_match(req.item_name, p['item_name']):
+                            dp_item = p
+                            dpi_type = 'dispatch_plan_items'
+                            break
+                except (ValueError, TypeError):
+                    pass
+
+            if dp_item:
+                scanned_q = float(req.qty_issued)
+                if dpi_type == 'dp_plan_items':
+                    cursor.execute("UPDATE dp_plan_items SET dispatched_qty = dispatched_qty + %s WHERE id = %s AND (dispatched_qty + %s) <= planned_qty", (scanned_q, dp_item['id'], scanned_q))
+                else:
+                    cursor.execute("UPDATE dispatch_plan_items SET dispatched_qty = dispatched_qty + %s WHERE id = %s AND (dispatched_qty + %s) <= planned_qty", (scanned_q, dp_item['id'], scanned_q))
+
+        add_log(conn, "FIFO_OUTWARD", f"FIFO Outward: {req.item_name} | Qty: {req.qty_issued} | Boxes used: {len(updated_boxes)} | DP: {dp_target or 'N/A'}", user_name=req.scanned_by or "Store Keeper")
+
+    # Broadcast update
+    await manager.broadcast("STOCK_UPDATED")
+
+    return {
+        "status": "Success",
+        "message": f"✅ FIFO Outward successful! {req.qty_issued} units dispatched from {len(updated_boxes)} oldest box(es).",
+        "item_name": req.item_name,
+        "qty_issued": req.qty_issued,
+        "boxes_used": updated_boxes,
+        "dp_target": dp_target
     }
 
 
