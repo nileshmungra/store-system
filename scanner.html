@@ -717,15 +717,23 @@
                     })
                 });
 
-                const data = await res.json();
+                let data = null;
+                try {
+                    data = await res.json();
+                } catch (jsonErr) {
+                    data = {};
+                }
+
                 if (res.ok) {
-                    statusDiv.innerHTML = `<div class="alert alert-success m-0"><i class="bi bi-check-circle-fill me-1"></i> ${data.message}</div>`;
-                    if (window.showToast) window.showToast(data.message, "success");
+                    statusDiv.innerHTML = `<div class="alert alert-success m-0"><i class="bi bi-check-circle-fill me-1"></i> ${data.message || 'FIFO Outward successful!'}</div>`;
+                    if (window.showToast) window.showToast(data.message || 'FIFO Outward successful!', "success");
                     document.getElementById('fifoQty').value = 1;
                 } else {
-                    statusDiv.innerHTML = `<div class="alert alert-danger m-0">❌ ${data.detail || data.message || 'FIFO Outward failed!'}</div>`;
+                    const detail = data.detail || data.message || 'FIFO Outward failed!';
+                    statusDiv.innerHTML = `<div class="alert alert-danger m-0">❌ ${detail}</div>`;
                 }
             } catch (e) {
+                console.error("FIFO outward failed:", e);
                 statusDiv.innerHTML = `<div class="alert alert-danger m-0">❌ Unable to connect to server.</div>`;
             }
         }
@@ -776,11 +784,18 @@
                     checkUrl += `?dispatch_plan_id=${dispatchPlanId}`;
                 }
                 const checkRes = await fetch(checkUrl);
-                const boxData = await checkRes.json();
+                let boxData = null;
+                let parseError = null;
+                try {
+                    boxData = await checkRes.json();
+                } catch (jsonErr) {
+                    parseError = jsonErr;
+                }
 
                 if (!checkRes.ok) {
+                    const detail = (boxData && boxData.detail) ? boxData.detail : 'Box not found or server error.';
                     resultDiv.className = "mb-3 text-center fw-bold text-danger fs-6 p-2 bg-light rounded border border-danger shadow";
-                    resultDiv.innerText = `❌ ${boxData.detail || 'Box not found'}`;
+                    resultDiv.innerText = `❌ ${detail}`;
                     setTimeout(() => {
                         resultDiv.innerText = "";
                         resultDiv.className = "mb-3 text-center fw-bold fs-6";
@@ -892,7 +907,13 @@
                     })
                 });
 
-                const data = await response.json();
+                let data = null;
+                try {
+                    data = await response.json();
+                } catch (jsonErr) {
+                    data = {};
+                }
+
                 approvalModal.hide();
 
                 if (response.ok) {
@@ -909,10 +930,11 @@
                         loadAndDisplayDpProgress(dispatchPlanId);
                     }
                 } else {
-                    if (window.showToast) window.showToast(`❌ ${data.detail || 'An error occurred'}`, "error");
+                    const detail = data.detail || data.message || 'An error occurred';
+                    if (window.showToast) window.showToast(`❌ ${detail}`, "error");
                     resultDiv.className = "mb-3 text-center fw-bold text-danger fs-6 p-3 bg-light rounded border border-danger shadow";
                     resultDiv.innerHTML = `
-                        <div class="mb-2">❌ ${data.detail || 'An error occurred'}</div>
+                        <div class="mb-2">❌ ${detail}</div>
                         <button type="button" class="btn btn-warning text-dark fw-bold px-3 py-1 btn-sm" onclick="startNextScan()">
                             🔄 Try Again
                         </button>
@@ -920,6 +942,7 @@
                 }
             } catch (error) {
                 approvalModal.hide();
+                console.error("Outward request failed:", error);
                 if (window.showToast) window.showToast("❌ Unable to connect to server.", "error");
                 resultDiv.className = "mb-3 text-center fw-bold text-danger p-3 bg-light rounded border border-danger";
                 resultDiv.innerHTML = `
