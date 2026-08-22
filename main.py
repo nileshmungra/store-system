@@ -995,6 +995,16 @@ def is_item_match(scanned_name: str, plan_item_name: str) -> bool:
 # 2. Material OUT / DISPATCH (Outward + Auto Log)
 @app.post("/api/outward")
 async def process_outward(req: OutwardRequest):
+    try:
+        return await _process_outward_impl(req)
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[OUTWARD_ERROR] box_id={req.box_id} dp={req.dispatch_plan_id} error={e}")
+        raise HTTPException(status_code=500, detail=f"Server error during outward processing: {str(e)}")
+
+
+async def _process_outward_impl(req: OutwardRequest):
     # If DP Plan ID is provided and issued_to is empty, populate DP Plan details into issued_to
     if req.dispatch_plan_id and not req.issued_to:
         with get_db_ctx() as (conn, cursor):
@@ -1310,6 +1320,16 @@ async def process_non_dp_outward(req: NonDpOutwardRequest):
 # 🚀 FIFO Outward API - Auto-selects oldest boxes for an item
 @app.post("/api/outward/fifo")
 async def process_fifo_outward(req: FifoOutwardRequest):
+    try:
+        return await _process_fifo_outward_impl(req)
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[FIFO_OUTWARD_ERROR] item={req.item_name} qty={req.qty_issued} error={e}")
+        raise HTTPException(status_code=500, detail=f"Server error during FIFO outward processing: {str(e)}")
+
+
+async def _process_fifo_outward_impl(req: FifoOutwardRequest):
     """
     FIFO Outward: Automatically selects oldest available boxes for the given item.
     Useful for automatic dispatch where oldest stock should be used first.
@@ -2074,6 +2094,26 @@ async def add_production(req: ProductionEntryRequest):
             # Strict Plan vs Actual: Default is ALWAYS PENDING_APPROVAL unless explicitly APPROVED
             if req.status != "APPROVED":
                 cursor.execute('''
+                    SELECT id FROM production_logs 
+                    WHERE status = 'PENDING_APPROVAL'
+                    AND production_date = %s
+                    AND machine_name = %s
+                    AND pipe_type = %s
+                    AND pipe_size = %s
+                    AND planned_qty = %s
+                    AND actual_qty = %s
+                    LIMIT 1
+                ''', (req.production_date, req.machine_name, req.pipe_type, req.pipe_size, planned_val, actual_val))
+                existing = cursor.fetchone()
+                if existing:
+                    return {
+                        "status": "Success",
+                        "message": "Production entry already exists in Pending Approval Queue.",
+                        "log_id": existing['id'],
+                        "is_approved": False
+                    }
+
+                cursor.execute('''
                     INSERT INTO production_logs 
                     (production_date, machine_name, pipe_type, pipe_size, planned_qty, actual_qty, bundle_unit, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code, status)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NULL, 'PENDING_APPROVAL')
@@ -2421,9 +2461,9 @@ def get_production_logs(status: Optional[str] = None):
     """Retrieves recent production logs (optionally filtered by status)."""
     with get_db_ctx(commit=False) as (conn, cursor):
         if status:
-            cursor.execute("SELECT * FROM production_logs WHERE status = %s ORDER BY id DESC LIMIT 200", (status,))
+            cursor.execute("SELECT DISTINCT * FROM production_logs WHERE status = %s ORDER BY id DESC LIMIT 200", (status,))
         else:
-            cursor.execute("SELECT * FROM production_logs ORDER BY id DESC LIMIT 200")
+            cursor.execute("SELECT DISTINCT * FROM production_logs ORDER BY id DESC LIMIT 200")
         logs = cursor.fetchall()
         return {"status": "Success", "logs": logs}
 

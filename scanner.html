@@ -941,6 +941,7 @@
                     `;
                     if (dispatchPlanId) {
                         loadAndDisplayDpProgress(dispatchPlanId);
+                        checkDpCompletionAndRefresh(dispatchPlanId);
                     }
                 } else {
                     const detail = data.detail || data.message || responseText || `Server error (status ${response.status})`;
@@ -976,6 +977,39 @@
             resultDiv.innerText = "";
             resultDiv.className = "mb-3 text-center fw-bold fs-6";
             html5QrcodeScanner.resume();
+        }
+
+        async function checkDpCompletionAndRefresh(planId) {
+            try {
+                const res = await fetch(`${API_URL}/api/dispatch-plan/${planId}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                const plan = data.plan;
+                if (!plan || !plan.items) return;
+
+                const allDone = plan.items.every(item => {
+                    const remaining = Math.max(0, (parseFloat(item.planned_qty) || 0) - (parseFloat(item.dispatched_qty) || 0));
+                    return remaining <= 0;
+                });
+
+                if (allDone && plan.status !== 'COMPLETED') {
+                    if (window.showToast) window.showToast("🎉 DP Plan Completed! All items dispatched.", "success", "DP Complete", 5000);
+                }
+
+                if (plan.status === 'COMPLETED') {
+                    const selectEl = document.getElementById('dispatchPlanSelect');
+                    const options = Array.from(selectEl.options);
+                    const optionToRemove = options.find(opt => opt.value === String(planId));
+                    if (optionToRemove) {
+                        optionToRemove.remove();
+                    }
+                    document.getElementById('dpProgressContainer').style.display = 'none';
+                    document.getElementById('dpProgressContainer').innerHTML = '';
+                    document.getElementById('dispatchPlanSelect').value = '';
+                }
+            } catch (e) {
+                console.error("Error checking DP completion:", e);
+            }
         }
 
         function cancelScan() {
