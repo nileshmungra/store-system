@@ -103,6 +103,7 @@ h4,
 h5,
 h6 {
     color: var(--text-main);
+    margin: 15px;
 }
 
 /* --- General Text Muted Override --- */
@@ -525,6 +526,17 @@ select option {
 .btn-page:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+}
+
+.btn-bordered {
+    border: 2px solid var(--border-color) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease;
+}
+
+.btn-bordered:hover {
+    border-color: #6366f1 !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25) !important;
 }
 
 /* --- Toast Notification System --- */
