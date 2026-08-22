@@ -45,11 +45,11 @@ function renderLogs(logs) {
 
         return `
             <tr>
-                <td class="ps-4 fw-bold text-secondary">#${id}</td>
-                <td><small class="text-muted">${timeStr}</small></td>
+                <td class="ps-4 fw-bold text-dark">#${id}</td>
+                <td><small class="text-dark">${timeStr}</small></td>
                 <td><span class="badge bg-dark px-2 py-1">${userName}</span></td>
                 <td><span class="badge ${badgeClass} fs-6">${action}</span></td>
-                <td class="fw-semibold text-slate-800">${details}</td>
+                <td class="fw-semibold text-dark">${details}</td>
             </tr>
         `;
     }).join('');
