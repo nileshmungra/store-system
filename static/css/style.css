@@ -947,11 +947,11 @@ select option {
     border-top-color: #ffffff !important;
 }
 
-/* Challan Page Print Styles */
+/* Loading/Packing List Page Print Styles */
 @media print {
     @page {
         size: A4;
-        margin: 10mm;
+        margin: 8mm;
     }
 
     #challan-page {
@@ -971,7 +971,7 @@ select option {
         box-shadow: none !important;
         border: 2px solid #000000 !important;
         margin: 0 !important;
-        padding: 10mm !important;
+        padding: 8mm !important;
         width: 100% !important;
         max-width: 100% !important;
         page-break-inside: avoid;
@@ -980,21 +980,38 @@ select option {
         color: #000000 !important;
     }
 
+    #challan-page .table-custom {
+        border: 2px solid #000000 !important;
+        width: 100% !important;
+        border-collapse: collapse;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
     #challan-page .table-custom th,
     #challan-page .table-custom td {
-        border-color: #000000 !important;
+        border: 1px solid #000000 !important;
         color: #000000 !important;
         font-size: 9pt !important;
+        padding: 6px 8px !important;
+    }
+
+    #challan-page .table-custom th {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        font-weight: 900 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     #challan-page .company-header {
-        padding-bottom: 8px;
-        margin-bottom: 12px;
+        padding-bottom: 6px;
+        margin-bottom: 10px;
         border-bottom: 2px solid #000000 !important;
     }
 
     #challan-page .company-title {
-        font-size: 16pt !important;
+        font-size: 15pt !important;
         color: #000000 !important;
     }
 
@@ -1009,21 +1026,47 @@ select option {
         color: #ffffff !important;
     }
 
-    #challan-page .info-block,
-    #challan-page .card-body {
-        padding: 6px !important;
+    #challan-page .info-block {
+        padding: 4px 6px !important;
+        margin-bottom: 8px !important;
     }
 
-    #challan-page .table-custom th,
-    #challan-page .table-custom td,
-    #challan-page .summary-box span,
-    #challan-page .summary-box strong {
+    #challan-page .info-label {
+        color: #000000 !important;
+        font-size: 8pt !important;
+    }
+
+    #challan-page .info-value {
+        color: #000000 !important;
         font-size: 9pt !important;
+    }
+
+    #challan-page .card-header {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border-bottom: 2px solid #000000 !important;
+    }
+
+    #challan-page .card-body {
         padding: 4px 6px !important;
     }
 
-    #challan-page .table-responsive {
-        overflow: visible !important;
+    #challan-page .form-control,
+    #challan-page .form-select {
+        border: 1px solid #000000 !important;
+        color: #000000 !important;
+        background: #ffffff !important;
+    }
+
+    #challan-page .summary-box {
+        border: 2px solid #000000 !important;
+        padding: 8px !important;
+    }
+
+    #challan-page .summary-box span,
+    #challan-page .summary-box strong {
+        color: #000000 !important;
+        font-size: 9pt !important;
     }
 
     #challan-page .signature-section {
@@ -1036,9 +1079,34 @@ select option {
     #challan-page .sig-line {
         border-top: 2px dashed #000000 !important;
     }
+
+    #challan-page .sig-line + div,
+    #challan-page .sig-line + small {
+        color: #000000 !important;
+    }
+
+    #challan-page .text-muted,
+    #challan-page .text-primary,
+    #challan-page .text-warning,
+    #challan-page .text-success {
+        color: #000000 !important;
+    }
+
+    #challan-page small,
+    #challan-page .small {
+        color: #000000 !important;
+    }
+
+    #challan-page .table-responsive {
+        overflow: visible !important;
+    }
+
+    #challan-page .no-print {
+        display: none !important;
+    }
 }
 
-/* Challan Page Responsive */
+/* Loading/Packing List Page Responsive */
 @media (max-width: 768px) {
     #challan-page .challan-card {
         padding: 20px;
