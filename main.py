@@ -4017,13 +4017,16 @@ def get_delivery_challan(plan_id: str):
         dpi_items = []
         is_numeric = plan_id.isdigit()
 
+        dispatch_plan_cols = "id, plan_no, so_no, plan_date, status, vehicle_no, transporter_name, driver_info, created_at"
+        dp_plan_cols = "id, dp_number, so_numbers, total_items, status, created_at"
+
         # 1. Try finding in dispatch_plans by ID or plan_no
         if is_numeric:
-            cursor.execute("SELECT * FROM dispatch_plans WHERE id = %s", (int(plan_id),))
+            cursor.execute(f"SELECT {dispatch_plan_cols} FROM dispatch_plans WHERE id = %s", (int(plan_id),))
             plan = cursor.fetchone()
 
         if not plan:
-            cursor.execute("SELECT * FROM dispatch_plans WHERE plan_no = %s", (plan_id,))
+            cursor.execute(f"SELECT {dispatch_plan_cols} FROM dispatch_plans WHERE plan_no = %s", (plan_id,))
             plan = cursor.fetchone()
 
         if plan:
@@ -4035,11 +4038,11 @@ def get_delivery_challan(plan_id: str):
             vehicle_no = plan.get('vehicle_no', '')
             transporter_name = plan.get('transporter_name', '')
             driver_info = plan.get('driver_info', '')
-            pan_number = plan.get('pan_number', '') or ''
+            pan_number = ''
             created_at = str(plan.get('created_at', ''))
         else:
             # 2. Try finding in dp_plans by dp_number
-            cursor.execute("SELECT * FROM dp_plans WHERE dp_number = %s", (plan_id,))
+            cursor.execute(f"SELECT {dp_plan_cols} FROM dp_plans WHERE dp_number = %s", (plan_id,))
             plan = cursor.fetchone()
             if not plan:
                 raise HTTPException(status_code=404, detail=f"DP Plan '{plan_id}' not found for Delivery Challan!")
@@ -4052,7 +4055,7 @@ def get_delivery_challan(plan_id: str):
             vehicle_no = plan.get('vehicle_no', '')
             transporter_name = plan.get('transporter_name', '')
             driver_info = plan.get('driver_info', '')
-            pan_number = plan.get('pan_number', '') or ''
+            pan_number = ''
             created_at = str(plan.get('created_at', ''))
 
         # Process item list & calculate weights

@@ -32,10 +32,10 @@
             --bg-main: #0f172a;
             --bg-card: #1e293b;
             --border-color: #334155;
-            --text-main: #f8fafc;
+            --text-main: #18191a;
             --text-muted: #94a3b8;
             --input-bg: #0f172a;
-            --input-text: #f8fafc;
+            --input-text: #0c0c0c;
             --shadow-glow: rgba(0, 0, 0, 0.35);
         }
 
@@ -258,7 +258,7 @@
         [data-theme="dark"] .company-subtitle,
         [data-theme="dark"] .text-dark,
         [data-theme="dark"] .detail-value {
-            color: #f8fafc !important;
+            color: #000000 !important;
         }
 
         /* 🚀 High-End Pill Navigation Buttons & 4 Clean Dropdowns */
@@ -651,7 +651,7 @@
                     </thead>
                     <tbody id="challanItemsTbody">
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">Item list is loading...</td>
+                            <td colspan="8" class="text-center py-4 text-dark">Item list is loading...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -848,10 +848,24 @@
                 const res = await fetch(`/api/delivery-challan/${encodeURIComponent(planId)}`, {
                     headers: { 'Bypass-Tunnel-Reminder': 'true' }
                 });
-                const data = await res.json();
+                let data = null;
+                let responseText = null;
+                try {
+                    data = await res.json();
+                } catch (jsonErr) {
+                    try {
+                        responseText = await res.text();
+                    } catch (textErr) {
+                        responseText = null;
+                    }
+                    console.error("Challan response JSON parse failed. Status:", res.status, "Body:", responseText);
+                    data = {};
+                }
 
-                if (!res.ok) { // Check for non-2xx responses
-                    alert("❌ Error: " + (data.detail || "Could not fetch Challan data!"));
+                if (!res.ok) {
+                    const detail = (data && (data.detail || data.message)) ? data.detail || data.message : (responseText || `Server error (status ${res.status})`);
+                    console.error("Challan fetch failed:", res.status, data, responseText);
+                    alert("❌ Error: " + detail);
                     return;
                 }
 
