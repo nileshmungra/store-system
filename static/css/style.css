@@ -48,7 +48,7 @@
 [data-theme="dark"] .text-dark,
 [data-theme="dark"] .text-slate-800,
 [data-theme="dark"] .text-slate-900 {
-    color: var(--text-main) !important;
+    color: #f1f2f4 !important;
     /* Ensure main text is visible */
 }
 
@@ -757,4 +757,303 @@ select option {
     display: block;
     width: 140px !important;
     height: 140px !important;
+}
+
+/* =========================================================
+   CHALLAN PAGE SPECIFIC STYLES
+   Scoped to #challan-page to avoid affecting other pages
+   ========================================================= */
+
+#challan-page {
+    /* Ensure theme variables are available */
+    --challan-accent: #0f172a;
+    --challan-success: #10b981;
+    --challan-warning: #f59e0b;
+    --challan-danger: #ef4444;
+    --challan-radius-sm: 8px;
+    --challan-radius-md: 12px;
+    --challan-radius-lg: 16px;
+}
+
+#challan-page .challan-card {
+    background: var(--bg-card) !important;
+    color: var(--text-main) !important;
+    border-radius: var(--challan-radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px var(--shadow-glow) !important;
+    max-width: 900px;
+    margin: auto;
+    padding: 30px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#challan-page .company-header {
+    border-bottom: 3px double var(--challan-accent);
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+}
+
+#challan-page .company-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 24pt;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--challan-accent) !important;
+    text-transform: uppercase;
+    line-height: 1.1;
+    transition: color 0.3s ease;
+}
+
+[data-theme="dark"] #challan-page .company-title {
+    color: #ffffff !important;
+}
+
+#challan-page .company-subtitle {
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: color 0.3s ease;
+}
+
+[data-theme="dark"] #challan-page .company-subtitle {
+    color: #cbd5e1 !important;
+}
+
+#challan-page .challan-badge {
+    font-size: 13pt;
+    font-weight: 800;
+    background: var(--challan-accent);
+    color: #ffffff;
+    padding: 6px 16px;
+    border-radius: var(--challan-radius-sm);
+    display: inline-block;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] #challan-page .challan-badge {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+#challan-page .info-block {
+    background: var(--bg-muted) !important;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--challan-radius-md);
+    padding: 14px;
+    margin-bottom: 20px;
+    color: var(--text-main) !important;
+    transition: all 0.3s ease;
+}
+
+#challan-page .info-label {
+    font-size: 8.5pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
+}
+
+#challan-page .info-value {
+    font-size: 10.5pt;
+    font-weight: 800;
+    color: var(--challan-accent);
+    transition: color 0.3s ease;
+}
+
+[data-theme="dark"] #challan-page .info-value {
+    color: #ffffff !important;
+}
+
+#challan-page .table-custom {
+    border: 2px solid var(--challan-accent);
+    width: 100%;
+    margin-bottom: 20px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+[data-theme="dark"] #challan-page .table-custom {
+    border-color: #ffffff !important;
+}
+
+#challan-page .table-custom th {
+    background-color: var(--challan-accent) !important;
+    color: #ffffff !important;
+    font-size: 9.5pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    border: 1px solid var(--challan-accent);
+    letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] #challan-page .table-custom th {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #ffffff !important;
+}
+
+#challan-page .table-custom td {
+    font-size: 9.5pt;
+    padding: 9px 12px;
+    border: 1px solid var(--border-color);
+    vertical-align: middle;
+    transition: all 0.2s ease;
+}
+
+[data-theme="dark"] #challan-page .table-custom td {
+    border-color: #334155 !important;
+}
+
+#challan-page .table-custom tbody tr:hover {
+    background-color: rgba(99, 102, 241, 0.05);
+}
+
+[data-theme="dark"] #challan-page .table-custom tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+#challan-page .summary-box {
+    background: var(--bg-muted) !important;
+    border: 2px solid var(--challan-accent);
+    border-radius: var(--challan-radius-md);
+    padding: 14px;
+}
+
+[data-theme="dark"] #challan-page .summary-box {
+    border-color: #ffffff !important;
+}
+
+#challan-page .signature-section {
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--border-color);
+}
+
+#challan-page .sig-line {
+    border-top: 2px dashed var(--challan-accent);
+    width: 80%;
+    margin: auto;
+    margin-top: 40px;
+    transition: border-color 0.3s ease;
+}
+
+[data-theme="dark"] #challan-page .sig-line {
+    border-top-color: #ffffff !important;
+}
+
+/* Challan Page Print Styles */
+@media print {
+    @page {
+        size: A4;
+        margin: 10mm;
+    }
+
+    #challan-page {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    #challan-page .no-print {
+        display: none !important;
+    }
+
+    #challan-page .challan-card {
+        box-shadow: none !important;
+        border: 2px solid #000000 !important;
+        margin: 0 !important;
+        padding: 10mm !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    #challan-page .table-custom th,
+    #challan-page .table-custom td {
+        border-color: #000000 !important;
+        color: #000000 !important;
+        font-size: 9pt !important;
+    }
+
+    #challan-page .company-header {
+        padding-bottom: 8px;
+        margin-bottom: 12px;
+        border-bottom: 2px solid #000000 !important;
+    }
+
+    #challan-page .company-title {
+        font-size: 16pt !important;
+        color: #000000 !important;
+    }
+
+    #challan-page .company-subtitle {
+        color: #000000 !important;
+    }
+
+    #challan-page .challan-badge {
+        font-size: 10pt !important;
+        padding: 4px 12px !important;
+        background: #000000 !important;
+        color: #ffffff !important;
+    }
+
+    #challan-page .info-block,
+    #challan-page .card-body {
+        padding: 6px !important;
+    }
+
+    #challan-page .table-custom th,
+    #challan-page .table-custom td,
+    #challan-page .summary-box span,
+    #challan-page .summary-box strong {
+        font-size: 9pt !important;
+        padding: 4px 6px !important;
+    }
+
+    #challan-page .table-responsive {
+        overflow: visible !important;
+    }
+
+    #challan-page .signature-section {
+        margin-top: 15px !important;
+        padding-top: 10px !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    #challan-page .sig-line {
+        border-top: 2px dashed #000000 !important;
+    }
+}
+
+/* Challan Page Responsive */
+@media (max-width: 768px) {
+    #challan-page .challan-card {
+        padding: 20px;
+        margin: 10px;
+    }
+
+    #challan-page .company-title {
+        font-size: 18pt !important;
+    }
+
+    #challan-page .table-custom {
+        font-size: 8pt;
+    }
+
+    #challan-page .signature-section {
+        margin-top: 30px;
+    }
 }
