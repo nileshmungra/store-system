@@ -559,7 +559,9 @@ async def upload_excel(file: UploadFile = File(...)):
     if not file.filename.endswith(('.xlsx', '.xls')):
         raise HTTPException(status_code=400, detail="Only Excel files (.xlsx/.xls) are supported!")
 
-    df = pd.read_excel(file.file)
+    file_bytes = await file.read()
+    header_row = find_excel_header_row(file_bytes)
+    df = pd.read_excel(io.BytesIO(file_bytes), header=header_row)
     
     required_cols = ['item_code', 'item_name', 'item_group', 'hsn_code', 'unit', 'rate']
     for col in required_cols:
@@ -2522,7 +2524,8 @@ def parse_dispatch_plan_bytes(file_bytes: bytes, filename: str):
                 i += 1
     elif filename.lower().endswith((".xlsx", ".xls")):
         try:
-            df = pd.read_excel(io.BytesIO(file_bytes))
+            header_row = find_excel_header_row(file_bytes)
+            df = pd.read_excel(io.BytesIO(file_bytes), header=header_row)
         except Exception:
             df = pd.read_csv(io.BytesIO(file_bytes))
 
@@ -2862,7 +2865,8 @@ async def auto_connect_so_dp(
         excel_bytes = await so_excel.read()
         try:
             try:
-                df = pd.read_excel(io.BytesIO(excel_bytes))
+                header_row = find_excel_header_row(excel_bytes)
+                df = pd.read_excel(io.BytesIO(excel_bytes), header=header_row)
             except Exception:
                 df = pd.read_csv(io.BytesIO(excel_bytes))
 
@@ -3013,8 +3017,8 @@ def process_excel_in_background(file_bytes: bytes, filename: str):
     This function runs in the background. It contains the original heavy processing logic.
     """
     try:
-        # Use io.BytesIO to read the file from in-memory bytes instead of disk
-        df = pd.read_excel(io.BytesIO(file_bytes))
+        header_row = find_excel_header_row(file_bytes)
+        df = pd.read_excel(io.BytesIO(file_bytes), header=header_row)
         df.columns = [str(c).strip() for c in df.columns]
     except Exception as e:
         # Since this is a background task, we log the error instead of returning an HTTPException
@@ -3117,13 +3121,45 @@ async def upload_excel_dispatch_plan(background_tasks: BackgroundTasks, file: Up
         "message": f"File '{file.filename}' has been received and is being processed in the background. The UI will update automatically upon completion."
     }
 
+def find_excel_header_row(file_bytes: bytes, max_scan_rows: int = 10) -> int:
+    """
+    Scan the first few rows of an Excel file to find the actual header row.
+    Returns the 0-based row index that looks most like a header row.
+    """
+    try:
+        df_raw = pd.read_excel(io.BytesIO(file_bytes), header=None)
+    except Exception:
+        return 0
+
+    header_keywords = [
+        'disp. plan no', 'dispatch plan no', 'dp no', 'plan no',
+        'so no', 'sales order no', 'sales order',
+        'item name', 'item code', 'product name', 'product code',
+        'pending qty', 'pend. qty', 'qty',
+        'unit', 'uom'
+    ]
+
+    best_row = 0
+    best_score = -1
+
+    for i in range(min(max_scan_rows, len(df_raw))):
+        row_values = [str(v).strip().lower() for v in df_raw.iloc[i]]
+        score = sum(1 for kw in header_keywords if any(kw in val for val in row_values))
+        if score > best_score:
+            best_score = score
+            best_row = i
+
+    return best_row
+
+
 def process_loading_entry_excel(file_bytes: bytes, filename: str):
     """
     Background task to process 'Pending Loading Entry' Excel file.
     It inserts or updates records in the `pending_loading_entries` table.
     """
     try:
-        df = pd.read_excel(io.BytesIO(file_bytes))
+        header_row = find_excel_header_row(file_bytes)
+        df = pd.read_excel(io.BytesIO(file_bytes), header=header_row)
         df.columns = [str(c).strip().lower() for c in df.columns]
     except Exception as e:
         print(f"BACKGROUND_TASK_ERROR: Failed to read loading entry Excel file {filename}: {e}")
