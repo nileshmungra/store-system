@@ -3152,6 +3152,76 @@ def find_excel_header_row(file_bytes: bytes, max_scan_rows: int = 10) -> int:
     return best_row
 
 
+def is_pivot_style_excel(df: pd.DataFrame) -> bool:
+    """
+    Detect whether the loaded DataFrame looks like a pivot-style export
+    rather than a normal flat table.
+    """
+    cols = [str(c).strip().lower() for c in df.columns]
+    return (
+        'row labels' in cols
+        or any(str(c).strip().lower().startswith('sum of') for c in df.columns)
+        or any(str(c).strip().lower().startswith('count of') for c in df.columns)
+    )
+
+
+def normalize_pivot_loading_entry(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Convert a pivot-style loading entry sheet into a flat DataFrame
+    with the standard columns expected by process_loading_entry_excel().
+    """
+    df = df.copy()
+    df.columns = [str(c).strip() for c in df.columns]
+    cols_lower = [str(c).strip().lower() for c in df.columns]
+
+    row_label_col = next((c for c in df.columns if str(c).strip().lower() == 'row labels'), None)
+    qty_col = next((c for c in df.columns if str(c).strip().lower().startswith('sum of') or 'pend. qty' in str(c).strip().lower() or 'pending qty' in str(c).strip().lower()), None)
+
+    if row_label_col is None or qty_col is None:
+        return df
+
+    records = []
+    for _, row in df.iterrows():
+        raw_label = str(row.get(row_label_col, '') or '').strip()
+        if not raw_label or raw_label.lower() in {'grand total', 'total'}:
+            continue
+
+        qty_val = pd.to_numeric(row.get(qty_col), errors='coerce')
+        if pd.isna(qty_val):
+            continue
+
+        # Try to split concatenated DP / SO / item info from the row label.
+        # Expected examples:
+        #   RJT/DP/1346/26-27 | RJT/SO/4592/26-27 | HDPE Sprinkler Pipe ...
+        parts = [p.strip() for p in raw_label.replace('/', '|').split('|') if p.strip()]
+        if len(parts) >= 3:
+            disp_plan_no = parts[0]
+            so_no = parts[1]
+            item_name = ' | '.join(parts[2:])
+        elif len(parts) == 2:
+            disp_plan_no = parts[0]
+            so_no = parts[1]
+            item_name = ''
+        else:
+            disp_plan_no = raw_label
+            so_no = ''
+            item_name = ''
+
+        records.append({
+            'disp_plan_no': disp_plan_no,
+            'so_no': so_no,
+            'item_name': item_name,
+            'item_code': '',
+            'pending_qty': float(qty_val),
+            'unit': 'Nos',
+        })
+
+    if not records:
+        return pd.DataFrame(columns=['disp_plan_no', 'so_no', 'item_name', 'item_code', 'pending_qty', 'unit'])
+
+    return pd.DataFrame(records)
+
+
 def process_loading_entry_excel(file_bytes: bytes, filename: str):
     """
     Background task to process 'Pending Loading Entry' Excel file.
@@ -3171,6 +3241,24 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
             "filename": filename,
             "fatal_error": f"Failed to read Excel file: {e}"
         }
+
+    if is_pivot_style_excel(df):
+        df = normalize_pivot_loading_entry(df)
+        if df.empty:
+            error_msg = (
+                f"Could not parse pivot-style loading entry file {filename}. "
+                "Please export it as a flat table with columns: "
+                "Disp. Plan No., SO No., Item, Code, Pend. Qty., Unit."
+            )
+            print(f"BACKGROUND_TASK_ERROR: {error_msg}")
+            return {
+                "inserted": 0,
+                "updated": 0,
+                "skipped": 0,
+                "errors": 0,
+                "filename": filename,
+                "fatal_error": error_msg
+            }
 
     # Map columns based on expected names
     col_map = {
