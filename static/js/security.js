@@ -1,6 +1,6 @@
 /**
  * ====================================================================
- * 🛡️ Security & Data Validation Utilities - Store Management System
+ * 🛡️ Security & Data Validation Utilities - Inventory Management System
  * ====================================================================
  * Provides:
  * 1. HTML Injection (XSS) prevention via escapeHtml().
@@ -74,7 +74,7 @@
     // -------------------------------------------------------------
     async function authFetch(url, options = {}) {
         const token = AuthManager.getToken();
-        
+
         // Merge headers safely
         const defaultHeaders = {
             'Bypass-Tunnel-Reminder': 'true'
@@ -95,7 +95,7 @@
 
         try {
             const response = await fetch(url, fetchOptions);
-            
+
             // Handle unauthorized status gracefully
             if (response.status === 401 || response.status === 403) {
                 console.warn(`[Security] Unauthorized access to ${url} (Status ${response.status})`);

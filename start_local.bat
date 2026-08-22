@@ -226,7 +226,7 @@ if not defined local_ip (
 echo.
 echo =================================================================
 echo.
-echo              STORE SYSTEM SERVER IS LIVE!
+echo              INVENTORY SYSTEM SERVER IS LIVE!
 echo.
 echo =================================================================
 echo.

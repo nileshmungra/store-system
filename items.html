@@ -495,7 +495,8 @@
             <i class="fa-solid fa-lock"></i>
         </div>
         <h3 style="margin-bottom: 8px;">Admin Security</h3>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Enter admin password to access this page</p>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Enter admin password to access
+            this page</p>
 
         <div class="form-group" style="margin-bottom: 15px;">
             <input type="password" id="admin-pass" placeholder="••••••••" style="text-align: center;"
@@ -526,7 +527,7 @@
             <div class="container-fluid px-4">
                 <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
                     <span class="fs-4 text-warning">📦</span>
-                    <span>STORE MANAGEMENT SYSTEM</span>
+                    <span>INVENTORY MANAGEMENT SYSTEM</span>
                 </a>
 
                 <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse"
@@ -653,18 +654,18 @@
                                 <label>Rate (₹)</label>
                                 <input type="number" step="0.01" id="rate" placeholder="0.00">
                             </div>
-                        <div class="form-group full-width">
-                            <label>Item Image</label>
-                            <input type="file" id="image">
-                        </div>
-                        <div class="form-group full-width">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="is_outsource_check">
-                                <label class="form-check-label" for="is_outsource_check">
-                                    <strong>Outsourced Item</strong> (Future QC Approval)
-                                </label>
+                            <div class="form-group full-width">
+                                <label>Item Image</label>
+                                <input type="file" id="image">
                             </div>
-                        </div>
+                            <div class="form-group full-width">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="is_outsource_check">
+                                    <label class="form-check-label" for="is_outsource_check">
+                                        <strong>Outsourced Item</strong> (Future QC Approval)
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary" style="margin-top: 18px; width: 100%;">
                             <i class="fa-solid fa-floppy-disk"></i> Save Item
@@ -677,7 +678,8 @@
                     <!-- Excel Upload -->
                     <div class="card">
                         <div class="card-title">
-                            <i class="fa-solid fa-file-excel" style="color: var(--success-color);"></i> Excel Bulk Import
+                            <i class="fa-solid fa-file-excel" style="color: var(--success-color);"></i> Excel Bulk
+                            Import
                         </div>
                         <div class="form-group" style="margin-bottom: 15px;">
                             <input type="file" id="excelFile" accept=".xlsx, .xls">
@@ -745,7 +747,8 @@
             <!-- D. Transaction Edit Section -->
             <div class="card" style="margin-bottom: 25px;">
                 <div class="card-title">
-                    <i class="fa-solid fa-pen-to-square" style="color: var(--primary-color);"></i> Edit Inward Transactions
+                    <i class="fa-solid fa-pen-to-square" style="color: var(--primary-color);"></i> Edit Inward
+                    Transactions
                 </div>
                 <div class="grid-2">
                     <!-- Edit Inward Entry -->
@@ -765,8 +768,7 @@
                             <div class="form-group" style="margin-bottom: 10px;">
                                 <label>Item Name (Search or Type) *</label>
                                 <input type="text" id="edit_inward_item_name" list="edit_items_datalist"
-                                    class="form-control" placeholder="🔍 Search or type..." required
-                                    autocomplete="off">
+                                    class="form-control" placeholder="🔍 Search or type..." required autocomplete="off">
                                 <datalist id="edit_items_datalist"></datalist>
                             </div>
                             <div class="form-group" style="margin-bottom: 10px;">
@@ -781,7 +783,8 @@
                                 <button type="submit" class="btn btn-success" style="flex: 1;">
                                     <i class="fa-solid fa-save"></i> Save Changes
                                 </button>
-                                <button type="button" class="btn" style="background: #ef4444; color: white;" onclick="deleteInwardBatch()">
+                                <button type="button" class="btn" style="background: #ef4444; color: white;"
+                                    onclick="deleteInwardBatch()">
                                     <i class="fa-solid fa-trash"></i> Delete Batch
                                 </button>
                             </div>
@@ -830,7 +833,8 @@
                                 <button type="submit" class="btn btn-success" style="flex: 1;">
                                     <i class="fa-solid fa-save"></i> Save Changes
                                 </button>
-                                <button type="button" class="btn" style="background: #ef4444; color: white;" onclick="deleteProductionLog()">
+                                <button type="button" class="btn" style="background: #ef4444; color: white;"
+                                    onclick="deleteProductionLog()">
                                     <i class="fa-solid fa-trash"></i> Delete Coil Entry
                                 </button>
                             </div>
@@ -843,7 +847,8 @@
             <div class="card">
                 <div class="card-title"
                     style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <span><i class="fa-solid fa-list-check" style="color: var(--primary-color);"></i> Item Master List</span>
+                    <span><i class="fa-solid fa-list-check" style="color: var(--primary-color);"></i> Item Master
+                        List</span>
                     <button onclick="downloadTemplate()" class="btn"
                         style="padding: 4px 10px; font-size: 0.75rem; background: #e0e7ff; color: var(--primary-color);">
                         <i class="fa-solid fa-download"></i> Download Template

@@ -134,7 +134,7 @@ def start_cloudflare_tunnel(port: int, use_ssl: bool):
 
 def main():
     print("===================================================")
-    print(" STORE SYSTEM - QUICK TEMPORARY TUNNEL STARTER")
+    print(" INVENTORY SYSTEM - QUICK TEMPORARY TUNNEL STARTER")
     print("===================================================")
 
     # ── 1. Ensure MySQL is running ────────────────────────────────────────────

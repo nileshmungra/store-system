@@ -1,5 +1,5 @@
 /* =========================================================
-   📦 Page Loader / Progress Bar - Store Management System
+   📦 Page Loader / Progress Bar - INVENTORY MANAGEMENT SYSTEM
    ========================================================= */
 
 /* --- Top Progress Bar (Slim, always visible at top) --- */
@@ -96,6 +96,7 @@
 
 /* --- Print: Hide Loaders --- */
 @media print {
+
     #page-progress-bar,
     #page-loader-overlay {
         display: none !important;
