@@ -704,3 +704,33 @@ select option {
         display: none !important;
     }
 }
+
+/* --- QR Code Cards --- */
+.qr-card-custom {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    transition: all 0.25s ease;
+}
+
+.qr-card-custom:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    border-color: #6366f1;
+}
+
+.qr-code-wrapper {
+    display: inline-block;
+    padding: 10px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+}
+
+.qr-code-wrapper canvas,
+.qr-code-wrapper img {
+    display: block;
+    width: 140px !important;
+    height: 140px !important;
+}
