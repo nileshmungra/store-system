@@ -320,6 +320,18 @@ def init_db():
         except Exception:
             pass
 
+    # Legacy Dispatch Plans Table (keyed by dp_number)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS dp_plans (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            dp_number VARCHAR(255) UNIQUE NOT NULL,
+            so_numbers TEXT,
+            total_items INT DEFAULT 0,
+            status VARCHAR(50) DEFAULT 'ACTIVE',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    ''')
+
 
     # Dispatch Plan Items Table
     cursor.execute('''
