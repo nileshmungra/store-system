@@ -216,7 +216,6 @@
                             <th style="width: 37%;">Item Name / Specification</th>
                             <th style="width: 10%;" class="text-center">Planned<br>Qty</th>
                             <th style="width: 10%;" class="text-center">Loaded<br>Qty</th>
-                            <th style="width: 9%;" class="text-center">Pkg<br>Count</th>
                             <th style="width: 7%;" class="text-center">Unit</th>
                             <th style="width: 11%;" class="text-end">Wt/Unit<br>(KG)</th>
                             <th style="width: 11%;" class="text-end">Total Wt<br>(KG)</th>
@@ -235,7 +234,6 @@
                                 style="letter-spacing: 0.5px; text-transform: uppercase;">Totals</td>
                             <td class="text-center font-monospace fw-bold" id="tfoot_total_planned">0</td>
                             <td class="text-center font-monospace fw-bold" id="tfoot_total_loaded">0</td>
-                            <td class="text-center font-monospace fw-bold" id="tfoot_total_pkg">0</td>
                             <td colspan="2"></td>
                             <td class="text-end font-monospace fw-bold" id="tfoot_total_weight">0.00 KG</td>
                         </tr>
@@ -387,17 +385,15 @@
                 document.getElementById('input_loading_datetime').value = new Date().toLocaleString('en-IN');
 
                 const items = data.items || [];
-                let totalPlannedQty = 0, grandTotalWeight = 0, totalPackages = 0;
+                let totalPlannedQty = 0, grandTotalWeight = 0;
 
                 tbody.innerHTML = items.map((itm, idx) => {
                     const plannedQty = parseFloat(itm.planned_qty) || 0;
                     const wtPerUnit = parseFloat(itm.weight_per_pc) || 0;
                     const itemTotalWt = parseFloat(itm.total_weight_kg) || (plannedQty * wtPerUnit);
-                    const pkgCount = Math.ceil(plannedQty / (itm.coil_length_meters || plannedQty || 1));
 
                     totalPlannedQty += plannedQty;
                     grandTotalWeight += itemTotalWt;
-                    totalPackages += isNaN(pkgCount) ? 0 : pkgCount;
 
                     return `
                         <tr>
@@ -405,7 +401,6 @@
                             <td class="fw-semibold">${escapeHtml(itm.item_name)}</td>
                             <td class="text-center font-monospace">${plannedQty}</td>
                             <td class="text-center fw-bold font-monospace ch-loaded-qty">${plannedQty}</td>
-                            <td class="text-center font-monospace">${isNaN(pkgCount) ? '—' : pkgCount}</td>
                             <td class="text-center">${escapeHtml(itm.unit || 'Nos')}</td>
                             <td class="text-end font-monospace">${wtPerUnit > 0 ? wtPerUnit.toFixed(3) : '—'}</td>
                             <td class="text-end fw-bold font-monospace">${itemTotalWt.toFixed(2)} KG</td>
@@ -415,7 +410,6 @@
                 globalGrandTotalWeight = grandTotalWeight;
                 document.getElementById('tfoot_total_planned').innerText = totalPlannedQty;
                 document.getElementById('tfoot_total_loaded').innerText = totalPlannedQty;
-                document.getElementById('tfoot_total_pkg').innerText = totalPackages;
                 document.getElementById('tfoot_total_weight').innerText = `${grandTotalWeight.toFixed(2)} KG`;
                 document.getElementById('lbl_total_items_count').innerText = `${items.length} Items`;
                 document.getElementById('lbl_grand_total_weight').innerText = `${grandTotalWeight.toFixed(2)} KG`;
