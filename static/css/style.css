@@ -960,6 +960,407 @@ select option {
     border-top-color: #ffffff !important;
 }
 
+/* ── New Challan Layout Styles ── */
+#challan-page .ch-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-bottom: 3px double var(--challan-accent);
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+}
+
+[data-theme="dark"] #challan-page .ch-header {
+    border-bottom-color: #ffffff;
+}
+
+#challan-page .ch-company-name {
+    font-family: 'Poppins', sans-serif;
+    font-size: 22pt;
+    font-weight: 900;
+    color: var(--challan-accent) !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1.1;
+}
+
+[data-theme="dark"] #challan-page .ch-company-name {
+    color: #ffffff !important;
+}
+
+#challan-page .ch-company-tagline {
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+[data-theme="dark"] #challan-page .ch-company-tagline {
+    color: #cbd5e1 !important;
+}
+
+#challan-page .ch-company-address {
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+[data-theme="dark"] #challan-page .ch-company-address {
+    color: #94a3b8 !important;
+}
+
+#challan-page .ch-header-right {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+#challan-page .ch-doc-badge {
+    font-size: 11pt;
+    font-weight: 800;
+    background: var(--challan-accent);
+    color: #ffffff;
+    padding: 5px 14px;
+    border-radius: 6px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+[data-theme="dark"] #challan-page .ch-doc-badge {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+#challan-page .ch-status-label {
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] #challan-page .ch-status-label {
+    color: #cbd5e1 !important;
+}
+
+#challan-page .ch-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+#challan-page .ch-meta-cell {
+    background: var(--bg-muted);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+#challan-page .ch-meta-label {
+    display: block;
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+#challan-page .ch-meta-value {
+    display: block;
+    font-size: 10pt;
+    font-weight: 800;
+    color: var(--challan-accent);
+}
+
+[data-theme="dark"] #challan-page .ch-meta-value {
+    color: #ffffff !important;
+}
+
+#challan-page .ch-details-card {
+    background: var(--bg-muted);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+#challan-page .ch-details-header {
+    background: var(--challan-accent);
+    color: #ffffff;
+    padding: 8px 14px;
+    font-weight: 700;
+    font-size: 10pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+[data-theme="dark"] #challan-page .ch-details-header {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+#challan-page .ch-details-body {
+    padding: 14px;
+}
+
+#challan-page .ch-details-border-top {
+    border-top: 1px solid var(--border-color);
+}
+
+#challan-page .ch-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+#challan-page .ch-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#challan-page .ch-field-label {
+    font-size: 8pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+[data-theme="dark"] #challan-page .ch-field-label {
+    color: #94a3b8 !important;
+}
+
+#challan-page .ch-field-input {
+    background: var(--input-bg) !important;
+    color: var(--input-text) !important;
+    border: 1px solid var(--input-border) !important;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 10pt;
+    font-weight: 600;
+    width: 100%;
+}
+
+#challan-page .ch-field-group {
+    display: flex;
+    gap: 6px;
+}
+
+#challan-page .ch-field-group .ch-field-input {
+    flex: 1;
+}
+
+#challan-page .ch-table-wrapper {
+    border: 2px solid var(--challan-accent);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+[data-theme="dark"] #challan-page .ch-table-wrapper {
+    border-color: #ffffff !important;
+}
+
+#challan-page .ch-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-bottom: 0;
+}
+
+#challan-page .ch-table thead th {
+    background: var(--challan-accent) !important;
+    color: #ffffff !important;
+    font-size: 9pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 10px 8px;
+    border: 1px solid var(--challan-accent);
+}
+
+[data-theme="dark"] #challan-page .ch-table thead th {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #ffffff !important;
+}
+
+#challan-page .ch-table tbody td {
+    font-size: 9.5pt;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+[data-theme="dark"] #challan-page .ch-table tbody td {
+    border-color: #334155 !important;
+}
+
+#challan-page .ch-table tbody tr:hover {
+    background-color: rgba(99, 102, 241, 0.04);
+}
+
+[data-theme="dark"] #challan-page .ch-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+#challan-page .ch-table tfoot td {
+    background: var(--bg-muted);
+    font-weight: 800;
+    font-size: 9.5pt;
+    padding: 10px 8px;
+    border: 1px solid var(--border-color);
+}
+
+#challan-page .ch-empty-msg {
+    color: var(--text-muted);
+    padding: 20px !important;
+    font-style: italic;
+}
+
+#challan-page .ch-loaded-qty {
+    color: #10b981;
+    font-weight: 800;
+}
+
+[data-theme="dark"] #challan-page .ch-loaded-qty {
+    color: #34d399 !important;
+}
+
+#challan-page .ch-bottom-row {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+    margin-bottom: 16px;
+}
+
+#challan-page .ch-terms {
+    flex: 1;
+    background: var(--bg-muted);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+#challan-page .ch-terms-title {
+    font-weight: 700;
+    font-size: 10pt;
+    margin-bottom: 8px;
+    color: var(--text-main);
+}
+
+#challan-page .ch-terms-list {
+    margin-bottom: 0;
+    padding-left: 18px;
+    font-size: 9pt;
+    color: var(--text-muted);
+}
+
+#challan-page .ch-terms-list li {
+    margin-bottom: 3px;
+}
+
+#challan-page .ch-summary {
+    width: 260px;
+    min-width: 220px;
+    background: var(--bg-muted);
+    border: 1.5px solid var(--challan-accent);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+[data-theme="dark"] #challan-page .ch-summary {
+    border-color: #ffffff !important;
+}
+
+#challan-page .ch-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+#challan-page .ch-summary-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 0;
+}
+
+#challan-page .ch-net-weight-row {
+    background: var(--challan-accent);
+    color: #ffffff !important;
+    margin: 0 -14px;
+    padding: 10px 14px !important;
+    border-radius: 0 0 8px 8px;
+    font-weight: 800;
+}
+
+[data-theme="dark"] #challan-page .ch-net-weight-row {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+#challan-page .ch-net-value {
+    font-size: 12pt;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+}
+
+#challan-page .ch-signatures {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border-color);
+}
+
+#challan-page .ch-sig-col {
+    flex: 1;
+    text-align: center;
+}
+
+#challan-page .ch-sig-line {
+    border-top: 1.5px dashed var(--challan-accent);
+    margin: 0 20px 8px;
+    padding-top: 40px;
+}
+
+[data-theme="dark"] #challan-page .ch-sig-line {
+    border-top-color: #ffffff !important;
+}
+
+#challan-page .ch-sig-name {
+    font-weight: 700;
+    font-size: 9.5pt;
+    color: var(--text-main);
+}
+
+#challan-page .ch-sig-role {
+    font-size: 8pt;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
 /* Loading/Packing List Page Print Styles */
 @media print {
 
@@ -1004,8 +1405,7 @@ select option {
     }
 
     /* Table: fixed layout enforces percentage widths, prevents column clip */
-    #challan-page .table-custom,
-    #challan-page #challanPrintTable {
+    #challan-page .ch-table {
         border: 1.5px solid #000000 !important;
         width: 100% !important;
         table-layout: fixed !important;
@@ -1015,22 +1415,20 @@ select option {
     }
 
     /* Prevent individual rows from splitting across pages */
-    #challan-page .table-custom tbody tr,
-    #challan-page #challanPrintTable tbody tr {
+    #challan-page .ch-table tbody tr {
         page-break-inside: avoid;
         break-inside: avoid;
     }
 
     /* Force tfoot to render as a single row-group (no phantom repeats) */
-    #challan-page .table-custom tfoot,
-    #challan-page #challanPrintTable tfoot {
+    #challan-page .ch-table tfoot {
         display: table-row-group !important;
         page-break-inside: avoid;
         break-inside: avoid;
     }
 
-    #challan-page .table-custom th,
-    #challan-page .table-custom td {
+    #challan-page .ch-table th,
+    #challan-page .ch-table td {
         border: 1px solid #000000 !important;
         color: #000000 !important;
         font-size: 8.5pt !important;
@@ -1040,7 +1438,7 @@ select option {
     }
 
     /* Header: dark background for clear column labels */
-    #challan-page .table-custom th {
+    #challan-page .ch-table thead th {
         background-color: #1e293b !important;
         color: #ffffff !important;
         font-weight: 900 !important;
@@ -1049,13 +1447,13 @@ select option {
     }
 
     /* Company header */
-    #challan-page .company-header {
+    #challan-page .ch-header {
         padding-bottom: 6px;
         margin-bottom: 10px;
         border-bottom: 2px solid #000000 !important;
     }
 
-    #challan-page .company-title {
+    #challan-page .ch-company-name {
         font-family: 'Poppins', sans-serif;
         font-size: 22pt;
         font-weight: 900;
@@ -1063,11 +1461,11 @@ select option {
         text-transform: uppercase;
     }
 
-    #challan-page .company-subtitle {
+    #challan-page .ch-company-tagline {
         color: #000000 !important;
     }
 
-    #challan-page .challan-badge {
+    #challan-page .ch-doc-badge {
         font-size: 10pt !important;
         padding: 3px 10px !important;
         background: #000000 !important;
@@ -1075,37 +1473,37 @@ select option {
         border-radius: 3px !important;
     }
 
-    #challan-page .info-block {
+    /* Meta info cells */
+    #challan-page .ch-meta-cell {
         padding: 3px 5px !important;
         margin-bottom: 6px !important;
         border: 1px solid #cccccc !important;
         background: #ffffff !important;
     }
 
-    #challan-page .info-label {
+    #challan-page .ch-meta-label {
         color: #444444 !important;
         font-size: 7.5pt !important;
     }
 
-    #challan-page .info-value {
+    #challan-page .ch-meta-value {
         color: #000000 !important;
         font-size: 9pt !important;
     }
 
     /* Details card header */
-    #challan-page .card-header {
+    #challan-page .ch-details-header {
         background: #f0f0f0 !important;
         color: #000000 !important;
         border-bottom: 1.5px solid #000000 !important;
     }
 
-    #challan-page .card-body {
+    #challan-page .ch-details-body {
         padding: 4px 6px !important;
     }
 
     /* Form inputs: strip box, show plain text — NO placeholder visible */
-    #challan-page .form-control,
-    #challan-page .form-select {
+    #challan-page .ch-field-input {
         border: none !important;
         border-bottom: 1px solid #888888 !important;
         border-radius: 0 !important;
@@ -1118,26 +1516,24 @@ select option {
     }
 
     /* Hide placeholder text in print */
-    #challan-page .form-control::placeholder,
-    #challan-page .form-select::placeholder {
+    #challan-page .ch-field-input::placeholder {
         color: transparent !important;
         opacity: 0 !important;
     }
 
     /* Hide save buttons and input-group append buttons */
-    #challan-page .input-group .btn {
+    #challan-page .ch-field-group .btn {
         display: none !important;
     }
 
     /* Summary box */
-    #challan-page .summary-box {
+    #challan-page .ch-summary {
         border: 1.5px solid #000000 !important;
         padding: 6px !important;
         background: #ffffff !important;
     }
 
-    #challan-page .summary-box span,
-    #challan-page .summary-box strong {
+    #challan-page .ch-summary-row {
         color: #000000 !important;
         font-size: 9pt !important;
     }
@@ -1153,25 +1549,25 @@ select option {
     }
 
     /* Table overflow: never clip horizontally */
-    #challan-page .table-responsive {
+    #challan-page .ch-table-wrapper {
         overflow: visible !important;
         overflow-x: visible !important;
     }
 
     /* Signature section: keep together on same page */
-    #challan-page .signature-section {
+    #challan-page .ch-signatures {
         margin-top: 12px !important;
         padding-top: 8px !important;
         page-break-inside: avoid;
         break-inside: avoid;
     }
 
-    #challan-page .sig-line {
+    #challan-page .ch-sig-line {
         border-top: 1.5px dashed #000000 !important;
     }
 
-    #challan-page .sig-line+div,
-    #challan-page .sig-line+small {
+    #challan-page .ch-sig-name,
+    #challan-page .ch-sig-role {
         color: #000000 !important;
     }
 
@@ -1191,7 +1587,7 @@ select option {
     }
 
     /* Terms & conditions box */
-    #challan-page .bg-light {
+    #challan-page .ch-terms {
         background: #f8f8f8 !important;
     }
 }
@@ -1203,15 +1599,36 @@ select option {
         margin: 10px;
     }
 
-    #challan-page .company-title {
-        font-size: 18pt !important;
+    #challan-page .ch-company-name {
+        font-size: 16pt !important;
     }
 
-    #challan-page .table-custom {
+    #challan-page .ch-meta-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    #challan-page .ch-fields-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #challan-page .ch-bottom-row {
+        flex-direction: column;
+    }
+
+    #challan-page .ch-summary {
+        width: 100%;
+    }
+
+    #challan-page .ch-signatures {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    #challan-page .ch-table {
         font-size: 8pt;
     }
 
-    #challan-page .signature-section {
+    #challan-page .ch-signatures {
         margin-top: 30px;
     }
 }
