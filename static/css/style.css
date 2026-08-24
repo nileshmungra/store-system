@@ -1466,12 +1466,20 @@ select option {
         color: #000000 !important;
     }
 
+    #challan-page .ch-company-address {
+        color: #000000 !important;
+    }
+
     #challan-page .ch-doc-badge {
         font-size: 10pt !important;
         padding: 3px 10px !important;
         background: #000000 !important;
         color: #ffffff !important;
         border-radius: 3px !important;
+    }
+
+    #challan-page .ch-status-label {
+        color: #000000 !important;
     }
 
     /* Meta info cells */
@@ -1537,6 +1545,40 @@ select option {
     #challan-page .ch-summary-row {
         color: #000000 !important;
         font-size: 9pt !important;
+    }
+
+    #challan-page .ch-net-weight-row {
+        background: #000000 !important;
+        color: #ffffff !important;
+        margin: 0 -6px !important;
+        padding: 8px 6px !important;
+        border-radius: 0 !important;
+    }
+
+    #challan-page .ch-net-value {
+        font-size: 11pt !important;
+        font-weight: 900 !important;
+    }
+
+    /* Terms & conditions box */
+    #challan-page .ch-terms {
+        background: #f8f8f8 !important;
+        border: 1px solid #cccccc !important;
+        border-radius: 0 !important;
+    }
+
+    #challan-page .ch-terms-title {
+        color: #000000 !important;
+        font-size: 9pt !important;
+    }
+
+    #challan-page .ch-terms-list {
+        color: #000000 !important;
+        font-size: 8.5pt !important;
+    }
+
+    #challan-page .ch-terms-list li {
+        color: #000000 !important;
     }
 
     /* Summary gross weight input */
