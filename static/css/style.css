@@ -1608,6 +1608,32 @@ select option {
         overflow-x: visible !important;
     }
 
+    #challan-page .ch-bottom-row {
+        display: block !important;
+    }
+
+    #challan-page .ch-terms {
+        display: block !important;
+        margin-bottom: 8px !important;
+    }
+
+    #challan-page .ch-summary {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    #challan-page .ch-fields-grid {
+        display: block !important;
+    }
+
+    #challan-page .ch-field {
+        display: inline-block !important;
+        width: calc(50% - 6px) !important;
+        vertical-align: top !important;
+        margin-right: 6px !important;
+        margin-bottom: 6px !important;
+    }
+
     /* Signature section: keep together on same page */
     #challan-page .ch-signatures {
         margin-top: 12px !important;
