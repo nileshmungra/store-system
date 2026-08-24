@@ -298,6 +298,9 @@
         let globalGrandTotalWeight = 0;
 
         document.addEventListener("DOMContentLoaded", async () => {
+            const savedTheme = localStorage.getItem('theme_preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
             const urlParams = new URLSearchParams(window.location.search);
             currentPlanId = urlParams.get('plan_id') || urlParams.get('dp_number');
 
