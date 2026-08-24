@@ -781,6 +781,7 @@ select option {
 }
 
 [data-theme="dark"] #challan-page {
+    --challan-accent: #ffffff;
     --bg-muted: rgba(30, 41, 59, 0.5);
 }
 
