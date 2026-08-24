@@ -1490,6 +1490,17 @@ select option {
         background: #ffffff !important;
     }
 
+    #challan-page .ch-meta-grid {
+        display: block !important;
+    }
+
+    #challan-page .ch-meta-cell {
+        display: inline-block !important;
+        width: calc(50% - 8px) !important;
+        vertical-align: top !important;
+        margin-right: 6px !important;
+    }
+
     #challan-page .ch-meta-label {
         color: #444444 !important;
         font-size: 7.5pt !important;
