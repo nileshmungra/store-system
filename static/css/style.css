@@ -2,54 +2,45 @@
    🌓 Modern Theme & UI Design System - Inventory Management
    ========================================================= */
 
-/* --- Default Root & Dark Mode Variables --- */
-:root {
-    --bg-main: #0f172a;
-    --bg-card: rgba(30, 41, 59, 0.9);
-    --border-color: rgba(255, 255, 255, 0.12);
-    --text-main: #0b0b0b;
-    --text-muted: #94a3b8;
-    --input-bg: #0f172a;
-    --input-text: #f8fafc;
-    --input-border: #334155;
-    --shadow-glow: rgba(0, 0, 0, 0.35);
-    --nav-bg: rgba(15, 23, 42, 0.95);
-    --pill-bg: rgba(255, 255, 255, 0.06);
-    --pill-border: rgba(255, 255, 255, 0.1);
-    --pill-color: #cbd5e1;
-    --pill-hover-bg: rgba(255, 255, 255, 0.16);
-    --pill-hover-border: rgba(255, 255, 255, 0.25);
-    --table-header-bg: #f5f7fa;
-    --table-header-color: #f8fafc;
-}
-
-/* --- Pure Black & Slate Dark Mode Explicit Override --- */
+/* --- Theme Variables (Dark is default — applies before JS sets data-theme) ---
+   Single source of truth: change here and every page updates automatically.
+   ================================================================== */
+:root,
 [data-theme="dark"] {
+    /* Backgrounds */
     --bg-main: #0f172a;
     --bg-card: rgba(30, 41, 59, 0.9);
+    --nav-bg: rgba(15, 23, 42, 0.95);
+    /* Borders & Shadows */
     --border-color: rgba(255, 255, 255, 0.12);
+    --shadow-glow: rgba(0, 0, 0, 0.35);
+    /* Text */
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
+    /* Brand / Accent */
+    --primary-color: #6366f1;
+    /* Inputs */
     --input-bg: #0f172a;
     --input-text: #f8fafc;
     --input-border: #334155;
-    --shadow-glow: rgba(0, 0, 0, 0.35);
-    --nav-bg: rgba(15, 23, 42, 0.95);
+    /* Navigation Pills */
     --pill-bg: rgba(255, 255, 255, 0.06);
     --pill-border: rgba(255, 255, 255, 0.1);
     --pill-color: #cbd5e1;
     --pill-hover-bg: rgba(255, 255, 255, 0.16);
     --pill-hover-border: rgba(255, 255, 255, 0.25);
+    /* Tables */
     --table-header-bg: #1e293b;
     --table-header-color: #f8fafc;
 }
 
-/* --- Dark Mode Specific Color Overrides for utility classes --- */
+/* --- Dark Mode Utility Overrides ---
+   Bootstrap .text-dark = near-black, invisible on dark bg → flip to light.
+   Only fire when [data-theme="dark"] is explicitly set (safe — no pre-JS flash). */
 [data-theme="dark"] .text-dark,
 [data-theme="dark"] .text-slate-800,
 [data-theme="dark"] .text-slate-900 {
     color: #f1f2f4 !important;
-    /* Ensure main text is visible */
 }
 
 [data-theme="dark"] .text-slate-300,
@@ -58,31 +49,37 @@
 [data-theme="dark"] .text-slate-600,
 [data-theme="dark"] .text-slate-700 {
     color: var(--text-muted) !important;
-    /* Ensure muted text is visible */
 }
 
 [data-theme="dark"] .text-slate-200 {
     color: var(--text-main) !important;
-    /* Use main text color for better visibility in dark mode */
 }
 
-/* --- Clean Light Mode Theme --- */
+/* --- Light Mode Theme Overrides --- */
 [data-theme="light"] {
+    /* Backgrounds */
     --bg-main: #f1f5f9;
     --bg-card: #ffffff;
+    --nav-bg: #ffffff;
+    /* Borders & Shadows */
     --border-color: #cbd5e1;
+    --shadow-glow: rgba(0, 0, 0, 0.08);
+    /* Text */
     --text-main: #0f172a;
     --text-muted: #475569;
+    /* Brand / Accent (slightly deeper for light-bg contrast) */
+    --primary-color: #4f46e5;
+    /* Inputs */
     --input-bg: #ffffff;
     --input-text: #0f172a;
     --input-border: #94a3b8;
-    --shadow-glow: rgba(0, 0, 0, 0.08);
-    --nav-bg: #ffffff;
+    /* Navigation Pills */
     --pill-bg: #f1f5f9;
     --pill-border: #cbd5e1;
     --pill-color: #334155;
     --pill-hover-bg: #e2e8f0;
     --pill-hover-border: #94a3b8;
+    /* Tables */
     --table-header-bg: #f8fafc;
     --table-header-color: #0f172a;
 }
@@ -145,7 +142,6 @@ h6 {
     background: var(--pill-bg) !important;
     border: 1px solid var(--pill-border) !important;
     transition: all 0.2s ease-in-out !important;
-    white-space: nowrap !important;
 }
 
 .nav-pill-custom:hover,
@@ -167,9 +163,6 @@ h6 {
     color: #ffffff !important;
     background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
     border-color: #818cf8 !important;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45) !important;
-    font-weight: 700 !important;
-    text-decoration: none !important;
 }
 
 [data-theme="light"] .nav-pill-custom.active {
@@ -184,20 +177,22 @@ h6 {
     border: 1px solid var(--border-color) !important;
     border-radius: 12px !important;
     box-shadow: 0 10px 30px var(--shadow-glow) !important;
-    padding: 8px !important;
-    margin-top: 8px !important;
 }
 
 .dropdown-item-custom {
     color: var(--text-main) !important;
-    border-radius: 8px !important;
     padding: 9px 14px !important;
     font-size: 13.5px !important;
     font-weight: 600 !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    transition: all 0.2s ease !important;
+}
+
+.glass-card,
+.card {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-main) !important;
+    box-shadow: 0 8px 24px var(--shadow-glow) !important;
+    border-radius: 16px;
 }
 
 .dropdown-item-custom:hover {
@@ -212,15 +207,6 @@ h6 {
 }
 
 /* --- Glassmorphism & Cards --- */
-.glass-card,
-.card {
-    background-color: var(--bg-card) !important;
-    border: 1px solid var(--border-color) !important;
-    color: var(--text-main) !important;
-    box-shadow: 0 8px 24px var(--shadow-glow) !important;
-    border-radius: 16px;
-    backdrop-filter: blur(10px);
-}
 
 .card-header {
     background-color: var(--bg-card) !important;
@@ -353,15 +339,11 @@ h6 {
 
 /* --- Forms & Inputs --- */
 .form-control,
-.form-select,
-input,
-select,
-textarea {
+.form-select {
     background-color: var(--input-bg) !important;
     color: var(--input-text) !important;
     border: 1px solid var(--input-border) !important;
     border-radius: 8px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-control:focus,
@@ -418,6 +400,7 @@ select option {
 }
 
 /* --- Light Mode Specific Color Overrides --- */
+/* In light mode: .text-white must become DARK (white bg → needs dark text) */
 [data-theme="light"] .text-white,
 [data-theme="light"] .text-slate-300 {
     color: var(--text-muted) !important;
@@ -435,17 +418,43 @@ select option {
     color: var(--text-main) !important;
 }
 
-[data-theme="light"] .text-slate-200 {
-    color: var(--text-main) !important;
-    /* Ensure slate-200 is dark in light mode */
-}
-
+/* bg-dark in light mode flips to light background — fix text inside it */
 [data-theme="light"] .bg-dark,
 [data-theme="light"] .bg-slate-800,
 [data-theme="light"] .bg-slate-900 {
     background-color: #f8fafc !important;
     color: #0f172a !important;
     border-color: #cbd5e1 !important;
+}
+
+/* When bg-dark flips to white in light mode:
+   - the element itself already has color:#0f172a from the rule above
+   - only Bootstrap's .text-white (explicit class) needs overriding here
+   - avoid the * wildcard which would break badge/icon accent colours */
+[data-theme="light"] .bg-dark .text-white,
+[data-theme="light"] .card-header.bg-dark {
+    color: #0f172a !important;
+}
+
+/* Exceptions: colored badges/icons inside bg-dark keep their accent color */
+[data-theme="light"] .bg-dark .text-warning {
+    color: #b45309 !important;
+}
+
+[data-theme="light"] .bg-dark .text-success {
+    color: #15803d !important;
+}
+
+[data-theme="light"] .bg-dark .text-info {
+    color: #0369a1 !important;
+}
+
+[data-theme="light"] .bg-dark .text-primary {
+    color: #3730a3 !important;
+}
+
+[data-theme="light"] .bg-dark .text-danger {
+    color: #b91c1c !important;
 }
 
 /* --- Skeleton Shimmer Animation --- */
@@ -765,26 +774,25 @@ select option {
    ========================================================= */
 
 #challan-page {
-    /* Ensure theme variables are available */
     --challan-accent: #0f172a;
-    --challan-success: #10b981;
-    --challan-warning: #f59e0b;
-    --challan-danger: #ef4444;
-    --challan-radius-sm: 8px;
-    --challan-radius-md: 12px;
-    --challan-radius-lg: 16px;
+    --challan-radius-sm: 6px;
+    --challan-radius-md: 10px;
+    --bg-muted: rgba(248, 250, 252, 0.6);
+}
+
+[data-theme="dark"] #challan-page {
+    --bg-muted: rgba(30, 41, 59, 0.5);
 }
 
 #challan-page .challan-card {
     background: var(--bg-card) !important;
     color: var(--text-main) !important;
-    border-radius: var(--challan-radius-lg);
+    border-radius: 16px;
     border: 1px solid var(--border-color);
     box-shadow: 0 10px 30px var(--shadow-glow) !important;
     max-width: 900px;
     margin: auto;
     padding: 30px;
-    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #challan-page .company-header {
@@ -802,6 +810,10 @@ select option {
     text-transform: uppercase;
     line-height: 1.1;
     transition: color 0.3s ease;
+}
+
+[data-theme="dark"] #challan-page .company-header {
+    border-bottom-color: #ffffff;
 }
 
 [data-theme="dark"] #challan-page .company-title {
@@ -872,6 +884,7 @@ select option {
 #challan-page .table-custom {
     border: 2px solid var(--challan-accent);
     width: 100%;
+    table-layout: fixed;
     margin-bottom: 20px;
     border-collapse: separate;
     border-spacing: 0;
@@ -949,11 +962,25 @@ select option {
 
 /* Loading/Packing List Page Print Styles */
 @media print {
+
+    /* A4 Portrait with standard margins */
     @page {
-        size: A4;
+        size: A4 portrait;
         margin: 8mm;
     }
 
+    /* Hide all non-print UI globally */
+    .navbar,
+    .navbar-custom,
+    .no-print,
+    #page-progress-bar,
+    #page-loader-overlay,
+    #planSelectorCard {
+        display: none !important;
+    }
+
+    /* Reset body for clean white print surface */
+    body,
     #challan-page {
         background: #ffffff !important;
         color: #000000 !important;
@@ -963,27 +990,41 @@ select option {
         print-color-adjust: exact;
     }
 
-    #challan-page .no-print {
-        display: none !important;
-    }
-
+    /* Challan card fills full print width */
     #challan-page .challan-card {
         box-shadow: none !important;
-        border: 2px solid #000000 !important;
+        border: 1.5px solid #000000 !important;
         margin: 0 !important;
-        padding: 8mm !important;
+        padding: 6mm !important;
         width: 100% !important;
         max-width: 100% !important;
-        page-break-inside: avoid;
-        break-inside: avoid;
+        border-radius: 0 !important;
         background: #ffffff !important;
         color: #000000 !important;
     }
 
-    #challan-page .table-custom {
-        border: 2px solid #000000 !important;
+    /* Table: fixed layout enforces percentage widths, prevents column clip */
+    #challan-page .table-custom,
+    #challan-page #challanPrintTable {
+        border: 1.5px solid #000000 !important;
         width: 100% !important;
-        border-collapse: collapse;
+        table-layout: fixed !important;
+        border-collapse: collapse !important;
+        border-spacing: 0 !important;
+        page-break-inside: auto;
+    }
+
+    /* Prevent individual rows from splitting across pages */
+    #challan-page .table-custom tbody tr,
+    #challan-page #challanPrintTable tbody tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    /* Force tfoot to render as a single row-group (no phantom repeats) */
+    #challan-page .table-custom tfoot,
+    #challan-page #challanPrintTable tfoot {
+        display: table-row-group !important;
         page-break-inside: avoid;
         break-inside: avoid;
     }
@@ -992,18 +1033,22 @@ select option {
     #challan-page .table-custom td {
         border: 1px solid #000000 !important;
         color: #000000 !important;
-        font-size: 9pt !important;
-        padding: 6px 8px !important;
+        font-size: 8.5pt !important;
+        padding: 5px 7px !important;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
 
+    /* Header: dark background for clear column labels */
     #challan-page .table-custom th {
-        background-color: #ffffff !important;
-        color: #000000 !important;
+        background-color: #1e293b !important;
+        color: #ffffff !important;
         font-weight: 900 !important;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.4px;
     }
 
+    /* Company header */
     #challan-page .company-header {
         padding-bottom: 6px;
         margin-bottom: 10px;
@@ -1011,8 +1056,11 @@ select option {
     }
 
     #challan-page .company-title {
-        font-size: 15pt !important;
+        font-family: 'Poppins', sans-serif;
+        font-size: 22pt;
+        font-weight: 900;
         color: #000000 !important;
+        text-transform: uppercase;
     }
 
     #challan-page .company-subtitle {
@@ -1021,19 +1069,22 @@ select option {
 
     #challan-page .challan-badge {
         font-size: 10pt !important;
-        padding: 4px 12px !important;
+        padding: 3px 10px !important;
         background: #000000 !important;
         color: #ffffff !important;
+        border-radius: 3px !important;
     }
 
     #challan-page .info-block {
-        padding: 4px 6px !important;
-        margin-bottom: 8px !important;
+        padding: 3px 5px !important;
+        margin-bottom: 6px !important;
+        border: 1px solid #cccccc !important;
+        background: #ffffff !important;
     }
 
     #challan-page .info-label {
-        color: #000000 !important;
-        font-size: 8pt !important;
+        color: #444444 !important;
+        font-size: 7.5pt !important;
     }
 
     #challan-page .info-value {
@@ -1041,26 +1092,48 @@ select option {
         font-size: 9pt !important;
     }
 
+    /* Details card header */
     #challan-page .card-header {
-        background: #ffffff !important;
+        background: #f0f0f0 !important;
         color: #000000 !important;
-        border-bottom: 2px solid #000000 !important;
+        border-bottom: 1.5px solid #000000 !important;
     }
 
     #challan-page .card-body {
         padding: 4px 6px !important;
     }
 
+    /* Form inputs: strip box, show plain text — NO placeholder visible */
     #challan-page .form-control,
     #challan-page .form-select {
-        border: 1px solid #000000 !important;
+        border: none !important;
+        border-bottom: 1px solid #888888 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
         color: #000000 !important;
-        background: #ffffff !important;
+        padding: 0 2px !important;
+        font-weight: 700 !important;
+        font-size: 8.5pt !important;
     }
 
+    /* Hide placeholder text in print */
+    #challan-page .form-control::placeholder,
+    #challan-page .form-select::placeholder {
+        color: transparent !important;
+        opacity: 0 !important;
+    }
+
+    /* Hide save buttons and input-group append buttons */
+    #challan-page .input-group .btn {
+        display: none !important;
+    }
+
+    /* Summary box */
     #challan-page .summary-box {
-        border: 2px solid #000000 !important;
-        padding: 8px !important;
+        border: 1.5px solid #000000 !important;
+        padding: 6px !important;
+        background: #ffffff !important;
     }
 
     #challan-page .summary-box span,
@@ -1069,40 +1142,57 @@ select option {
         font-size: 9pt !important;
     }
 
+    /* Summary gross weight input */
+    #challan-page #input_gross_weight {
+        border: none !important;
+        border-bottom: 1px solid #888888 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+
+    /* Table overflow: never clip horizontally */
+    #challan-page .table-responsive {
+        overflow: visible !important;
+        overflow-x: visible !important;
+    }
+
+    /* Signature section: keep together on same page */
     #challan-page .signature-section {
-        margin-top: 15px !important;
-        padding-top: 10px !important;
+        margin-top: 12px !important;
+        padding-top: 8px !important;
         page-break-inside: avoid;
         break-inside: avoid;
     }
 
     #challan-page .sig-line {
-        border-top: 2px dashed #000000 !important;
+        border-top: 1.5px dashed #000000 !important;
     }
 
-    #challan-page .sig-line + div,
-    #challan-page .sig-line + small {
+    #challan-page .sig-line+div,
+    #challan-page .sig-line+small {
         color: #000000 !important;
     }
 
+    /* Force all colored text to black */
     #challan-page .text-muted,
     #challan-page .text-primary,
     #challan-page .text-warning,
-    #challan-page .text-success {
+    #challan-page .text-success,
+    #challan-page .text-danger,
+    #challan-page .text-info {
         color: #000000 !important;
     }
 
     #challan-page small,
     #challan-page .small {
-        color: #000000 !important;
+        color: #333333 !important;
     }
 
-    #challan-page .table-responsive {
-        overflow: visible !important;
-    }
-
-    #challan-page .no-print {
-        display: none !important;
+    /* Terms & conditions box */
+    #challan-page .bg-light {
+        background: #f8f8f8 !important;
     }
 }
 
