@@ -7,6 +7,7 @@ import time
 import gc
 import json
 import sqlite3
+import hashlib
 import pdfplumber
 from datetime import datetime
 import asyncio
@@ -30,6 +31,12 @@ class CreatePlanFromLoadingEntryRequest(BaseModel):
     disp_plan_no: str
     so_numbers: list[str]
 
+class PasswordRequest(BaseModel):
+    password: str
+
+ADMIN_PASSWORD_SALT = "store_system_admin_salt_v1"
+ADMIN_PASSWORD_HASH = hashlib.sha256((ADMIN_PASSWORD_SALT + "admin123").encode()).hexdigest()
+
 app = FastAPI(title="Store QR Inventory System")
 
 # Setup static folder for saving images
@@ -39,6 +46,15 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.on_event("startup")
 def startup_event():
     init_db()
+
+@app.post("/api/admin/verify-password")
+async def verify_admin_password(req: PasswordRequest):
+    if not req.password:
+        raise HTTPException(status_code=400, detail="Password is required")
+    entered_hash = hashlib.sha256((ADMIN_PASSWORD_SALT + req.password).encode()).hexdigest()
+    if entered_hash == ADMIN_PASSWORD_HASH:
+        return {"valid": True}
+    raise HTTPException(status_code=401, detail="Invalid password")
 
 app.add_middleware(
     CORSMiddleware,

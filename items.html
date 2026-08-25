@@ -411,65 +411,6 @@
             color: #0f172a !important;
         }
 
-        .nav-pill-custom {
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-            padding: 8px 16px !important;
-            border-radius: 12px !important;
-            font-size: 13.5px !important;
-            font-weight: 600 !important;
-            color: #cbd5e1 !important;
-            text-decoration: none !important;
-            background: rgba(255, 255, 255, 0.06) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            transition: all 0.2s ease-in-out !important;
-            white-space: nowrap !important;
-        }
-
-        .nav-pill-custom:hover {
-            color: #ffffff !important;
-            background: rgba(255, 255, 255, 0.16) !important;
-            border-color: rgba(255, 255, 255, 0.25) !important;
-            transform: translateY(-1.5px) !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
-            text-decoration: none !important;
-        }
-
-        .nav-pill-custom.active {
-            color: #ffffff !important;
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-            border-color: #818cf8 !important;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45) !important;
-            font-weight: 700 !important;
-            text-decoration: none !important;
-        }
-
-        [data-theme="light"] .navbar-custom {
-            background-color: #ffffff !important;
-            border-bottom: 1px solid #cbd5e1 !important;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
-        }
-
-        [data-theme="light"] .nav-pill-custom {
-            color: #334155 !important;
-            background: #f1f5f9 !important;
-            border-color: #cbd5e1 !important;
-        }
-
-        [data-theme="light"] .nav-pill-custom:hover {
-            color: #0f172a !important;
-            background: #e2e8f0 !important;
-            border-color: #94a3b8 !important;
-        }
-
-        [data-theme="light"] .nav-pill-custom.active {
-            color: #ffffff !important;
-            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
-            border-color: #4338ca !important;
-            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
-        }
-
         /* 🔒 Hide Protected Content Until Password Login */
         #protected-content {
             display: none;
@@ -656,7 +597,9 @@
                             </div>
                             <div class="form-group full-width">
                                 <label>Item Image</label>
-                                <input type="file" id="image">
+                                <input type="file" id="image" accept="image/*">
+                                <img id="imagePreview"
+                                    style="display:none; max-width: 120px; max-height: 120px; margin-top: 8px; border-radius: 8px; border: 1px solid var(--border-color);">
                             </div>
                             <div class="form-group full-width">
                                 <div class="form-check form-switch">
@@ -860,7 +803,7 @@
                     style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border-color);">
                     <div style="flex: 2; min-width: 200px;">
                         <input type="text" id="itemSearchInput" placeholder="🔍 Search name, code or group..."
-                            onkeyup="loadItems(1)">
+                            onkeyup="debouncedSearch()">
                     </div>
                     <div style="flex: 1; min-width: 160px;">
                         <select id="groupFilterSelect" onchange="loadItems(1)">
@@ -929,10 +872,18 @@
         </div>
 
         <script>
-            const SECRET_PASS = "admin123";
+            const SECRET_PASS = "";
 
             let currentPage = 1;
             let limit = 50; // Items per page
+
+            function setTableLoading(tbodyId, isLoading) {
+                const tbody = document.getElementById(tbodyId);
+                if (!tbody) return;
+                tbody.innerHTML = isLoading
+                    ? `<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>`
+                    : '';
+            }
 
             function changePageSize() {
                 const val = document.getElementById("pageSizeSelect").value;
@@ -941,19 +892,32 @@
                 loadItems(1);
             }
 
-            function checkPassword() {
+            async function checkPassword() {
                 const pass = document.getElementById("admin-pass").value;
-                if (pass === SECRET_PASS) {
-                    document.getElementById("login-box").style.setProperty("display", "none", "important");
-                    const protContent = document.getElementById("protected-content");
-                    protContent.style.setProperty("display", "block", "important");
-                    document.getElementById("error-msg").style.display = "none";
-                    Promise.all([loadItems(), loadMachines()]).then(() => {
+                if (!pass) return;
+
+                try {
+                    const res = await fetch('/api/admin/verify-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: pass })
+                    });
+                    const data = await res.json();
+
+                    if (data.valid) {
+                        document.getElementById("login-box").style.setProperty("display", "none", "important");
+                        const protContent = document.getElementById("protected-content");
+                        protContent.style.setProperty("display", "block", "important");
+                        document.getElementById("error-msg").style.display = "none";
+                        await Promise.all([loadItems(), loadMachines()]);
                         if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
                             window.PageLoader.hide();
                         }
-                    });
-                } else {
+                    } else {
+                        document.getElementById("error-msg").style.display = "block";
+                    }
+                } catch (err) {
+                    console.error("Password verification error:", err);
                     document.getElementById("error-msg").style.display = "block";
                 }
             }
@@ -962,6 +926,8 @@
                 const search = document.getElementById("itemSearchInput") ? document.getElementById("itemSearchInput").value.trim() : "";
                 const group = document.getElementById("groupFilterSelect") ? document.getElementById("groupFilterSelect").value : "";
                 const ownFilter = document.getElementById("ownFilterSelect") ? document.getElementById("ownFilterSelect").value : "";
+
+                setTableLoading('itemsTableBody', true);
 
                 let url = `/api/items/list?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&group=${encodeURIComponent(group)}`;
                 if (ownFilter === "only_own") url += "&only_own=true";
@@ -1037,19 +1003,24 @@
                     }
                 } catch (err) {
                     console.error("Error loading items:", err);
+                } finally {
+                    setTableLoading('itemsTableBody', false);
                 }
             }
+
+            const debouncedSearch = debounce(() => loadItems(1), 300);
 
             async function toggleOwnProd(itemId) {
                 try {
                     const res = await fetch(`/api/items/toggle-own/${itemId}`, { method: 'POST' });
                     if (res.ok) {
                         loadItems(currentPage);
+                        if (window.showToast) window.showToast('Own Production status updated', 'success');
                     } else {
-                        alert("❌ Status update error");
+                        if (window.showToast) window.showToast('❌ Status update error', 'error');
                     }
                 } catch (err) {
-                    alert("❌ Connection error");
+                    if (window.showToast) window.showToast('❌ Connection error', 'error');
                 }
             }
 
@@ -1058,11 +1029,12 @@
                     const res = await fetch(`/api/items/toggle-outsourced/${itemId}`, { method: 'POST' });
                     if (res.ok) {
                         loadItems(currentPage);
+                        if (window.showToast) window.showToast('Outsource status updated', 'success');
                     } else {
-                        alert("❌ Outsource status update error");
+                        if (window.showToast) window.showToast('❌ Outsource status update error', 'error');
                     }
                 } catch (err) {
-                    alert("❌ Connection error");
+                    if (window.showToast) window.showToast('❌ Connection error', 'error');
                 }
             }
 
@@ -1087,18 +1059,20 @@
                     });
                     const data = await res.json();
                     if (res.ok) {
-                        alert(`✅ Group '${grp}' has ${data.affected_items} items set as Own Production [Yes] successfully!`);
+                        if (window.showToast) window.showToast(`✅ Group '${grp}' has ${data.affected_items} items set as Own Production [Yes] successfully!`, 'success');
                         loadItems(currentPage);
+                    } else {
+                        if (window.showToast) window.showToast(data.detail || 'Operation failed', 'error');
                     }
                 } catch (err) {
-                    alert("❌ Connection error");
+                    if (window.showToast) window.showToast('❌ Connection error', 'error');
                 }
             }
 
             async function bulkSetGroupOutsourced() {
                 const grp = document.getElementById("groupFilterSelect").value;
                 if (!grp) {
-                    alert("⚠️ Please select an Item Group filter first to set as Outsourced [Yes]!");
+                    if (window.showToast) window.showToast("⚠️ Please select an Item Group filter first!", "warning");
                     return;
                 }
                 if (!confirm(`Are you sure you want to set all items in Group '${grp}' as Outsourced [Yes]?`)) {
@@ -1116,11 +1090,13 @@
                     });
                     const data = await res.json();
                     if (res.ok) {
-                        alert(`✅ Group '${grp}' has ${data.affected_items} items set as Outsourced [Yes] successfully!`);
+                        if (window.showToast) window.showToast(`✅ Group '${grp}' has ${data.affected_items} items set as Outsourced [Yes] successfully!`, 'success');
                         loadItems(currentPage);
+                    } else {
+                        if (window.showToast) window.showToast(data.detail || 'Operation failed', 'error');
                     }
                 } catch (err) {
-                    alert("❌ Connection error");
+                    if (window.showToast) window.showToast('❌ Connection error', 'error');
                 }
             }
 
@@ -1132,39 +1108,53 @@
                 loadItems(currentPage + 1);
             });
 
+            let itemsDatalistCache = null;
+            let machinesDatalistCache = null;
+
+            function debounce(fn, ms) {
+                let timer;
+                return (...args) => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => fn(...args), ms);
+                };
+            }
+
             async function populateItemsDropdown(datalistId) {
+                if (itemsDatalistCache) {
+                    renderDatalist(datalistId, itemsDatalistCache);
+                    return;
+                }
+
                 try {
-                    const res = await fetch(`/api/items/list?limit=2000`);
+                    const res = await fetch('/api/items/list?limit=5000');
                     const data = await res.json();
-                    const datalist = document.getElementById(datalistId);
-                    if (datalist) {
-                        datalist.innerHTML = '';
-                        if (data.items) {
-                            data.items.forEach(item => {
-                                datalist.innerHTML += `<option value="${item.item_name}">`;
-                            });
-                        }
-                    }
+                    itemsDatalistCache = data.items || [];
+                    renderDatalist(datalistId, itemsDatalistCache);
                 } catch (err) { console.error("Error populating items dropdown:", err); }
             }
 
+            function renderDatalist(datalistId, items) {
+                const datalist = document.getElementById(datalistId);
+                if (!datalist) return;
+                datalist.innerHTML = items.map(i => `<option value="${escapeHtml(i.item_name)}">`).join('');
+            }
+
             async function populateMachinesDropdown(datalistId) {
+                if (machinesDatalistCache) {
+                    renderDatalist(datalistId, machinesDatalistCache);
+                    return;
+                }
+
                 try {
                     const res = await fetch('/api/machines');
                     const data = await res.json();
-                    const datalist = document.getElementById(datalistId);
-                    if (datalist) {
-                        datalist.innerHTML = '';
-                        if (data.machines) {
-                            data.machines.forEach(m => {
-                                datalist.innerHTML += `<option value="${m.machine_name}">`;
-                            });
-                        }
-                    }
+                    machinesDatalistCache = data.machines || [];
+                    renderDatalist(datalistId, machinesDatalistCache);
                 } catch (err) { console.error("Error populating machines dropdown:", err); }
             }
 
             async function loadMachines() {
+                setTableLoading('machinesTableBody', true);
                 try {
                     const res = await fetch('/api/machines');
                     const data = await res.json();
@@ -1176,9 +1166,9 @@
                             tbody.innerHTML += `
                             <tr>
                                 <td>#${m.id}</td>
-                                <td style="font-weight: 500;">${m.machine_name}</td>
+                                <td style="font-weight: 500;">${escapeHtml(m.machine_name)}</td>
                                 <td style="text-align: center; white-space: nowrap;">
-                                    <button onclick='editMachine(${m.id}, ${JSON.stringify(m.machine_name)})' class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: #dbeafe; color: #2563eb; margin-right: 5px;">
+                                    <button onclick='editMachine(${m.id}, "${m.machine_name.replace(/"/g, '&quot;')}")' class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: #dbeafe; color: #2563eb; margin-right: 5px;">
                                         <i class="fa-solid fa-pencil"></i> Edit
                                     </button>
                                     <button onclick="deleteMachine(${m.id})" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;">
@@ -1193,6 +1183,8 @@
                     }
                 } catch (err) {
                     console.error("Error loading machines:", err);
+                } finally {
+                    setTableLoading('machinesTableBody', false);
                 }
             }
 
@@ -1206,7 +1198,7 @@
 
                 const res = await fetch('/api/machines/add', { method: 'POST', body: formData });
                 const result = await res.json();
-                alert(result.message || result.detail);
+                if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
                 if (res.ok) {
                     document.getElementById('addMachineForm').reset();
                     loadMachines();
@@ -1214,25 +1206,40 @@
             }
 
             async function editMachine(id, currentName) {
-                const newName = prompt("Enter new machine name:", currentName);
-                if (newName && newName.trim() !== "" && newName.trim() !== currentName) {
-                    const formData = new FormData();
-                    formData.append('machine_name', newName.trim());
+                editingMachineId = id;
+                document.getElementById('editMachineInput').value = currentName;
+                new bootstrap.Modal(document.getElementById('editMachineModal')).show();
+            }
 
-                    const res = await fetch(`/api/machines/update/${id}`, { method: 'PUT', body: formData });
-                    const result = await res.json();
-                    alert(result.message || result.detail);
-                    if (res.ok) {
-                        loadMachines();
-                    }
+            async function saveMachineEdit() {
+                const newName = document.getElementById('editMachineInput').value.trim();
+                if (!newName) return;
+
+                const formData = new FormData();
+                formData.append('machine_name', newName);
+
+                const res = await fetch(`/api/machines/update/${editingMachineId}`, { method: 'PUT', body: formData });
+                const result = await res.json();
+
+                if (res.ok) {
+                    if (window.showToast) window.showToast(result.message || 'Machine updated', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('editMachineModal')).hide();
+                    loadMachines();
+                } else {
+                    if (window.showToast) window.showToast(result.detail || 'Update failed', 'error');
                 }
             }
+
+            let editingMachineId = null;
 
             // --- Transaction Edit Functions ---
 
             async function searchInwardBatch() {
                 const batchId = document.getElementById('search_batch_id').value;
-                if (!batchId) return alert("Please enter an Inward Batch ID.");
+                if (!batchId) {
+                    if (window.showToast) window.showToast("Please enter an Inward Batch ID.", "warning");
+                    return;
+                }
 
                 await populateItemsDropdown('edit_items_datalist');
 
@@ -1240,7 +1247,7 @@
                 const result = await res.json();
 
                 if (!res.ok) {
-                    alert(result.detail);
+                    if (window.showToast) window.showToast(result.detail, 'error');
                     document.getElementById('editInwardForm').style.display = 'none';
                 } else {
                     const batch = result.batch;
@@ -1267,7 +1274,7 @@
                     body: JSON.stringify(data)
                 });
                 const result = await res.json();
-                alert(result.message || result.detail);
+                if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
                 if (res.ok) {
                     document.getElementById('editInwardForm').style.display = 'none';
                     document.getElementById('search_batch_id').value = '';
@@ -1276,7 +1283,10 @@
 
             async function searchProductionLog() {
                 const qrCode = document.getElementById('search_qr_code').value;
-                if (!qrCode) return alert("Please enter a Coil QR Code.");
+                if (!qrCode) {
+                    if (window.showToast) window.showToast("Please enter a Coil QR Code.", "warning");
+                    return;
+                }
 
                 await populateMachinesDropdown('edit_machines_datalist');
 
@@ -1284,7 +1294,7 @@
                 const result = await res.json();
 
                 if (!res.ok) {
-                    alert(result.detail);
+                    if (window.showToast) window.showToast(result.detail, 'error');
                     document.getElementById('editProdForm').style.display = 'none';
                 } else {
                     const log = result.log;
@@ -1319,7 +1329,7 @@
                     body: JSON.stringify(data)
                 });
                 const result = await res.json();
-                alert(result.message || result.detail);
+                if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
                 if (res.ok) {
                     document.getElementById('editProdForm').style.display = 'none';
                     document.getElementById('search_qr_code').value = '';
@@ -1334,13 +1344,13 @@
                 try {
                     const res = await fetch(`/api/inward/delete/${batchId}`, { method: 'DELETE' });
                     const result = await res.json();
-                    alert(result.message || result.detail);
+                    if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
                     if (res.ok) {
                         document.getElementById('editInwardForm').style.display = 'none';
                         document.getElementById('search_batch_id').value = '';
                     }
                 } catch (err) {
-                    alert("❌ Error deleting Inward Batch");
+                    if (window.showToast) window.showToast("❌ Error deleting Inward Batch", 'error');
                 }
             }
 
@@ -1353,13 +1363,13 @@
                 try {
                     const res = await fetch(`/api/production/delete/${logId}`, { method: 'DELETE' });
                     const result = await res.json();
-                    alert(result.message || result.detail);
+                    if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
                     if (res.ok) {
                         document.getElementById('editProdForm').style.display = 'none';
                         document.getElementById('search_qr_code').value = '';
                     }
                 } catch (err) {
-                    alert("❌ Error deleting Production Entry");
+                    if (window.showToast) window.showToast("❌ Error deleting Production Entry", 'error');
                 }
             }
 
@@ -1379,24 +1389,52 @@
 
                 const res = await fetch('/api/items/add', { method: 'POST', body: formData });
                 const result = await res.json();
-                alert(result.message || result.detail);
+                if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
                 if (res.ok) {
                     document.getElementById('addItemForm').reset();
                     document.getElementById('is_outsource_check').checked = false;
+                    const preview = document.getElementById('imagePreview');
+                    if (preview) preview.style.display = 'none';
                     loadItems();
                 }
             }
 
+            // Image preview for item image upload
+            document.getElementById('image')?.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                const preview = document.getElementById('imagePreview');
+                if (file && preview) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        preview.src = ev.target.result;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else if (preview) {
+                    preview.style.display = 'none';
+                }
+            });
+
+            // Utility: escape HTML to prevent XSS
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
             async function uploadExcel() {
                 const fileInput = document.getElementById('excelFile');
-                if (!fileInput.files[0]) return alert("Please select an Excel file!");
+                if (!fileInput.files[0]) {
+                    if (window.showToast) window.showToast("Please select an Excel file!", "warning");
+                    return;
+                }
 
                 const formData = new FormData();
                 formData.append('file', fileInput.files[0]);
 
                 const res = await fetch('/api/items/upload-excel', { method: 'POST', body: formData });
                 const result = await res.json();
-                alert(result.message || result.detail);
+                if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
                 if (res.ok) loadItems();
             }
 
@@ -1404,7 +1442,7 @@
                 if (confirm("Are you sure you want to delete this item?")) {
                     const res = await fetch(`/api/items/delete/${id}`, { method: 'DELETE' });
                     const result = await res.json();
-                    alert(result.message || result.detail);
+                    if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
                     loadItems();
                 }
             }
@@ -1413,21 +1451,31 @@
                 if (confirm("Are you sure you want to delete this machine?")) {
                     const res = await fetch(`/api/machines/delete/${id}`, { method: 'DELETE' });
                     const result = await res.json();
-                    alert(result.message || result.detail);
+                    if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
                     loadMachines();
                 }
             }
 
             async function eraseAllData() {
-                const confirmPass = prompt("Re-enter password to erase all data:");
-                if (confirmPass === SECRET_PASS) {
-                    if (confirm("⚠️ WARNING: All stock data and history will be permanently deleted. Do you want to proceed?")) {
-                        const res = await fetch('/api/reset-all-data', { method: 'DELETE' });
-                        const result = await res.json();
-                        alert(result.message);
-                    }
-                } else {
-                    alert("Incorrect password!");
+                const confirmPass = prompt("Re-enter admin password to erase all data:");
+                if (!confirmPass) return;
+
+                const res = await fetch('/api/admin/verify-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: confirmPass })
+                });
+                const data = await res.json();
+
+                if (!data.valid) {
+                    if (window.showToast) window.showToast("Incorrect password!", 'error');
+                    return;
+                }
+
+                if (confirm("⚠️ WARNING: All stock data and history will be permanently deleted. Do you want to proceed?")) {
+                    const res = await fetch('/api/reset-all-data', { method: 'DELETE' });
+                    const result = await res.json();
+                    if (window.showToast) window.showToast(result.message, res.ok ? 'success' : 'error');
                 }
             }
 
@@ -1436,20 +1484,19 @@
                 const example_row1 = ['ITM-101', 'HDPE Pipe 50mm', 'Pipes', '3917', 'MTR', '45.50'];
                 const example_row2 = ['ITM-102', 'PVC Glue 100ml', 'Fittings', '3506', 'PCS', '25.00'];
 
-                let csvContent = "data:text/csv;charset=utf-8,"
-                    + headers.join(",") + "\n"
-                    + example_row1.join(",") + "\n"
-                    + example_row2.join(",");
+                const csvContent = [headers, example_row1, example_row2]
+                    .map(row => row.map(cell => `"${cell}"`).join(","))
+                    .join("\n");
 
-                const encodedUri = encodeURI(csvContent);
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", "item_master_template.csv");
-                document.body.appendChild(link);
-                link.click();
+                link.href = url;
+                link.download = "item_master_template.csv";
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                URL.revokeObjectURL(url);
             }
 
             // 🌓 Global Dark / Light Theme Management
@@ -1483,18 +1530,34 @@
             applyGlobalTheme();
         </script>
 
-        <script>
-            // Global Theme Auto-Apply Functions (backward-compat wrappers for onclick attrs)
-            function toggleGlobalTheme() { if (window.ThemeManager) window.ThemeManager.toggle(); }
-            function applyGlobalTheme() { if (window.ThemeManager) window.ThemeManager.apply(); }
-        </script>
-
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <script src="/static/js/toast.js"></script>
         <script src="/static/js/security.js"></script>
         <script src="/static/js/theme.js"></script>
         <script src="/static/js/english-ui.js"></script>
         <script src="/static/js/page-loader.js"></script>
+
+        <!-- Edit Machine Modal -->
+        <div class="modal fade" id="editMachineModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Machine</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="editMachineInput" class="form-control"
+                            placeholder="Enter new machine name">
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-primary" onclick="saveMachineEdit()"><i
+                                class="fa-solid fa-save me-1"></i>Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
