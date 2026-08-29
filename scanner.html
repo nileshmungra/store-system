@@ -574,7 +574,7 @@
             container.innerHTML = `<div class="text-center py-3 text-secondary"><span class="spinner-border spinner-border-sm text-primary"></span> Loading DP Progress...</div>`;
 
             try {
-                const res = await fetch(`${API_URL}/api/dispatch-plan/${planId}`);
+                const res = await fetch(`${API_URL}/api/dispatch-plan/${planId}?t=${Date.now()}`);
                 if (!res.ok) {
                     container.innerHTML = `<div class="alert alert-danger m-0">Unable to load DP progress.</div>`;
                     return;
@@ -963,8 +963,10 @@
                         </button>
                     `;
                     if (dispatchPlanId) {
-                        loadAndDisplayDpProgress(dispatchPlanId);
-                        checkDpCompletionAndRefresh(dispatchPlanId);
+                        setTimeout(async () => {
+                            await loadAndDisplayDpProgress(dispatchPlanId);
+                            await checkDpCompletionAndRefresh(dispatchPlanId);
+                        }, 300);
                     }
                 } else {
                     const detail = data.detail || data.message || responseText || `Server error (status ${response.status})`;
@@ -1004,7 +1006,7 @@
 
         async function checkDpCompletionAndRefresh(planId) {
             try {
-                const res = await fetch(`${API_URL}/api/dispatch-plan/${planId}`);
+                const res = await fetch(`${API_URL}/api/dispatch-plan/${planId}?t=${Date.now()}`);
                 if (!res.ok) return;
                 const data = await res.json();
                 const plan = data.plan;
@@ -1018,6 +1020,10 @@
                 if (allDone && plan.status !== 'COMPLETED') {
                     if (window.showToast) window.showToast("🎉 DP Plan Completed! All items dispatched.", "success", "DP Complete", 5000);
                 }
+            } catch (e) {
+                console.error("Error checking DP completion:", e);
+            }
+        }
 
                 if (plan.status === 'COMPLETED') {
                     const selectEl = document.getElementById('dispatchPlanSelect');
