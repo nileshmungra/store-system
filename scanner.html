@@ -812,7 +812,18 @@
                 }
 
                 pendingBoxId = decodedText;
-                maxBoxQty = boxData.qty;
+
+                const boxQty = boxData.qty || 0;
+                const dpRemaining = boxData.dp_remaining_qty !== undefined ? boxData.dp_remaining_qty : null;
+                const dpPlanned = boxData.dp_planned_qty !== undefined ? boxData.dp_planned_qty : null;
+                const dpDispatched = boxData.dp_dispatched_qty !== undefined ? boxData.dp_dispatched_qty : null;
+                const dpUnit = boxData.dp_unit || boxData.unit || 'Pcs';
+
+                if (dpRemaining !== null && dpRemaining < boxQty) {
+                    maxBoxQty = dpRemaining;
+                } else {
+                    maxBoxQty = boxQty;
+                }
 
                 document.getElementById('modalBoxId').innerText = decodedText;
                 document.getElementById('modalItemName').innerText = boxData.item_name || 'N/A';
@@ -823,23 +834,34 @@
                     finalIssuedTo = `DP: ${selectedOption.text}`;
                 }
                 document.getElementById('modalIssuedTo').innerText = finalIssuedTo;
-                document.getElementById('modalMaxQty').innerText = `${boxData.qty} Pcs`;
-                document.getElementById('modalQty').value = boxData.qty;
-                document.getElementById('modalQty').max = boxData.qty;
+
+                let qtyDisplay = `${boxQty} ${dpUnit}`;
+                if (dpRemaining !== null && dpRemaining < boxQty) {
+                    qtyDisplay = `${dpRemaining} ${dpUnit} <span class="badge bg-info ms-2">DP Remaining</span>`;
+                } else if (dpRemaining !== null && dpRemaining === boxQty && boxQty > 0) {
+                    qtyDisplay = `${boxQty} ${dpUnit}`;
+                }
+                document.getElementById('modalMaxQty').innerHTML = qtyDisplay;
+                document.getElementById('modalQty').value = maxBoxQty;
+                document.getElementById('modalQty').max = maxBoxQty;
 
                 resultDiv.innerText = "";
                 resultDiv.className = "mb-3 text-center fw-bold fs-6";
 
                 const modalBody = document.getElementById('modalMaxQty');
-                if (boxData.qty === 1) {
-                    modalBody.innerHTML = `1 Pc <span class="badge bg-danger ms-2">⚠️ LAST PIECE</span>`;
+                if (maxBoxQty === 1) {
+                    modalBody.innerHTML = `1 ${dpUnit} <span class="badge bg-danger ms-2">⚠️ LAST PIECE</span>`;
                 } else {
-                    modalBody.innerHTML = `${boxData.qty} Pcs`;
+                    modalBody.innerHTML = qtyDisplay;
                 }
 
                 const fullBoxBtn = document.querySelector("button[onclick='setMaxQty()']");
                 if (fullBoxBtn) {
-                    fullBoxBtn.innerText = `Full Box (${boxData.qty})`;
+                    if (dpRemaining !== null && dpRemaining < boxQty) {
+                        fullBoxBtn.innerText = `DP Limit (${dpRemaining})`;
+                    } else {
+                        fullBoxBtn.innerText = `Full Box (${boxQty})`;
+                    }
                 }
                 approvalModal.show();
 

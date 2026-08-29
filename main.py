@@ -1851,12 +1851,23 @@ def _check_box_status_impl(box_id: str, dp_number: Optional[str] = None, dispatc
                         detail=f"⚠️ Overdispatch Warning! This item ('{matched_item['item_name']}') planned quantity ({planned_q} {unit}) is already fully dispatched!"
                     )
 
-    return {
-        "status": "Success",
-        "item_name": box["item_name"],
-        "qty": box["qty_in_box"],
-        "unit": box["unit"]
-    }
+            response = {
+                "status": "Success",
+                "item_name": box["item_name"],
+                "qty": box["qty_in_box"],
+                "unit": box["unit"]
+            }
+
+            if dpi_items and matched_item:
+                planned_q = float(matched_item['planned_qty'] or 0)
+                disp_q = float(matched_item['dispatched_qty'] or 0)
+                dp_remaining = max(0.0, planned_q - disp_q)
+                response["dp_planned_qty"] = planned_q
+                response["dp_dispatched_qty"] = disp_q
+                response["dp_remaining_qty"] = dp_remaining
+                response["dp_unit"] = matched_item.get('unit') or box.get('unit') or 'PCS'
+
+            return response
 
 # 8. Search QR Codes
 @app.get("/api/search-qrs")
