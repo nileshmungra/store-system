@@ -1025,22 +1025,6 @@
             }
         }
 
-                if (plan.status === 'COMPLETED') {
-                    const selectEl = document.getElementById('dispatchPlanSelect');
-                    const options = Array.from(selectEl.options);
-                    const optionToRemove = options.find(opt => opt.value === String(planId));
-                    if (optionToRemove) {
-                        optionToRemove.remove();
-                    }
-                    document.getElementById('dpProgressContainer').style.display = 'none';
-                    document.getElementById('dpProgressContainer').innerHTML = '';
-                    document.getElementById('dispatchPlanSelect').value = '';
-                }
-            } catch (e) {
-                console.error("Error checking DP completion:", e);
-            }
-        }
-
         function cancelScan() {
             approvalModal.hide();
             showNextScanButton();
