@@ -569,6 +569,39 @@ def add_item(
     
     return {"status": "Success", "message": "Item added successfully"}
 
+@app.get("/api/items/download-template")
+def download_item_template():
+    headers = [
+        'Item', 'Code', 'Group', 'Unit', 'Min. Stock', 'Max. Stock', 'Re-Order',
+        'HSN Code', 'Wt./Pc.', 'Rate/Unit', 'Item Mapping ?', 'Show In Print ?',
+        'Fitting Item ?', 'Print In Disp. Plan ?', 'Own Mfg. ?', 'Allow Above MSL ?',
+        'Service Item ?', 'QC Required ?', 'Allow Partial Disp. ?', 'Sec. Unit ?', 'Status'
+    ]
+    sample_rows = [
+        [
+            'OM" Fly CNC Engraving Machine Model No SM-30X', 'PLM00016', 'Plant & Machinery', 'Nos',
+            '', '', '', '84561100', 25.0, '', 'No', 'No', 'No', 'No', 'No', 'No', 'No', 'No', 'No', '', 'Active'
+        ],
+        [
+            'HDPE Pipe 50mm', 'ITM-101', 'Pipes', 'MTR', 100, 500, 50,
+            '3917', 0.25, 45.50, 'No', 'Yes', 'No', 'Yes', 'Yes', 'No', 'No', 'No', 'Yes', '', 'Active'
+        ],
+        [
+            'PVC Glue 100ml', 'ITM-102', 'Fittings', 'PCS', 200, 1000, 100,
+            '3506', 0.05, 25.00, 'No', 'No', 'Yes', 'No', 'No', 'No', 'No', 'Yes', 'No', '', 'Active'
+        ]
+    ]
+    df = pd.DataFrame([headers] + sample_rows, columns=headers)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Item Master Template')
+    output.seek(0)
+    return Response(
+        content=output.read(),
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={'Content-Disposition': 'attachment; filename=item_master_template.xlsx'}
+    )
+
 # A2. Excel Sheet Bulk Import
 @app.post("/api/items/upload-excel")
 async def upload_excel(file: UploadFile = File(...)):
@@ -579,26 +612,105 @@ async def upload_excel(file: UploadFile = File(...)):
     header_row = find_excel_header_row(file_bytes)
     df = pd.read_excel(io.BytesIO(file_bytes), header=header_row)
     
-    required_cols = ['item_code', 'item_name', 'item_group', 'hsn_code', 'unit', 'rate']
-    for col in required_cols:
-        if col not in df.columns:
-            raise HTTPException(status_code=400, detail=f"Missing required column '{col}' in Excel file!")
+    col_map = {
+        'item_code': ['code', 'item code', 'itemcode'],
+        'item_name': ['item', 'item name', 'itemname'],
+        'item_group': ['group'],
+        'hsn_code': ['hsn code', 'hsn'],
+        'unit': ['unit'],
+        'rate': ['rate/unit', 'rate', 'price'],
+        'min_stock': ['min. stock', 'min stock', 'min_stock'],
+        'max_stock': ['max. stock', 'max stock', 'max_stock'],
+        'reorder_point': ['re-order', 're order', 'reorder', 'reorder_point'],
+        'weight_per_pc': ['wt./pc.', 'wt/pc', 'weight', 'weight_per_pc'],
+        'show_in_print': ['show in print ?', 'show in print'],
+        'is_fitting_item': ['fitting item ?', 'fitting item'],
+        'print_in_dispatch_plan': ['print in disp. plan ?', 'print in dispatch plan'],
+        'own_mfg': ['own mfg. ?', 'own mfg', 'own production ?'],
+        'allow_above_msl': ['allow above msl ?', 'allow above msl'],
+        'is_service_item': ['service item ?', 'service item'],
+        'qc_required': ['qc required ?', 'qc required'],
+        'allow_partial_dispatch': ['allow partial disp. ?', 'allow partial dispatch'],
+        'sec_unit': ['sec. unit', 'secondary unit', 'sec unit'],
+    }
+
+    def find_col(candidates):
+        for c in candidates:
+            if c in df.columns:
+                return c
+            lc = c.lower()
+            for col in df.columns:
+                if str(col).strip().lower() == lc:
+                    return col
+        return None
+
+    mapped = {k: find_col(v) for k, v in col_map.items()}
+    missing = [k for k, v in mapped.items() if k in ('item_code', 'item_name', 'unit', 'rate') and v is None]
+    if missing:
+        raise HTTPException(status_code=400, detail=f"Missing required column(s) in Excel: {', '.join(missing)}")
 
     imported_count = 0
     with get_db_ctx(commit=True) as (conn, cursor):
         for _, row in df.iterrows():
             try:
-                grp = str(row['item_group']) if pd.notna(row['item_group']) else ''
-                is_own = 1 if grp == 'Own Production' else 0
-                is_out = 1 if ('is_outsource' in df.columns and pd.notna(row.get('is_outsource')) and str(row.get('is_outsource')).lower() in ('1', 'true', 'yes')) else 0
+                item_code = str(row[mapped['item_code']]) if mapped['item_code'] is not None else None
+                item_name = str(row[mapped['item_name']]) if mapped['item_name'] is not None else None
+                if not item_code or not item_name:
+                    continue
+
+                unit = str(row[mapped['unit']]) if mapped['unit'] is not None else 'PCS'
+                rate = float(row[mapped['rate']]) if mapped['rate'] is not None and pd.notna(row[mapped['rate']]) else 0.0
+                item_group = str(row[mapped['item_group']]) if mapped['item_group'] is not None and pd.notna(row[mapped['item_group']]) else ''
+                hsn_code = str(row[mapped['hsn_code']]) if mapped['hsn_code'] is not None and pd.notna(row[mapped['hsn_code']]) else ''
+                min_stock = float(row[mapped['min_stock']]) if mapped['min_stock'] is not None and pd.notna(row[mapped['min_stock']]) else 0.0
+                max_stock = float(row[mapped['max_stock']]) if mapped['max_stock'] is not None and pd.notna(row[mapped['max_stock']]) else 0.0
+                reorder_point = float(row[mapped['reorder_point']]) if mapped['reorder_point'] is not None and pd.notna(row[mapped['reorder_point']]) else 0.0
+                weight_per_pc = float(row[mapped['weight_per_pc']]) if mapped['weight_per_pc'] is not None and pd.notna(row[mapped['weight_per_pc']]) else 0.0
+
+                own_mfg_raw = str(row[mapped['own_mfg']]) if mapped['own_mfg'] is not None else 'No'
+                is_own = 1 if own_mfg_raw.strip().lower() in ('yes', 'true', '1', 'y') else 0
+                if is_own and item_group != 'Own Production':
+                    item_group = 'Own Production'
+
+                is_out = 1 if mapped['qc_required'] is not None and pd.notna(row[mapped['qc_required']]) and str(row[mapped['qc_required']]).strip().lower() in ('yes', 'true', '1', 'y') else 0
+                show_in_print = 1 if mapped['show_in_print'] is not None and pd.notna(row[mapped['show_in_print']]) and str(row[mapped['show_in_print']]).strip().lower() in ('yes', 'true', '1', 'y') else 0
+                is_fitting_item = 1 if mapped['is_fitting_item'] is not None and pd.notna(row[mapped['is_fitting_item']]) and str(row[mapped['is_fitting_item']]).strip().lower() in ('yes', 'true', '1', 'y') else 0
+                print_in_dispatch_plan = 1 if mapped['print_in_dispatch_plan'] is not None and pd.notna(row[mapped['print_in_dispatch_plan']]) and str(row[mapped['print_in_dispatch_plan']]).strip().lower() in ('yes', 'true', '1', 'y') else 0
+                allow_above_msl = 1 if mapped['allow_above_msl'] is not None and pd.notna(row[mapped['allow_above_msl']]) and str(row[mapped['allow_above_msl']]).strip().lower() in ('yes', 'true', '1', 'y') else 0
+                is_service_item = 1 if mapped['is_service_item'] is not None and pd.notna(row[mapped['is_service_item']]) and str(row[mapped['is_service_item']]).strip().lower() in ('yes', 'true', '1', 'y') else 0
+                allow_partial_dispatch = 1 if mapped['allow_partial_dispatch'] is not None and pd.notna(row[mapped['allow_partial_dispatch']]) and str(row[mapped['allow_partial_dispatch']]).strip().lower() in ('yes', 'true', '1', 'y') else 0
+                sec_unit = str(row[mapped['sec_unit']]) if mapped['sec_unit'] is not None and pd.notna(row[mapped['sec_unit']]) else ''
+
                 cursor.execute('''
-                    INSERT INTO items (item_code, item_name, item_group, hsn_code, unit, rate, image_url, is_own_production, is_outsource)
-                    VALUES (%s, %s, %s, %s, %s, %s, '', %s, %s)
-                ''', (str(row['item_code']), str(row['item_name']), grp, str(row['hsn_code']), str(row['unit']), float(row['rate']), is_own, is_out))
+                    INSERT INTO items (
+                        item_code, item_name, item_group, hsn_code, unit, rate,
+                        image_url, is_own_production, is_outsource,
+                        min_stock, max_stock, reorder_point, weight_per_pc,
+                        show_in_print, is_fitting_item, print_in_dispatch_plan,
+                        allow_above_msl, is_service_item, qc_required,
+                        allow_partial_dispatch, sec_unit, status
+                    ) VALUES (%s, %s, %s, %s, %s, %s, '', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'Active')
+                    ON DUPLICATE KEY UPDATE
+                        item_name=VALUES(item_name), item_group=VALUES(item_group), hsn_code=VALUES(hsn_code),
+                        unit=VALUES(unit), rate=VALUES(rate), is_own_production=VALUES(is_own_production),
+                        is_outsource=VALUES(is_outsource), min_stock=VALUES(min_stock), max_stock=VALUES(max_stock),
+                        reorder_point=VALUES(reorder_point), weight_per_pc=VALUES(weight_per_pc),
+                        show_in_print=VALUES(show_in_print), is_fitting_item=VALUES(is_fitting_item),
+                        print_in_dispatch_plan=VALUES(print_in_dispatch_plan), allow_above_msl=VALUES(allow_above_msl),
+                        is_service_item=VALUES(is_service_item), qc_required=VALUES(qc_required),
+                        allow_partial_dispatch=VALUES(allow_partial_dispatch), sec_unit=VALUES(sec_unit)
+                ''', (
+                    item_code, item_name, item_group, hsn_code, unit, rate,
+                    is_own, is_out, min_stock, max_stock, reorder_point, weight_per_pc,
+                    show_in_print, is_fitting_item, print_in_dispatch_plan,
+                    allow_above_msl, is_service_item, is_out,
+                    allow_partial_dispatch, sec_unit
+                ))
                 imported_count += 1
             except mysql.connector.Error as err:
-                if err.errno == 1062: # Duplicate entry
+                if err.errno == 1062:
                     continue
+                raise
 
         add_log(conn, "EXCEL_IMPORT", f"Imported total {imported_count} items from Excel.")
 
@@ -672,7 +784,19 @@ def update_item(
     unit: str = Form("PCS"),
     rate: float = Form(0.0),
     is_own_production: bool = Form(False),
-    is_outsource: bool = Form(False)
+    is_outsource: bool = Form(False),
+    min_stock: float = Form(0.0),
+    max_stock: float = Form(0.0),
+    reorder_point: float = Form(0.0),
+    weight_per_pc: float = Form(0.0),
+    show_in_print: bool = Form(False),
+    is_fitting_item: bool = Form(False),
+    print_in_dispatch_plan: bool = Form(False),
+    allow_above_msl: bool = Form(False),
+    is_service_item: bool = Form(False),
+    qc_required: bool = Form(False),
+    allow_partial_dispatch: bool = Form(False),
+    sec_unit: str = Form("")
 ):
     """Updates item details."""
     is_own_val = 1 if (is_own_production or item_group == 'Own Production') else 0
@@ -680,9 +804,21 @@ def update_item(
     with get_db_ctx(commit=True) as (conn, cursor):
         cursor.execute('''
             UPDATE items 
-            SET item_name=%s, item_group=%s, hsn_code=%s, unit=%s, rate=%s, is_own_production=%s, is_outsource=%s
+            SET item_name=%s, item_group=%s, hsn_code=%s, unit=%s, rate=%s,
+                is_own_production=%s, is_outsource=%s,
+                min_stock=%s, max_stock=%s, reorder_point=%s, weight_per_pc=%s,
+                show_in_print=%s, is_fitting_item=%s, print_in_dispatch_plan=%s,
+                allow_above_msl=%s, is_service_item=%s, qc_required=%s,
+                allow_partial_dispatch=%s, sec_unit=%s
             WHERE id=%s
-        ''', (item_name, item_group, hsn_code, unit, rate, is_own_val, is_out_val, item_id))
+        ''', (
+            item_name, item_group, hsn_code, unit, rate,
+            is_own_val, is_out_val,
+            min_stock, max_stock, reorder_point, weight_per_pc,
+            show_in_print, is_fitting_item, print_in_dispatch_plan,
+            allow_above_msl, is_service_item, qc_required,
+            allow_partial_dispatch, sec_unit, item_id
+        ))
         add_log(conn, "ITEM_UPDATE", f"Item updated: ID #{item_id} ({item_name})")
     return {"status": "Success", "message": "Item updated successfully"}
 
@@ -1651,19 +1787,34 @@ def _check_box_status_impl(box_id: str, dp_number: Optional[str] = None, dispatc
     if dp_target:
         with get_db_ctx() as (conn, cursor):
             dpi_items = []
-            cursor.execute("SELECT * FROM dp_plan_items WHERE dp_number = %s", (dp_target,))
-            dpi_items = cursor.fetchall()
             
-            if not dpi_items and dispatch_plan_id:
+            if dispatch_plan_id:
                 try:
-                    cursor.execute("SELECT * FROM dispatch_plan_items WHERE dispatch_plan_id = %s", (int(dispatch_plan_id),))
+                    cursor.execute("""
+                        SELECT dpi.id, dpi.planned_qty, dpi.dispatched_qty, dpi.item_name, dpi.unit
+                        FROM dispatch_plan_items dpi
+                        WHERE dpi.dispatch_plan_id = %s
+                    """, (int(dispatch_plan_id),))
                     dpi_items = cursor.fetchall()
                 except (ValueError, TypeError):
                     pass
+                
+                if not dpi_items:
+                    cursor.execute("""
+                        SELECT dpi.id, dpi.planned_qty, dpi.dispatched_qty, dpi.item_name, dpi.unit
+                        FROM dispatch_plan_items dpi
+                        JOIN dispatch_plans dp ON dpi.dispatch_plan_id = dp.id
+                        WHERE dp.plan_no = %s
+                    """, (str(dp_target),))
+                    dpi_items = cursor.fetchall()
+            else:
+                cursor.execute("SELECT * FROM dp_plan_items WHERE dp_number = %s", (dp_target,))
+                dpi_items = cursor.fetchall()
 
             if not dpi_items:
                 cursor.execute("""
-                    SELECT dpi.* FROM dispatch_plan_items dpi
+                    SELECT dpi.id, dpi.planned_qty, dpi.dispatched_qty, dpi.item_name, dpi.unit
+                    FROM dispatch_plan_items dpi
                     JOIN dispatch_plans dp ON dpi.dispatch_plan_id = dp.id
                     WHERE dp.plan_no = %s
                 """, (dp_target,))
@@ -1682,12 +1833,22 @@ def _check_box_status_impl(box_id: str, dp_number: Optional[str] = None, dispatc
                         detail=f"❌ This item ('{box['item_name']}') is not in the selected Dispatch Plan ({dp_target}) list!"
                     )
 
-                planned_q = float(matched_item['planned_qty'])
-                disp_q = float(matched_item['dispatched_qty'])
-                if disp_q >= planned_q:
+                exact_matches = [m for m in dpi_items if m['item_name'].lower().strip() == box['item_name'].lower().strip()]
+                partial_matches = [m for m in dpi_items if is_item_match(box['item_name'], m['item_name'])]
+                candidates = exact_matches if exact_matches else partial_matches
+
+                has_remaining = any(
+                    float(m['planned_qty'] or 0) - float(m['dispatched_qty'] or 0) > 0
+                    for m in candidates
+                )
+
+                if not has_remaining:
+                    planned_q = float(matched_item['planned_qty'])
+                    disp_q = float(matched_item['dispatched_qty'])
+                    unit = matched_item.get('unit') or box.get('unit') or 'PCS'
                     raise HTTPException(
                         status_code=400,
-                        detail=f"⚠️ Overdispatch Warning! This item ('{box['item_name']}') planned quantity ({planned_q} {box['unit']}) is already fully dispatched!"
+                        detail=f"⚠️ Overdispatch Warning! This item ('{matched_item['item_name']}') planned quantity ({planned_q} {unit}) is already fully dispatched!"
                     )
 
     return {

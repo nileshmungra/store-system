@@ -173,61 +173,9 @@
             color: #0f172a !important;
         }
 
-        .nav-pill-custom {
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-            padding: 8px 16px !important;
-            border-radius: 12px !important;
-            font-size: 13.5px !important;
-            font-weight: 600 !important;
-            color: #cbd5e1 !important;
-            text-decoration: none !important;
-            background: rgba(255, 255, 255, 0.06) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            transition: all 0.2s ease-in-out !important;
-            white-space: nowrap !important;
-        }
-
-        .nav-pill-custom:hover {
-            color: #ffffff !important;
-            background: rgba(255, 255, 255, 0.16) !important;
-            border-color: rgba(255, 255, 255, 0.25) !important;
-            transform: translateY(-1.5px) !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
-            text-decoration: none !important;
-        }
-
-        .nav-pill-custom.active {
-            color: #ffffff !important;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-            border-color: #fbbf24 !important;
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.45) !important;
-            font-weight: 700 !important;
-            text-decoration: none !important;
-        }
-
-        [data-theme="light"] .navbar-custom {
-            background-color: #ffffff !important;
-            border-bottom: 1px solid #cbd5e1 !important;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
-        }
-
-        [data-theme="light"] .nav-pill-custom {
-            color: #334155 !important;
-            background: #f1f5f9 !important;
-            border-color: #cbd5e1 !important;
-        }
-
-        [data-theme="light"] .nav-pill-custom:hover {
-            color: #0f172a !important;
-            background: #e2e8f0 !important;
-            border-color: #94a3b8 !important;
-        }
-
-        [data-theme="light"] .nav-pill-custom.active {
-            color: #ffffff !important;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+        /* 🔒 Hide Protected Content Until Password Login */
+        #protected-content {
+            display: none;
         }
     </style>
 
@@ -400,11 +348,25 @@
     </div>
 
     <script>
-        const API_URL = "";
+        const API_URL = window.location.origin;
         let allItems = [];
         let finishedGoods = [];
         let rawMaterials = [];
         let currentEditingBomId = null;
+
+        function setListLoading(containerId, isLoading) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = isLoading
+                ? `<div class="text-center py-5"><div class="spinner-border text-warning" role="status"></div><p class="text-muted mt-2">Loading...</p></div>`
+                : '';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
 
         document.addEventListener("DOMContentLoaded", async () => {
             await Promise.all([
@@ -427,7 +389,7 @@
                 rawMaterials = allItems.filter(i => i.is_own_production === 0 && i.item_group !== 'Own Production');
 
                 const fgDatalist = document.getElementById('finishedGoodsList');
-                fgDatalist.innerHTML = finishedGoods.map(i => `<option value="${i.item_name}" data-id="${i.id}"></option>`).join('');
+                fgDatalist.innerHTML = finishedGoods.map(i => `<option value="${escapeHtml(i.item_name)}" data-id="${i.id}"></option>`).join('');
 
             } catch (err) {
                 console.error("Error loading items for BOM:", err);
@@ -436,6 +398,7 @@
 
         async function loadBOMs() {
             const container = document.getElementById('bomsListContainer');
+            setListLoading('bomsListContainer', true);
             try {
                 const res = await fetch(`${API_URL}/api/boms/list`);
                 const data = await res.json();
@@ -445,33 +408,38 @@
                     return;
                 }
 
-                container.innerHTML = data.boms.map(bom => `
-                <div class="glass-card p-3" style="background: #0f172a;">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="fw-bold text-white mb-0">${bom.finished_good_name}</h6>
-                        <div>
-                            <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick='editBOM(${JSON.stringify(bom)})'>
-                                <i class="bi bi-pencil"></i> Edit
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteBOM(${bom.bom_id})">
-                                <i class="bi bi-trash"></i> Delete
-                            </button>
+                container.innerHTML = data.boms.map(bom => {
+                    const bomJson = encodeURIComponent(JSON.stringify(bom));
+                    return `
+                    <div class="glass-card p-3" style="background: #0f172a;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-white mb-0">${escapeHtml(bom.finished_good_name)}</h6>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick='editBOM("${bomJson}")'>
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="deleteBOM(${bom.bom_id})">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </div>
                         </div>
+                        <ul class="list-unstyled mb-0 small">
+                            ${bom.components.map(c => `
+                                <li class="d-flex justify-content-between border-bottom border-secondary py-1">
+                                    <span class="text-muted">${escapeHtml(c.component_name)}</span>
+                                    <span class="fw-bold text-info">${c.quantity} ${escapeHtml(c.unit || '')}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
                     </div>
-                    <ul class="list-unstyled mb-0 small">
-                        ${bom.components.map(c => `
-                            <li class="d-flex justify-content-between border-bottom border-secondary py-1">
-                                <span class="text-muted">${c.component_name}</span>
-                                <span class="fw-bold text-info">${c.quantity} ${c.unit || ''}</span>
-                            </li>
-                        `).join('')}
-                    </ul>
-                </div>
-            `).join('');
+                `;
+                }).join('');
 
             } catch (err) {
                 console.error("Error loading BOMs:", err);
                 container.innerHTML = `<div class="alert alert-danger">Error loading BOM definitions.</div>`;
+            } finally {
+                setListLoading('bomsListContainer', false);
             }
         }
 
@@ -487,9 +455,9 @@
             const rmOptionsId = `rawMaterialsList_${Date.now()}`;
             row.innerHTML = `
             <div class="col-7">
-                <input class="form-control form-control-sm form-control-dark component-item" list="${rmOptionsId}" placeholder="Search raw material item..." value="${componentName}" required autocomplete="off">
+                <input class="form-control form-control-sm form-control-dark component-item" list="${rmOptionsId}" placeholder="Search raw material item..." value="${escapeHtml(componentName)}" required autocomplete="off">
                 <datalist id="${rmOptionsId}">
-                    ${rawMaterials.map(i => `<option value="${i.item_name}" data-id="${i.id}"></option>`).join('')}
+                    ${rawMaterials.map(i => `<option value="${escapeHtml(i.item_name)}" data-id="${i.id}"></option>`).join('')}
                 </datalist>
             </div>
             <div class="col-3">
@@ -510,16 +478,22 @@
             currentEditingBomId = null;
         }
 
-        function editBOM(bom) {
-            clearForm();
-            document.getElementById('finishedGood').value = bom.finished_good_name;
-            currentEditingBomId = bom.bom_id;
+        function editBOM(bomJson) {
+            try {
+                const bom = JSON.parse(decodeURIComponent(bomJson));
+                clearForm();
+                document.getElementById('finishedGood').value = bom.finished_good_name;
+                currentEditingBomId = bom.bom_id;
 
-            bom.components.forEach(c => {
-                addComponentRow(c);
-            });
+                bom.components.forEach(c => {
+                    addComponentRow(c);
+                });
 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (err) {
+                console.error("Invalid BOM data:", err);
+                if (window.showToast) window.showToast('Invalid BOM data received', 'error');
+            }
         }
 
         async function deleteBOM(bomId) {
@@ -528,12 +502,12 @@
             try {
                 const res = await fetch(`${API_URL}/api/boms/delete/${bomId}`, { method: 'DELETE' });
                 const data = await res.json();
-                alert(data.message || data.detail);
+                if (window.showToast) window.showToast(data.message || data.detail, res.ok ? 'success' : 'error');
                 if (res.ok) {
                     loadBOMs();
                 }
             } catch (err) {
-                alert("❌ Server Error");
+                if (window.showToast) window.showToast("Server Error", 'error');
             }
         }
 
@@ -554,7 +528,7 @@
             const finishedGoodId = findOptionId('finishedGoodsList', fgInput.value);
 
             if (!finishedGoodId) {
-                alert("⚠️ Please select a Finished Good from the list.");
+                if (window.showToast) window.showToast("Please select a Finished Good from the list.", "warning");
                 return;
             }
 
@@ -580,12 +554,12 @@
             });
 
             if (validationFailed) {
-                alert("⚠️ Please fill in all components and their quantities correctly.");
+                if (window.showToast) window.showToast("Please fill in all components and their quantities correctly.", "warning");
                 return;
             }
 
             if (components.length === 0) {
-                alert("⚠️ Please add at least one component.");
+                if (window.showToast) window.showToast("Please add at least one component.", "warning");
                 return;
             }
 
@@ -602,14 +576,14 @@
                 });
 
                 const data = await res.json();
-                alert(data.message || data.detail);
+                if (window.showToast) window.showToast(data.message || data.detail, res.ok ? 'success' : 'error');
 
                 if (res.ok) {
                     clearForm();
                     loadBOMs();
                 }
             } catch (err) {
-                alert("❌ Server Error");
+                if (window.showToast) window.showToast("Server Error", 'error');
             }
         }
 
@@ -643,53 +617,6 @@
         }
 
         applyGlobalTheme();
-    </script>
-
-    <script>
-        // Global Theme Switcher Logic
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('user-theme', newTheme);
-            localStorage.setItem('theme_preference', newTheme);
-            updateThemeBtnUI(newTheme);
-        }
-
-        function updateThemeBtnUI(theme) {
-            const btn = document.getElementById('globalThemeBtn');
-            const icon = document.getElementById('themeIcon');
-            const text = document.getElementById('themeText');
-            if (!btn) return;
-
-            if (theme === 'dark') {
-                if (icon) icon.className = 'bi bi-moon-stars-fill text-warning';
-                if (text) text.innerText = 'Dark';
-                btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-            } else {
-                if (icon) icon.className = 'bi bi-sun-fill text-warning';
-                if (text) text.innerText = 'Light';
-                btn.className = 'btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-            }
-        }
-
-        // Global Theme Auto-Apply Functions
-        function toggleGlobalTheme() { toggleTheme(); }
-        function applyGlobalTheme() {
-            const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateThemeBtnUI(savedTheme);
-        }
-
-        // Page Load Auto-Apply Saved Theme
-        (function () {
-            const savedTheme = localStorage.getItem('user-theme') || localStorage.getItem('theme_preference') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            document.addEventListener('DOMContentLoaded', function () {
-                updateThemeBtnUI(savedTheme);
-            });
-        })();
     </script>
 
     <script src="/static/js/english-ui.js"></script>

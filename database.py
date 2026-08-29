@@ -187,6 +187,27 @@ def init_db():
     except Exception:
         pass
     
+    extra_item_cols = [
+        "min_stock DECIMAL(10, 2) DEFAULT 0",
+        "max_stock DECIMAL(10, 2) DEFAULT 0",
+        "reorder_point DECIMAL(10, 2) DEFAULT 0",
+        "weight_per_pc DECIMAL(10, 3) DEFAULT 0",
+        "show_in_print TINYINT DEFAULT 0",
+        "is_fitting_item TINYINT DEFAULT 0",
+        "print_in_dispatch_plan TINYINT DEFAULT 0",
+        "allow_above_msl TINYINT DEFAULT 0",
+        "is_service_item TINYINT DEFAULT 0",
+        "qc_required TINYINT DEFAULT 0",
+        "allow_partial_dispatch TINYINT DEFAULT 0",
+        "sec_unit VARCHAR(50) DEFAULT ''",
+        "status VARCHAR(20) DEFAULT 'Active'",
+    ]
+    for col_def in extra_item_cols:
+        try:
+            cursor.execute(f"ALTER TABLE items ADD COLUMN {col_def}")
+        except Exception:
+            pass
+    
     # 0. Inward Batches Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS inward_batches (

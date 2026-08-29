@@ -252,7 +252,22 @@
         }
 
         tr:hover {
-            background-color: #f9fafb;
+            background-color: var(--hover-bg, #f1f5f9) !important;
+        }
+
+        :root {
+            --hover-bg: rgba(255, 255, 255, 0.06);
+        }
+
+        [data-theme="light"] {
+            --hover-bg: #f1f5f9;
+        }
+
+        /* Table text color safety for both themes */
+        .table td,
+        .table th {
+            color: var(--text-main) !important;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
         /* 🌓 Global Dark / Light Theme System */
@@ -541,8 +556,7 @@
                         </div>
 
                         <!-- 🌓 Global Theme Toggle Button -->
-                        <button id="globalThemeBtn" onclick="toggleGlobalTheme()"
-                            class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
+                        <button id="globalThemeBtn" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
                             <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
                             <span id="themeText">Dark Mode</span>
                         </button>
@@ -1480,23 +1494,7 @@
             }
 
             function downloadTemplate() {
-                const headers = ['item_code', 'item_name', 'item_group', 'hsn_code', 'unit', 'rate'];
-                const example_row1 = ['ITM-101', 'HDPE Pipe 50mm', 'Pipes', '3917', 'MTR', '45.50'];
-                const example_row2 = ['ITM-102', 'PVC Glue 100ml', 'Fittings', '3506', 'PCS', '25.00'];
-
-                const csvContent = [headers, example_row1, example_row2]
-                    .map(row => row.map(cell => `"${cell}"`).join(","))
-                    .join("\n");
-
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = "item_master_template.csv";
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
+                window.open('/api/items/download-template', '_blank');
             }
 
             // 🌓 Global Dark / Light Theme Management
