@@ -486,6 +486,14 @@
         let html5QrcodeScanner = null;
         let approvalModal = new bootstrap.Modal(document.getElementById('approvalModal'));
 
+        // 🎯 DP Targeted Scanning State
+        let dpItemsCache = [];
+        let dpItemsStatus = {};
+        let scannerPaused = false;
+        let scannerPauseReason = "";
+        let currentDpPlanId = null;
+        let currentDpPlanNo = "";
+
         document.addEventListener('DOMContentLoaded', async function () {
             await loadDispatchPlans();
             document.getElementById('dispatchPlanSelect').addEventListener('change', handleDpSelection);
@@ -558,13 +566,21 @@
             } catch (e) { console.error("Could not load dispatch plans", e); }
         }
 
-        function handleDpSelection() {
+        async function handleDpSelection() {
             const planId = document.getElementById('dispatchPlanSelect').value;
             const progressContainer = document.getElementById('dpProgressContainer');
+
             if (planId) {
+                currentDpPlanId = planId;
+                scannerPaused = false;
+                scannerPauseReason = "";
                 progressContainer.style.display = 'block';
-                loadAndDisplayDpProgress(planId);
+                await loadAndDisplayDpProgress(planId);
             } else {
+                currentDpPlanId = null;
+                currentDpPlanNo = "";
+                dpItemsCache = [];
+                dpItemsStatus = {};
                 progressContainer.style.display = 'none';
                 progressContainer.innerHTML = '';
             }
@@ -582,49 +598,105 @@
                 }
                 const data = await res.json();
                 const plan = data.plan;
+                currentDpPlanNo = plan.plan_no;
 
-                const totalPlanned = plan.items.reduce((sum, item) => sum + parseFloat(item.planned_qty), 0);
-                const totalDispatched = plan.items.reduce((sum, item) => sum + parseFloat(item.dispatched_qty), 0);
+                // 🎯 Build DP Items Cache for Targeted Scanning
+                dpItemsCache = plan.items.map(item => ({
+                    id: item.id,
+                    item_name: item.item_name,
+                    planned_qty: parseFloat(item.planned_qty) || 0,
+                    dispatched_qty: parseFloat(item.dispatched_qty) || 0,
+                    unit: item.unit || 'Pcs',
+                    remaining: Math.max(0, (parseFloat(item.planned_qty) || 0) - (parseFloat(item.dispatched_qty) || 0))
+                }));
+
+                // Initialize status tracking
+                dpItemsStatus = {};
+                dpItemsCache.forEach(item => {
+                    const isDone = item.remaining <= 0;
+                    dpItemsStatus[item.item_name] = {
+                        status: isDone ? 'COMPLETED' : 'PENDING',
+                        scanned_qty: item.dispatched_qty,
+                        planned_qty: item.planned_qty,
+                        remaining: item.remaining
+                    };
+                });
+
+                const totalPlanned = dpItemsCache.reduce((sum, item) => sum + item.planned_qty, 0);
+                const totalDispatched = dpItemsCache.reduce((sum, item) => sum + item.dispatched_qty, 0);
                 const overallProgress = totalPlanned > 0 ? (totalDispatched / totalPlanned) * 100 : 0;
 
-                let itemsHtml = plan.items.map(item => {
-                    const remaining = Math.max(0, (parseFloat(item.planned_qty) || 0) - (parseFloat(item.dispatched_qty) || 0));
-                    const isDone = remaining <= 0;
-                    return `
-                        <div class="progress-item d-flex justify-content-between align-items-center small py-1 border-bottom">
-                            <div>
-                                <span class="fw-bold ${isDone ? 'text-success text-decoration-line-through' : 'text-dark'}">
-                                    ${isDone ? '<i class="bi bi-check-circle-fill me-1"></i>' : ''}
-                                    <span class="item-name-truncate" title="${item.item_name}">${item.item_name}</span>
-                                </span>
-                            </div>
-                            <div class="text-end">
-                                <span class="badge ${isDone ? 'bg-success' : 'bg-primary'} font-monospace">
-                                    ${parseFloat(item.dispatched_qty)} / ${parseFloat(item.planned_qty)} ${item.unit}
-                                </span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                container.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="fw-bold text-primary m-0"><i class="bi bi-list-check me-1"></i> DP Progress: ${plan.plan_no}</h6>
-                        <span class="fw-extrabold fs-6 text-dark">${overallProgress.toFixed(1)}%</span>
-                    </div>
-                    <div class="progress-bar-custom mb-3">
-                        <div class="progress-bar-fill" style="width: ${overallProgress.toFixed(1)}%;"></div>
-                    </div>
-                    <div class="position-relative">
-                        <div style="max-height: 180px; overflow-y: auto;">
-                            ${itemsHtml || '<div class="text-muted small text-center p-3">No items in this plan.</div>'}
-                        </div>
-                    </div>
-                `;
+                renderDpProgress(container, plan, overallProgress);
 
             } catch (e) {
                 console.error("Error loading DP progress:", e);
                 container.innerHTML = `<div class="alert alert-danger m-0">Server Error. Unable to load DP progress.</div>`;
+            }
+        }
+
+        function renderDpProgress(container, plan, overallProgress) {
+            const totalPlanned = dpItemsCache.reduce((sum, item) => sum + item.planned_qty, 0);
+            const totalDispatched = dpItemsCache.reduce((sum, item) => sum + item.dispatched_qty, 0);
+
+            let itemsHtml = dpItemsCache.map(item => {
+                const statusInfo = dpItemsStatus[item.item_name] || { status: 'PENDING' };
+                const isDone = statusInfo.status === 'COMPLETED';
+                const isScanned = statusInfo.status === 'SCANNED';
+
+                let statusBadge = '';
+                if (isDone) {
+                    statusBadge = `<span class="badge bg-success ms-1" style="font-size:10px;">✅ DONE</span>`;
+                } else if (isScanned) {
+                    statusBadge = `<span class="badge bg-info ms-1" style="font-size:10px;">📦 SCANNED</span>`;
+                } else {
+                    statusBadge = `<span class="badge bg-warning text-dark ms-1" style="font-size:10px;">⏳ PENDING</span>`;
+                }
+
+                return `
+                    <div class="progress-item d-flex justify-content-between align-items-center small py-1 border-bottom" id="dp-item-${item.id}">
+                        <div>
+                            <span class="fw-bold ${isDone ? 'text-success text-decoration-line-through' : 'text-dark'}">
+                                ${isDone ? '<i class="bi bi-check-circle-fill me-1"></i>' : ''}
+                                <span class="item-name-truncate" title="${item.item_name}">${item.item_name}</span>
+                            </span>
+                            ${statusBadge}
+                        </div>
+                        <div class="text-end">
+                            <span class="badge ${isDone ? 'bg-success' : (isScanned ? 'bg-info' : 'bg-primary')} font-monospace">
+                                ${item.dispatched_qty} / ${item.planned_qty} ${item.unit}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-primary m-0"><i class="bi bi-list-check me-1"></i> DP Progress: ${plan.plan_no}</h6>
+                    <span class="fw-extrabold fs-6 text-dark">${overallProgress.toFixed(1)}%</span>
+                </div>
+                <div class="progress-bar-custom mb-3">
+                    <div class="progress-bar-fill" style="width: ${overallProgress.toFixed(1)}%;"></div>
+                </div>
+                <div class="position-relative">
+                    <div style="max-height: 180px; overflow-y: auto;">
+                        ${itemsHtml || '<div class="text-muted small text-center p-3">No items in this plan.</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateDpItemStatus(itemName, scannedQty) {
+            if (dpItemsStatus[itemName]) {
+                dpItemsStatus[itemName].scanned_qty += scannedQty;
+                const remaining = dpItemsStatus[itemName].planned_qty - dpItemsStatus[itemName].scanned_qty;
+                dpItemsStatus[itemName].remaining = Math.max(0, remaining);
+
+                if (dpItemsStatus[itemName].remaining <= 0) {
+                    dpItemsStatus[itemName].status = 'COMPLETED';
+                } else if (dpItemsStatus[itemName].scanned_qty > 0) {
+                    dpItemsStatus[itemName].status = 'SCANNED';
+                }
             }
         }
 
@@ -640,6 +712,21 @@
                 gainNode.connect(audioCtx.destination);
                 oscillator.start();
                 oscillator.stop(audioCtx.currentTime + 0.15);
+            } catch (e) { console.log("Audio not supported"); }
+        }
+
+        function playErrorBeepSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = "square";
+                oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
             } catch (e) { console.log("Audio not supported"); }
         }
 
@@ -742,34 +829,117 @@
 
         const scannedBoxesHistory = new Map();
 
+        // 🎯 Find matching DP item for a scanned box item name
+        function findDpMatch(boxItemName) {
+            if (dpItemsCache.length === 0) return null;
+
+            // First try exact match
+            let match = dpItemsCache.find(item =>
+                item.item_name.toLowerCase().trim() === boxItemName.toLowerCase().trim()
+            );
+
+            // Then try partial match
+            if (!match) {
+                match = dpItemsCache.find(item =>
+                    boxItemName.toLowerCase().includes(item.item_name.toLowerCase()) ||
+                    item.item_name.toLowerCase().includes(boxItemName.toLowerCase())
+                );
+            }
+
+            return match;
+        }
+
+        // 🎯 Validate scan against DP items
+        function validateScanAgainstDp(boxItemName, boxId) {
+            // Check 1: Is there a matching DP item?
+            const matchedItem = findDpMatch(boxItemName);
+
+            if (!matchedItem) {
+                return {
+                    valid: false,
+                    error: `❌ Item '${boxItemName}' is NOT in DP ${currentDpPlanNo}. This item does not belong to the selected Dispatch Plan.`
+                };
+            }
+
+            // Check 2: Is the DP item already completed?
+            const statusInfo = dpItemsStatus[matchedItem.item_name];
+            if (statusInfo && statusInfo.status === 'COMPLETED') {
+                return {
+                    valid: false,
+                    error: `⚠️ Item '${matchedItem.item_name}' is already FULLY DISPATCHED (${matchedItem.planned_qty} ${matchedItem.unit}). Duplicate scan prevented!`
+                };
+            }
+
+            // Check 3: Has this specific box already been scanned?
+            if (scannedBoxesHistory.has(boxId)) {
+                const lastScannedTime = scannedBoxesHistory.get(boxId);
+                const now = Date.now();
+                if ((now - lastScannedTime) < 300000) {
+                    return {
+                        valid: false,
+                        error: `⚠️ Box '${boxId}' was already scanned in this session! Duplicate scan prevented.`
+                    };
+                }
+            }
+
+            return { valid: true, matchedItem };
+        }
+
+        // 🎯 Pause scanner with error
+        function pauseScannerWithError(errorMessage) {
+            scannerPaused = true;
+            scannerPauseReason = errorMessage;
+
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.pause();
+            }
+
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
+            playErrorBeepSound();
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = "mb-3 text-center p-3 bg-danger bg-opacity-10 rounded border border-danger shadow";
+            resultDiv.innerHTML = `
+                <div class="text-danger fw-bold fs-6 mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>SCANNER PAUSED</div>
+                <div class="text-dark mb-3">${errorMessage}</div>
+                <button type="button" class="btn btn-danger fw-bold px-4 py-2" onclick="resumeScanner()">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Resume Scanner
+                </button>
+            `;
+
+            if (window.showToast) window.showToast(errorMessage, "error");
+        }
+
+        function resumeScanner() {
+            scannerPaused = false;
+            scannerPauseReason = "";
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerText = "";
+            resultDiv.className = "mb-3 text-center fw-bold fs-6";
+
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.resume();
+            }
+        }
+
         async function onScanSuccess(decodedText, decodedResult) {
             const issuedTo = document.getElementById('issuedTo').value.trim();
             const dispatchPlanId = document.getElementById('dispatchPlanSelect').value;
             const resultDiv = document.getElementById('result');
+
+            // 🎯 If scanner is paused, don't process scans
+            if (scannerPaused) {
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                if (window.showToast) window.showToast("⏸️ Scanner is paused. Please resolve the error and resume.", "warning");
+                return;
+            }
 
             if (!issuedTo && !dispatchPlanId) {
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
                 if (window.showToast) window.showToast("⚠️ Please enter 'Issued To' recipient name first!", "warning");
                 resultDiv.className = "mb-3 text-center fw-bold text-warning p-2 bg-light rounded border border-warning shadow-sm";
                 resultDiv.innerText = "⚠️ Please enter 'Issued To' recipient name first!";
-                return;
-            }
-
-            // 🚫 Anti-Duplicate Scan Check (within active session)
-            const lastScannedTime = scannedBoxesHistory.get(decodedText);
-            const now = Date.now();
-            if (lastScannedTime && (now - lastScannedTime) < 60000) {
-                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-                if (window.showToast) {
-                    window.showToast(`⚠️ Box '${decodedText}' was already scanned! (Duplicate Scan Prevented)`, 'warning');
-                }
-                resultDiv.className = "mb-3 text-center fw-bold text-warning p-2 bg-light rounded border border-warning shadow-sm";
-                resultDiv.innerText = `⚠️ Duplicate Scan: '${decodedText}' was just scanned!`;
-                setTimeout(() => {
-                    resultDiv.innerText = "";
-                    resultDiv.className = "mb-3 text-center fw-bold fs-6";
-                    html5QrcodeScanner.resume();
-                }, 2500);
                 return;
             }
 
@@ -802,6 +972,13 @@
                 if (!checkRes.ok) {
                     const detail = (boxData && (boxData.detail || boxData.message)) ? boxData.detail || boxData.message : (responseText || `Server error (status ${checkRes.status})`);
                     console.error("Check-box failed:", checkRes.status, boxData, responseText);
+
+                    // 🎯 If DP-related error, pause scanner
+                    if (dispatchPlanId && detail.includes("not in the selected Dispatch Plan")) {
+                        pauseScannerWithError(detail);
+                        return;
+                    }
+
                     resultDiv.className = "mb-3 text-center fw-bold text-danger fs-6 p-2 bg-light rounded border border-danger shadow";
                     resultDiv.innerText = `❌ ${detail}`;
                     setTimeout(() => {
@@ -812,6 +989,15 @@
                     return;
                 }
 
+                // 🎯 Additional client-side validation for DP mode
+                if (dispatchPlanId && dpItemsCache.length > 0) {
+                    const validation = validateScanAgainstDp(boxData.item_name, decodedText);
+                    if (!validation.valid) {
+                        pauseScannerWithError(validation.error);
+                        return;
+                    }
+                }
+
                 pendingBoxId = decodedText;
 
                 const boxQty = boxData.qty || 0;
@@ -819,6 +1005,12 @@
                 const dpPlanned = boxData.dp_planned_qty !== undefined ? boxData.dp_planned_qty : null;
                 const dpDispatched = boxData.dp_dispatched_qty !== undefined ? boxData.dp_dispatched_qty : null;
                 const dpUnit = boxData.dp_unit || boxData.unit || 'Pcs';
+
+                // 🎯 Validate scan count doesn't exceed DP quantity
+                if (dpRemaining !== null && dpRemaining <= 0) {
+                    pauseScannerWithError(`⚠️ All items for '${boxData.item_name}' in DP ${currentDpPlanNo} have already been dispatched! Scan count would exceed planned quantity.`);
+                    return;
+                }
 
                 if (dpRemaining !== null && dpRemaining < boxQty) {
                     maxBoxQty = dpRemaining;
@@ -921,6 +1113,22 @@
                 return;
             }
 
+            // 🎯 Final validation: check scan count won't exceed DP quantity
+            if (dispatchPlanId && dpItemsCache.length > 0) {
+                const matchedItem = findDpMatch(pendingBoxId);
+                if (matchedItem) {
+                    const statusInfo = dpItemsStatus[matchedItem.item_name];
+                    if (statusInfo) {
+                        const projectedTotal = statusInfo.scanned_qty + qtyIssued;
+                        if (projectedTotal > statusInfo.planned_qty) {
+                            const allowed = statusInfo.planned_qty - statusInfo.scanned_qty;
+                            alert(`⚠️ Overdispatch Warning! Only ${allowed} ${matchedItem.unit} remaining for '${matchedItem.item_name}' in DP ${currentDpPlanNo}.`);
+                            return;
+                        }
+                    }
+                }
+            }
+
             confirmBtn.disabled = true;
             confirmBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Processing...`;
 
@@ -955,6 +1163,13 @@
 
                 if (response.ok) {
                     scannedBoxesHistory.set(pendingBoxId, Date.now());
+
+                    // 🎯 Update DP item status
+                    if (dispatchPlanId && dpItemsCache.length > 0) {
+                        const boxItemName = document.getElementById('modalItemName').innerText;
+                        updateDpItemStatus(boxItemName, qtyIssued);
+                    }
+
                     if (window.showToast) window.showToast(`✅ ${data.message || 'Material issued out successfully!'}`, "success");
                     resultDiv.className = "mb-3 text-center p-3 bg-light rounded border border-success shadow";
                     resultDiv.innerHTML = `
@@ -972,6 +1187,13 @@
                 } else {
                     const detail = data.detail || data.message || responseText || `Server error (status ${response.status})`;
                     console.error("Outward failed:", response.status, data, responseText);
+
+                    // 🎯 If overdispatch error, pause scanner
+                    if (dispatchPlanId && detail.includes("Overdispatch")) {
+                        pauseScannerWithError(detail);
+                        return;
+                    }
+
                     if (window.showToast) window.showToast(`❌ ${detail}`, "error");
                     resultDiv.className = "mb-3 text-center fw-bold text-danger fs-6 p-3 bg-light rounded border border-danger shadow";
                     resultDiv.innerHTML = `
