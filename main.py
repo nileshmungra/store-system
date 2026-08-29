@@ -1250,17 +1250,7 @@ async def _process_outward_impl(req: OutwardRequest):
         dpi_type = None  # 'dp_plan_items' or 'dispatch_plan_items'
 
         if dp_target:
-            # 1. Search in dp_plan_items by dp_number
-            cursor.execute("SELECT * FROM dp_plan_items WHERE dp_number = %s", (dp_target,))
-            items1 = cursor.fetchall()
-            for p in items1:
-                if is_item_match(box['item_name'], p['item_name']):
-                    dp_item = p
-                    dpi_type = 'dp_plan_items'
-                    break
-
-            # 2. Search in dispatch_plan_items by dispatch_plan_id
-            if not dp_item and req.dispatch_plan_id:
+            if req.dispatch_plan_id:
                 try:
                     cursor.execute("SELECT * FROM dispatch_plan_items WHERE dispatch_plan_id = %s", (int(req.dispatch_plan_id),))
                     items2 = cursor.fetchall()
@@ -1271,6 +1261,15 @@ async def _process_outward_impl(req: OutwardRequest):
                             break
                 except (ValueError, TypeError):
                     pass
+
+            if not dp_item:
+                cursor.execute("SELECT * FROM dp_plan_items WHERE dp_number = %s", (dp_target,))
+                items1 = cursor.fetchall()
+                for p in items1:
+                    if is_item_match(box['item_name'], p['item_name']):
+                        dp_item = p
+                        dpi_type = 'dp_plan_items'
+                        break
 
             # 3. Search in dispatch_plan_items by plan_no
             if not dp_item:
@@ -1550,15 +1549,7 @@ async def _process_fifo_outward_impl(req: FifoOutwardRequest):
         dp_item = None
         dpi_type = None
         if dp_target:
-            cursor.execute("SELECT * FROM dp_plan_items WHERE dp_number = %s", (dp_target,))
-            items1 = cursor.fetchall()
-            for p in items1:
-                if is_item_match(req.item_name, p['item_name']):
-                    dp_item = p
-                    dpi_type = 'dp_plan_items'
-                    break
-
-            if not dp_item and req.dispatch_plan_id:
+            if req.dispatch_plan_id:
                 try:
                     cursor.execute("SELECT * FROM dispatch_plan_items WHERE dispatch_plan_id = %s", (int(req.dispatch_plan_id),))
                     items2 = cursor.fetchall()
@@ -1569,6 +1560,15 @@ async def _process_fifo_outward_impl(req: FifoOutwardRequest):
                             break
                 except (ValueError, TypeError):
                     pass
+
+            if not dp_item:
+                cursor.execute("SELECT * FROM dp_plan_items WHERE dp_number = %s", (dp_target,))
+                items1 = cursor.fetchall()
+                for p in items1:
+                    if is_item_match(req.item_name, p['item_name']):
+                        dp_item = p
+                        dpi_type = 'dp_plan_items'
+                        break
 
             if dp_item:
                 scanned_q = float(req.qty_issued)
