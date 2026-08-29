@@ -546,9 +546,10 @@
         async function loadDispatchPlans() {
             const selectEl = document.getElementById('dispatchPlanSelect');
             try {
-                const res = await fetch(`${API_URL}/api/dispatch-plans/list`);
+                const res = await fetch(`${API_URL}/api/dispatch-plans/list?t=${Date.now()}`);
                 const data = await res.json();
                 if (res.ok && data.plans) {
+                    selectEl.innerHTML = '<option value="">-- Manual Outward (No DP) --</option>';
                     const activePlans = data.plans.filter(p => p.status !== 'COMPLETED');
                     activePlans.forEach(plan => {
                         selectEl.innerHTML += `<option value="${plan.id}">${plan.plan_no} (SO: ${plan.so_no})</option>`;
