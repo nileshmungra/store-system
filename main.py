@@ -4038,7 +4038,7 @@ def list_dispatch_plans():
             plan["store_kit_progress_pct"] = 100.0 if store_tot == 0 else round(min(100.0, store_disc / store_tot * 100), 1)
             plan["challan_unlocked"] = (plan["direct_progress_pct"] >= 100.0 and plan["store_kit_progress_pct"] >= 100.0)
 
-            is_completed = (total_planned > 0 and total_dispatched >= total_planned) or plan["challan_unlocked"]
+            is_completed = (total_planned > 0 and total_dispatched >= total_planned)
             if is_completed and plan["status"] != "COMPLETED":
                 cursor.execute("UPDATE dispatch_plans SET status = 'COMPLETED' WHERE id = %s", (plan["id"],))
                 plan["status"] = "COMPLETED"
