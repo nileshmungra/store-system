@@ -1851,6 +1851,11 @@ def _check_box_status_impl(box_id: str, dp_number: Optional[str] = None, dispatc
                         detail=f"⚠️ Overdispatch Warning! This item ('{matched_item['item_name']}') planned quantity ({planned_q} {unit}) is already fully dispatched!"
                     )
 
+                matched_item = next(
+                    (m for m in candidates if float(m['planned_qty'] or 0) - float(m['dispatched_qty'] or 0) > 0),
+                    matched_item
+                )
+
             response = {
                 "status": "Success",
                 "item_name": box["item_name"],
