@@ -493,6 +493,7 @@
         let scannerPauseReason = "";
         let currentDpPlanId = null;
         let currentDpPlanNo = "";
+        let dpCompleted = false; // 🎯 DP fully dispatched flag
 
         document.addEventListener('DOMContentLoaded', async function () {
             await loadDispatchPlans();
@@ -626,7 +627,16 @@
                 const totalDispatched = dpItemsCache.reduce((sum, item) => sum + item.dispatched_qty, 0);
                 const overallProgress = totalPlanned > 0 ? (totalDispatched / totalPlanned) * 100 : 0;
 
+                // 🎯 Check if DP is fully completed
+                dpCompleted = totalPlanned > 0 && totalDispatched >= totalPlanned;
+
                 renderDpProgress(container, plan, overallProgress);
+
+                if (dpCompleted) {
+                    showDpCompletedBlock(plan.plan_no);
+                } else {
+                    hideDpCompletedBlock();
+                }
 
             } catch (e) {
                 console.error("Error loading DP progress:", e);
@@ -684,6 +694,59 @@
                     </div>
                 </div>
             `;
+        }
+
+        // 🎯 Show DP Completed block and freeze scanner
+        function showDpCompletedBlock(planNo) {
+            scannerPaused = true;
+            scannerPauseReason = `✅ Dispatch Plan ${planNo} is fully completed!`;
+
+            const readerWrapper = document.getElementById('reader-wrapper');
+            if (readerWrapper) readerWrapper.style.display = 'none';
+
+            // Stop the live camera feed
+            if (html5QrcodeScanner) {
+                try { html5QrcodeScanner.pause(); } catch (e) {}
+            }
+
+            // Show completed banner in result area
+            const resultDiv = document.getElementById('result');
+            if (resultDiv) {
+                resultDiv.className = "mb-3 text-center p-4 rounded border border-success shadow";
+                resultDiv.style.background = "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)";
+                resultDiv.innerHTML = `
+                    <div style="font-size:3rem;">✅</div>
+                    <div class="fw-extrabold fs-5 text-success mt-2">DP COMPLETED!</div>
+                    <div class="text-dark fw-bold mt-1">${planNo}</div>
+                    <div class="text-muted small mt-2">All items have been fully dispatched.<br>Scanner is blocked for this plan.</div>
+                    <div class="mt-3">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('dispatchPlanSelect').value=''; handleDpSelection();">
+                            <i class="bi bi-arrow-left-circle me-1"></i> Select Different Plan
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // 🎯 Hide DP Completed block and restore scanner
+        function hideDpCompletedBlock() {
+            dpCompleted = false;
+            scannerPaused = false;
+            scannerPauseReason = "";
+
+            const readerWrapper = document.getElementById('reader-wrapper');
+            if (readerWrapper) readerWrapper.style.display = 'block';
+
+            if (html5QrcodeScanner) {
+                try { html5QrcodeScanner.resume(); } catch (e) {}
+            }
+
+            const resultDiv = document.getElementById('result');
+            if (resultDiv) {
+                resultDiv.className = "mb-3 text-center fw-bold fs-6";
+                resultDiv.style.background = "";
+                resultDiv.innerText = "";
+            }
         }
 
         function updateDpItemStatus(itemName, scannedQty) {
@@ -956,6 +1019,11 @@
         }
 
         async function onScanSuccess(decodedText, decodedResult) {
+            // 🎯 If DP is fully completed, block scanning entirely
+            if (dpCompleted) {
+                showDpCompletedBlock(currentDpPlanNo);
+                return;
+            }
             // 🎯 If scanner is paused or already processing, do not flood toasts
             if (scannerPaused) {
                 return;
