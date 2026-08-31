@@ -8,6 +8,7 @@
 
 const Toast = (function () {
     let container = null;
+    const recentMessages = new Map(); // key -> timestamp
 
     function getContainer() {
         if (!container || !document.body.contains(container)) {
@@ -43,9 +44,40 @@ const Toast = (function () {
     };
 
     function showToast(message, type = 'info', title = null, duration = 3500) {
+        if (!message) return;
+        const msgStr = String(message).trim();
+        const now = Date.now();
+
+        // 🛡️ Deduplication & Spam Protection: Ignore identical toasts shown within 2 seconds
+        const toastKey = `${type}:${msgStr}`;
+        const lastShown = recentMessages.get(toastKey);
+        if (lastShown && (now - lastShown) < 2000) {
+            return;
+        }
+        recentMessages.set(toastKey, now);
+
+        // Cleanup old keys in history
+        if (recentMessages.size > 50) {
+            for (const [k, time] of recentMessages.entries()) {
+                if (now - time > 10000) recentMessages.delete(k);
+            }
+        }
+
         const c = getContainer();
         const conf = typeConfig[type] || typeConfig.info;
         const toastTitle = title || conf.title;
+
+        // If an identical toast is already visible in DOM, don't duplicate it
+        const existingToasts = c.querySelectorAll('.toast-card-custom');
+        for (const existing of existingToasts) {
+            const msgEl = existing.querySelector('.toast-msg');
+            if (msgEl && msgEl.textContent.trim() === msgStr) {
+                // Reset timer on existing toast instead of stacking a new one
+                if (existing._timer) clearTimeout(existing._timer);
+                existing._timer = setTimeout(() => removeToast(existing), duration);
+                return;
+            }
+        }
 
         const toastEl = document.createElement('div');
         toastEl.className = `toast-card-custom ${conf.colorClass}`;
@@ -56,7 +88,7 @@ const Toast = (function () {
             </div>
             <div class="toast-body-wrap">
                 <div class="toast-title">${toastTitle}</div>
-                <div class="toast-msg">${message}</div>
+                <div class="toast-msg">${msgStr}</div>
             </div>
             <button type="button" class="toast-close-btn" aria-label="Close">&times;</button>
             <div class="toast-progress-bar" style="animation-duration: ${duration}ms;"></div>
@@ -79,9 +111,9 @@ const Toast = (function () {
 
         toastEl._timer = timer;
 
-        // Limit visible toasts to prevent screen clutter
+        // Limit visible toasts to max 3 to prevent full screen clutter
         const visibleToasts = c.querySelectorAll('.toast-card-custom');
-        const MAX_VISIBLE = 5;
+        const MAX_VISIBLE = 3;
         if (visibleToasts.length > MAX_VISIBLE) {
             const oldest = visibleToasts[0];
             if (oldest._timer) clearTimeout(oldest._timer);
@@ -90,6 +122,7 @@ const Toast = (function () {
     }
 
     function removeToast(el) {
+        if (!el) return;
         if (el._timer) clearTimeout(el._timer);
         el.classList.remove('show');
         el.classList.add('hide');

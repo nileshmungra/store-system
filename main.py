@@ -15,7 +15,11 @@ import asyncio
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-import mysql.connector
+try:
+    import mysql.connector  # type: ignore
+except Exception:
+    mysql = None  # type: ignore
+
 from typing import Optional, Union
 import pandas as pd
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, WebSocket, WebSocketDisconnect, BackgroundTasks
@@ -1133,9 +1137,16 @@ async def material_inward(data: InwardRequest):
 import re
 
 def is_item_match(scanned_name: str, plan_item_name: str) -> bool:
-    s1 = scanned_name.lower().strip()
-    s2 = plan_item_name.lower().strip()
-    if s1 in s2 or s2 in s1: return True
+    if not scanned_name or not plan_item_name:
+        return False
+    s1 = str(scanned_name).lower().strip()
+    s2 = str(plan_item_name).lower().strip()
+    if not s1 or not s2:
+        return False
+    if s1 == s2:
+        return True
+    if s1 in s2 or s2 in s1:
+        return True
     nums1 = set(re.findall(r'\b\d+(?:mm|kg|cm2|x\d+)?\b', s1))
     nums2 = set(re.findall(r'\b\d+(?:mm|kg|cm2|x\d+)?\b', s2))
     if nums1 and nums2 and not nums1.issubset(nums2) and not nums2.issubset(nums1):
@@ -1822,37 +1833,38 @@ def _check_box_status_impl(box_id: str, dp_number: Optional[str] = None, dispatc
 
             if dpi_items:
                 matched_item = None
+                box_name = str(box.get('item_name') or '').strip()
                 for p_item in dpi_items:
-                    if is_item_match(box['item_name'], p_item['item_name']):
+                    if is_item_match(box_name, p_item.get('item_name')):
                         matched_item = p_item
                         break
 
                 if not matched_item:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"❌ This item ('{box['item_name']}') is not in the selected Dispatch Plan ({dp_target}) list!"
+                        detail=f"❌ This item ('{box_name}') is not in the selected Dispatch Plan ({dp_target}) list!"
                     )
 
-                exact_matches = [m for m in dpi_items if m['item_name'].lower().strip() == box['item_name'].lower().strip()]
-                partial_matches = [m for m in dpi_items if is_item_match(box['item_name'], m['item_name'])]
+                exact_matches = [m for m in dpi_items if str(m.get('item_name') or '').lower().strip() == box_name.lower()]
+                partial_matches = [m for m in dpi_items if is_item_match(box_name, m.get('item_name'))]
                 candidates = exact_matches if exact_matches else partial_matches
 
                 has_remaining = any(
-                    float(m['planned_qty'] or 0) - float(m['dispatched_qty'] or 0) > 0
+                    float(m.get('planned_qty') or 0) - float(m.get('dispatched_qty') or 0) > 0
                     for m in candidates
                 )
 
                 if not has_remaining:
-                    planned_q = float(matched_item['planned_qty'])
-                    disp_q = float(matched_item['dispatched_qty'])
+                    planned_q = float(matched_item.get('planned_qty') or 0)
+                    disp_q = float(matched_item.get('dispatched_qty') or 0)
                     unit = matched_item.get('unit') or box.get('unit') or 'PCS'
                     raise HTTPException(
                         status_code=400,
-                        detail=f"⚠️ Overdispatch Warning! This item ('{matched_item['item_name']}') planned quantity ({planned_q} {unit}) is already fully dispatched!"
+                        detail=f"⚠️ Overdispatch Warning! This item ('{matched_item.get('item_name')}') planned quantity ({planned_q} {unit}) is already fully dispatched!"
                     )
 
                 matched_item = next(
-                    (m for m in candidates if float(m['planned_qty'] or 0) - float(m['dispatched_qty'] or 0) > 0),
+                    (m for m in candidates if float(m.get('planned_qty') or 0) - float(m.get('dispatched_qty') or 0) > 0),
                     matched_item
                 )
 
@@ -2665,9 +2677,12 @@ def get_production_logs(status: Optional[str] = None):
 # -----------------------------------------------
 
 try:
-    import pymupdf as fitz
-except ImportError:
-    import fitz
+    import pymupdf as fitz  # type: ignore
+except Exception:
+    try:
+        import fitz  # type: ignore
+    except Exception:
+        fitz = None  # type: ignore
 
 def parse_dispatch_plan_bytes(file_bytes: bytes, filename: str):
     items = []

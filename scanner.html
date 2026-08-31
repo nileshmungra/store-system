@@ -827,23 +827,29 @@
             }
         }
 
+        let isScanning = false;
+        let lastPauseToastTime = 0;
+
         const scannedBoxesHistory = new Map();
 
         // 🎯 Find matching DP item for a scanned box item name
         function findDpMatch(boxItemName) {
-            if (dpItemsCache.length === 0) return null;
+            if (!boxItemName || !dpItemsCache || dpItemsCache.length === 0) return null;
+            const bName = String(boxItemName).toLowerCase().trim();
+            if (!bName) return null;
 
             // First try exact match
             let match = dpItemsCache.find(item =>
-                item.item_name.toLowerCase().trim() === boxItemName.toLowerCase().trim()
+                item && item.item_name && String(item.item_name).toLowerCase().trim() === bName
             );
 
             // Then try partial match
             if (!match) {
-                match = dpItemsCache.find(item =>
-                    boxItemName.toLowerCase().includes(item.item_name.toLowerCase()) ||
-                    item.item_name.toLowerCase().includes(boxItemName.toLowerCase())
-                );
+                match = dpItemsCache.find(item => {
+                    if (!item || !item.item_name) return false;
+                    const iName = String(item.item_name).toLowerCase().trim();
+                    return bName.includes(iName) || iName.includes(bName);
+                });
             }
 
             return match;
@@ -851,13 +857,17 @@
 
         // 🎯 Validate scan against DP items
         function validateScanAgainstDp(boxItemName, boxId) {
+            if (!boxItemName) {
+                return { valid: false, error: "⚠️ Scanned box is missing item name." };
+            }
+
             // Check 1: Is there a matching DP item?
             const matchedItem = findDpMatch(boxItemName);
 
             if (!matchedItem) {
                 return {
                     valid: false,
-                    error: `❌ Item '${boxItemName}' is NOT in DP ${currentDpPlanNo}. This item does not belong to the selected Dispatch Plan.`
+                    error: `❌ Item '${boxItemName}' is NOT in DP ${currentDpPlanNo || ''}. This item does not belong to the selected Dispatch Plan.`
                 };
             }
 
@@ -866,7 +876,7 @@
             if (statusInfo && statusInfo.status === 'COMPLETED') {
                 return {
                     valid: false,
-                    error: `⚠️ Item '${matchedItem.item_name}' is already FULLY DISPATCHED (${matchedItem.planned_qty} ${matchedItem.unit}). Duplicate scan prevented!`
+                    error: `⚠️ Item '${matchedItem.item_name}' is already FULLY DISPATCHED (${matchedItem.planned_qty} ${matchedItem.unit || 'Pcs'}). Duplicate scan prevented!`
                 };
             }
 
@@ -889,9 +899,10 @@
         function pauseScannerWithError(errorMessage) {
             scannerPaused = true;
             scannerPauseReason = errorMessage;
+            isScanning = false;
 
             if (html5QrcodeScanner) {
-                html5QrcodeScanner.pause();
+                try { html5QrcodeScanner.pause(); } catch (e) {}
             }
 
             if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
@@ -913,27 +924,29 @@
         function resumeScanner() {
             scannerPaused = false;
             scannerPauseReason = "";
+            isScanning = false;
 
             const resultDiv = document.getElementById('result');
             resultDiv.innerText = "";
             resultDiv.className = "mb-3 text-center fw-bold fs-6";
 
             if (html5QrcodeScanner) {
-                html5QrcodeScanner.resume();
+                try { html5QrcodeScanner.resume(); } catch (e) {}
             }
         }
 
         async function onScanSuccess(decodedText, decodedResult) {
+            // 🎯 If scanner is paused or already processing, do not flood toasts
+            if (scannerPaused) {
+                return;
+            }
+            if (isScanning) {
+                return;
+            }
+
             const issuedTo = document.getElementById('issuedTo').value.trim();
             const dispatchPlanId = document.getElementById('dispatchPlanSelect').value;
             const resultDiv = document.getElementById('result');
-
-            // 🎯 If scanner is paused, don't process scans
-            if (scannerPaused) {
-                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-                if (window.showToast) window.showToast("⏸️ Scanner is paused. Please resolve the error and resume.", "warning");
-                return;
-            }
 
             if (!issuedTo && !dispatchPlanId) {
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
@@ -943,19 +956,30 @@
                 return;
             }
 
+            isScanning = true;
             if (navigator.vibrate) navigator.vibrate(100);
             playBeepSound();
 
-            html5QrcodeScanner.pause();
+            if (html5QrcodeScanner) {
+                try { html5QrcodeScanner.pause(); } catch (e) {}
+            }
             resultDiv.className = "mb-3 text-center fw-bold text-primary p-2 bg-light rounded border border-primary shadow-sm";
             resultDiv.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Verifying box QR code...`;
 
             try {
-                let checkUrl = `${API_URL}/api/check-box/${decodedText}`;
+                const cleanBoxId = String(decodedText || '').trim();
+                let checkUrl = `${API_URL}/api/check-box/${encodeURIComponent(cleanBoxId)}`;
                 if (dispatchPlanId) {
-                    checkUrl += `?dispatch_plan_id=${dispatchPlanId}`;
+                    checkUrl += `?dispatch_plan_id=${encodeURIComponent(dispatchPlanId)}`;
                 }
-                const checkRes = await fetch(checkUrl);
+
+                const checkRes = await fetch(checkUrl, {
+                    headers: {
+                        'Bypass-Tunnel-Reminder': 'true',
+                        'Accept': 'application/json'
+                    }
+                });
+
                 let boxData = null;
                 let responseText = null;
                 try {
@@ -970,35 +994,40 @@
                 }
 
                 if (!checkRes.ok) {
-                    const detail = (boxData && (boxData.detail || boxData.message)) ? boxData.detail || boxData.message : (responseText || `Server error (status ${checkRes.status})`);
+                    isScanning = false;
+                    const detail = (boxData && (boxData.detail || boxData.message)) ? (boxData.detail || boxData.message) : (responseText || `Server error (status ${checkRes.status})`);
                     console.error("Check-box failed:", checkRes.status, boxData, responseText);
 
                     // 🎯 If DP-related error, pause scanner
-                    if (dispatchPlanId && detail.includes("not in the selected Dispatch Plan")) {
+                    if (dispatchPlanId && (detail.includes("not in the selected Dispatch Plan") || detail.includes("Overdispatch"))) {
                         pauseScannerWithError(detail);
                         return;
                     }
 
                     resultDiv.className = "mb-3 text-center fw-bold text-danger fs-6 p-2 bg-light rounded border border-danger shadow";
                     resultDiv.innerText = `❌ ${detail}`;
+                    if (window.showToast) window.showToast(`❌ ${detail}`, "error");
+
                     setTimeout(() => {
                         resultDiv.innerText = "";
                         resultDiv.className = "mb-3 text-center fw-bold fs-6";
-                        html5QrcodeScanner.resume();
+                        if (!scannerPaused && html5QrcodeScanner) {
+                            try { html5QrcodeScanner.resume(); } catch (e) {}
+                        }
                     }, 3000);
                     return;
                 }
 
                 // 🎯 Additional client-side validation for DP mode
                 if (dispatchPlanId && dpItemsCache.length > 0) {
-                    const validation = validateScanAgainstDp(boxData.item_name, decodedText);
+                    const validation = validateScanAgainstDp(boxData.item_name, cleanBoxId);
                     if (!validation.valid) {
                         pauseScannerWithError(validation.error);
                         return;
                     }
                 }
 
-                pendingBoxId = decodedText;
+                pendingBoxId = cleanBoxId;
 
                 const boxQty = boxData.qty || 0;
                 const dpRemaining = boxData.dp_remaining_qty !== undefined ? boxData.dp_remaining_qty : null;
@@ -1018,13 +1047,13 @@
                     maxBoxQty = boxQty;
                 }
 
-                document.getElementById('modalBoxId').innerText = decodedText;
+                document.getElementById('modalBoxId').innerText = cleanBoxId;
                 document.getElementById('modalItemName').innerText = boxData.item_name || 'N/A';
 
                 let finalIssuedTo = issuedTo;
                 if (dispatchPlanId && !issuedTo) {
                     const selectedOption = document.getElementById('dispatchPlanSelect').options[document.getElementById('dispatchPlanSelect').selectedIndex];
-                    finalIssuedTo = `DP: ${selectedOption.text}`;
+                    finalIssuedTo = `DP: ${selectedOption ? selectedOption.text : ''}`;
                 }
                 document.getElementById('modalIssuedTo').innerText = finalIssuedTo;
 
@@ -1059,11 +1088,17 @@
                 approvalModal.show();
 
             } catch (error) {
+                isScanning = false;
+                console.error("QR check connection error:", error);
+                const errMsg = (error && error.message) ? error.message : "Unable to connect to server.";
                 resultDiv.className = "mb-3 text-center fw-bold text-danger p-2 bg-light rounded border border-danger";
-                resultDiv.innerText = "❌ Unable to connect to server.";
+                resultDiv.innerText = `❌ ${errMsg}`;
+                if (window.showToast) window.showToast(`❌ ${errMsg}`, "error");
                 setTimeout(() => {
                     resultDiv.innerText = "";
-                    html5QrcodeScanner.resume();
+                    if (!scannerPaused && html5QrcodeScanner) {
+                        try { html5QrcodeScanner.resume(); } catch (e) {}
+                    }
                 }, 2500);
             }
         }
@@ -1082,8 +1117,10 @@
 
         document.getElementById('approvalModal').addEventListener('shown.bs.modal', function () {
             const qtyInput = document.getElementById('modalQty');
-            qtyInput.focus();
-            qtyInput.select();
+            if (qtyInput) {
+                qtyInput.focus();
+                qtyInput.select();
+            }
         });
 
         document.getElementById('modalQty').addEventListener('keydown', function (e) {
@@ -1102,7 +1139,7 @@
             let finalIssuedTo = issuedTo;
             if (dispatchPlanId && !issuedTo) {
                 const selectedOption = document.getElementById('dispatchPlanSelect').options[document.getElementById('dispatchPlanSelect').selectedIndex];
-                finalIssuedTo = `DP: ${selectedOption.text}`;
+                finalIssuedTo = `DP: ${selectedOption ? selectedOption.text : ''}`;
             }
 
             const resultDiv = document.getElementById('result');
@@ -1135,7 +1172,10 @@
             try {
                 const response = await fetch(`${API_URL}/api/outward`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Bypass-Tunnel-Reminder': 'true'
+                    },
                     body: JSON.stringify({
                         box_id: pendingBoxId,
                         qty_issued: qtyIssued,
@@ -1185,7 +1225,7 @@
                         }, 300);
                     }
                 } else {
-                    const detail = data.detail || data.message || responseText || `Server error (status ${response.status})`;
+                    const detail = (data && (data.detail || data.message)) ? (data.detail || data.message) : (responseText || `Server error (status ${response.status})`);
                     console.error("Outward failed:", response.status, data, responseText);
 
                     // 🎯 If overdispatch error, pause scanner
@@ -1206,10 +1246,11 @@
             } catch (error) {
                 approvalModal.hide();
                 console.error("Outward request failed:", error);
-                if (window.showToast) window.showToast("❌ Unable to connect to server.", "error");
+                const errMsg = (error && error.message) ? error.message : "Unable to connect to server.";
+                if (window.showToast) window.showToast(`❌ ${errMsg}`, "error");
                 resultDiv.className = "mb-3 text-center fw-bold text-danger p-3 bg-light rounded border border-danger";
                 resultDiv.innerHTML = `
-                    <div class="mb-2">❌ Unable to connect to server.</div>
+                    <div class="mb-2">❌ ${errMsg}</div>
                     <button type="button" class="btn btn-warning text-dark fw-bold px-3 py-1 btn-sm" onclick="startNextScan()">
                         🔄 Try Again
                     </button>
@@ -1221,15 +1262,20 @@
         }
 
         function startNextScan() {
+            isScanning = false;
             const resultDiv = document.getElementById('result');
             resultDiv.innerText = "";
             resultDiv.className = "mb-3 text-center fw-bold fs-6";
-            html5QrcodeScanner.resume();
+            if (html5QrcodeScanner && !scannerPaused) {
+                try { html5QrcodeScanner.resume(); } catch (e) {}
+            }
         }
 
         async function checkDpCompletionAndRefresh(planId) {
             try {
-                const res = await fetch(`${API_URL}/api/dispatch-plan/${planId}?t=${Date.now()}`);
+                const res = await fetch(`${API_URL}/api/dispatch-plan/${planId}?t=${Date.now()}`, {
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                });
                 if (!res.ok) return;
                 const data = await res.json();
                 const plan = data.plan;
@@ -1263,7 +1309,6 @@
             `;
         }
     </script>
-    <script src="/static/js/english-ui.js"></script>
     <script src="/static/js/page-loader.js"></script>
 </body>
 
