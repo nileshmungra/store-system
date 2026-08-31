@@ -1,0 +1,14 @@
+[python]
+# Point to correct Python interpreter
+python_interpreter = "C:/Users/ADMIN/AppData/Local/Programs/Python/Python311/python.exe"
+
+[errors]
+# Suppress missing module errors for third-party packages
+ignore_missing_imports = true
+
+[project]
+# Only analyze project source files
+include = ["*.py"]
+exclude = [
+    "__pyrefly_virtual__/**",
+]
