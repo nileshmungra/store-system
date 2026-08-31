@@ -1145,15 +1145,73 @@ def is_item_match(scanned_name: str, plan_item_name: str) -> bool:
         return False
     if s1 == s2:
         return True
+    
+    # Check numeric dimensions (e.g. 16mm vs 20mm vs 25mm)
+    nums1 = set(re.findall(r'\b\d+(?:\.\d+)?(?:mm|kg|cm2|x\d+|mtr|m)?\b', s1))
+    nums2 = set(re.findall(r'\b\d+(?:\.\d+)?(?:mm|kg|cm2|x\d+|mtr|m)?\b', s2))
+    if nums1 and nums2 and nums1 != nums2:
+        if not nums1.issubset(nums2) and not nums2.issubset(nums1):
+            return False
+
     if s1 in s2 or s2 in s1:
         return True
-    nums1 = set(re.findall(r'\b\d+(?:mm|kg|cm2|x\d+)?\b', s1))
-    nums2 = set(re.findall(r'\b\d+(?:mm|kg|cm2|x\d+)?\b', s2))
-    if nums1 and nums2 and not nums1.issubset(nums2) and not nums2.issubset(nums1):
-        return False
+
     w1 = set(re.findall(r'\w+', s1))
     w2 = set(re.findall(r'\w+', s2))
-    return len(w1) > 0 and (len(w1.intersection(w2)) / len(w1)) >= 0.5
+    if not w1 or not w2:
+        return False
+    overlap = len(w1.intersection(w2))
+    return (overlap / min(len(w1), len(w2))) >= 0.7
+
+def find_best_dp_item_match(box_item_name: str, dpi_items: list, needed_qty: float = 0.0):
+    if not box_item_name or not dpi_items:
+        return None
+    b_name = str(box_item_name).lower().strip()
+
+    # 1. Exact string match
+    exact_matches = [
+        item for item in dpi_items
+        if str(item.get('item_name') or '').lower().strip() == b_name
+    ]
+
+    # 2. Normalized alphanumeric match
+    def clean_token(s):
+        return re.sub(r'[^a-z0-9]+', '', str(s).lower().strip())
+
+    b_clean = clean_token(b_name)
+    norm_matches = [
+        item for item in dpi_items
+        if clean_token(item.get('item_name') or '') == b_clean
+    ]
+
+    # 3. Fuzzy match using is_item_match
+    partial_matches = [
+        item for item in dpi_items
+        if is_item_match(box_item_name, item.get('item_name'))
+    ]
+
+    candidates = exact_matches or norm_matches or partial_matches
+    if not candidates:
+        return None
+
+    # Filter for candidates with remaining allowance
+    pending = [
+        m for m in candidates
+        if (float(m.get('planned_qty') or 0) - float(m.get('dispatched_qty') or 0)) > 0
+    ]
+
+    if pending:
+        if needed_qty > 0:
+            accommodating = [
+                m for m in pending
+                if (float(m.get('planned_qty') or 0) - float(m.get('dispatched_qty') or 0)) >= needed_qty
+            ]
+            if accommodating:
+                return accommodating[0]
+        return pending[0]
+
+    return candidates[0]
+
 
 # 2. Material OUT / DISPATCH (Outward + Auto Log)
 @app.post("/api/outward")
@@ -1261,26 +1319,25 @@ async def _process_outward_impl(req: OutwardRequest):
         dpi_type = None  # 'dp_plan_items' or 'dispatch_plan_items'
 
         if dp_target:
+            needed_q = float(req.qty_issued or 0)
             if req.dispatch_plan_id:
                 try:
                     cursor.execute("SELECT * FROM dispatch_plan_items WHERE dispatch_plan_id = %s", (int(req.dispatch_plan_id),))
                     items2 = cursor.fetchall()
-                    for p in items2:
-                        if is_item_match(box['item_name'], p['item_name']):
-                            dp_item = p
-                            dpi_type = 'dispatch_plan_items'
-                            break
+                    match = find_best_dp_item_match(box['item_name'], items2, needed_q)
+                    if match:
+                        dp_item = match
+                        dpi_type = 'dispatch_plan_items'
                 except (ValueError, TypeError):
                     pass
 
             if not dp_item:
                 cursor.execute("SELECT * FROM dp_plan_items WHERE dp_number = %s", (dp_target,))
                 items1 = cursor.fetchall()
-                for p in items1:
-                    if is_item_match(box['item_name'], p['item_name']):
-                        dp_item = p
-                        dpi_type = 'dp_plan_items'
-                        break
+                match = find_best_dp_item_match(box['item_name'], items1, needed_q)
+                if match:
+                    dp_item = match
+                    dpi_type = 'dp_plan_items'
 
             # 3. Search in dispatch_plan_items by plan_no
             if not dp_item:
@@ -1290,11 +1347,10 @@ async def _process_outward_impl(req: OutwardRequest):
                     WHERE dp.plan_no = %s
                 """, (dp_target,))
                 items3 = cursor.fetchall()
-                for p in items3:
-                    if is_item_match(box['item_name'], p['item_name']):
-                        dp_item = p
-                        dpi_type = 'dispatch_plan_items'
-                        break
+                match = find_best_dp_item_match(box['item_name'], items3, needed_q)
+                if match:
+                    dp_item = match
+                    dpi_type = 'dispatch_plan_items'
 
             # Condition 1: Check if item exists in selected DP Plan
             if not dp_item:
@@ -1832,12 +1888,8 @@ def _check_box_status_impl(box_id: str, dp_number: Optional[str] = None, dispatc
                 dpi_items = cursor.fetchall()
 
             if dpi_items:
-                matched_item = None
                 box_name = str(box.get('item_name') or '').strip()
-                for p_item in dpi_items:
-                    if is_item_match(box_name, p_item.get('item_name')):
-                        matched_item = p_item
-                        break
+                matched_item = find_best_dp_item_match(box_name, dpi_items, 0.0)
 
                 if not matched_item:
                     raise HTTPException(
@@ -1845,28 +1897,16 @@ def _check_box_status_impl(box_id: str, dp_number: Optional[str] = None, dispatc
                         detail=f"❌ This item ('{box_name}') is not in the selected Dispatch Plan ({dp_target}) list!"
                     )
 
-                exact_matches = [m for m in dpi_items if str(m.get('item_name') or '').lower().strip() == box_name.lower()]
-                partial_matches = [m for m in dpi_items if is_item_match(box_name, m.get('item_name'))]
-                candidates = exact_matches if exact_matches else partial_matches
+                planned_q = float(matched_item.get('planned_qty') or 0)
+                disp_q = float(matched_item.get('dispatched_qty') or 0)
+                unit = matched_item.get('unit') or box.get('unit') or 'PCS'
+                remaining_q = max(0.0, planned_q - disp_q)
 
-                has_remaining = any(
-                    float(m.get('planned_qty') or 0) - float(m.get('dispatched_qty') or 0) > 0
-                    for m in candidates
-                )
-
-                if not has_remaining:
-                    planned_q = float(matched_item.get('planned_qty') or 0)
-                    disp_q = float(matched_item.get('dispatched_qty') or 0)
-                    unit = matched_item.get('unit') or box.get('unit') or 'PCS'
+                if remaining_q <= 0:
                     raise HTTPException(
                         status_code=400,
                         detail=f"⚠️ Overdispatch Warning! This item ('{matched_item.get('item_name')}') planned quantity ({planned_q} {unit}) is already fully dispatched!"
                     )
-
-                matched_item = next(
-                    (m for m in candidates if float(m.get('planned_qty') or 0) - float(m.get('dispatched_qty') or 0) > 0),
-                    matched_item
-                )
 
             response = {
                 "status": "Success",

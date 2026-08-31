@@ -838,12 +838,32 @@
             const bName = String(boxItemName).toLowerCase().trim();
             if (!bName) return null;
 
-            // First try exact match
-            let match = dpItemsCache.find(item =>
-                item && item.item_name && String(item.item_name).toLowerCase().trim() === bName
-            );
+            // 1. First try exact match that has remaining quantity
+            let match = dpItemsCache.find(item => {
+                if (!item || !item.item_name) return false;
+                const iName = String(item.item_name).toLowerCase().trim();
+                const rem = item.remaining !== undefined ? item.remaining : (item.planned_qty - item.dispatched_qty);
+                return iName === bName && rem > 0;
+            });
 
-            // Then try partial match
+            // 2. Exact match fallback
+            if (!match) {
+                match = dpItemsCache.find(item =>
+                    item && item.item_name && String(item.item_name).toLowerCase().trim() === bName
+                );
+            }
+
+            // 3. Partial match with remaining quantity
+            if (!match) {
+                match = dpItemsCache.find(item => {
+                    if (!item || !item.item_name) return false;
+                    const iName = String(item.item_name).toLowerCase().trim();
+                    const rem = item.remaining !== undefined ? item.remaining : (item.planned_qty - item.dispatched_qty);
+                    return rem > 0 && (bName.includes(iName) || iName.includes(bName));
+                });
+            }
+
+            // 4. Partial match fallback
             if (!match) {
                 match = dpItemsCache.find(item => {
                     if (!item || !item.item_name) return false;
@@ -872,8 +892,8 @@
             }
 
             // Check 2: Is the DP item already completed?
-            const statusInfo = dpItemsStatus[matchedItem.item_name];
-            if (statusInfo && statusInfo.status === 'COMPLETED') {
+            const rem = matchedItem.remaining !== undefined ? matchedItem.remaining : (matchedItem.planned_qty - matchedItem.dispatched_qty);
+            if (rem <= 0) {
                 return {
                     valid: false,
                     error: `⚠️ Item '${matchedItem.item_name}' is already FULLY DISPATCHED (${matchedItem.planned_qty} ${matchedItem.unit || 'Pcs'}). Duplicate scan prevented!`
@@ -1152,16 +1172,13 @@
 
             // 🎯 Final validation: check scan count won't exceed DP quantity
             if (dispatchPlanId && dpItemsCache.length > 0) {
-                const matchedItem = findDpMatch(pendingBoxId);
+                const boxItemName = document.getElementById('modalItemName').innerText.trim();
+                const matchedItem = findDpMatch(boxItemName);
                 if (matchedItem) {
-                    const statusInfo = dpItemsStatus[matchedItem.item_name];
-                    if (statusInfo) {
-                        const projectedTotal = statusInfo.scanned_qty + qtyIssued;
-                        if (projectedTotal > statusInfo.planned_qty) {
-                            const allowed = statusInfo.planned_qty - statusInfo.scanned_qty;
-                            alert(`⚠️ Overdispatch Warning! Only ${allowed} ${matchedItem.unit} remaining for '${matchedItem.item_name}' in DP ${currentDpPlanNo}.`);
-                            return;
-                        }
+                    const rem = matchedItem.remaining !== undefined ? matchedItem.remaining : (matchedItem.planned_qty - matchedItem.dispatched_qty);
+                    if (qtyIssued > rem) {
+                        alert(`⚠️ Overdispatch Warning! Only ${rem} ${matchedItem.unit || 'Pcs'} remaining for '${matchedItem.item_name}' in DP ${currentDpPlanNo}.`);
+                        return;
                     }
                 }
             }
