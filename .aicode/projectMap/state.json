@@ -1,0 +1,19 @@
+{
+    "version": 1,
+    "rootsId": "19eef445444e283ce39614c0dc2821299cda3e1685fbc5925bbfcf3b63c8e71d",
+    "baselineId": "23d87585f36ee3093182c123f0e2fd083b48f9e3d50ef7489e84de95b130a4f2",
+    "headDeltaId": "23d87585f36ee3093182c123f0e2fd083b48f9e3d50ef7489e84de95b130a4f2",
+    "nextSeq": 1,
+    "files": {
+        "baselinePathsRel": "prjmap-baseline.paths.mtpntsfm-omi5xdcl.txt",
+        "deltasLogRel": "prjmap-deltas.log.mtpntsfm-omi5xdcl.txt",
+        "prjmapInjectRel": "prjmap-snapshot.inject.mtpntsfm-omi5xdcl.txt",
+        "prjorientInjectRel": "prjorient-snapshot.inject.mtpntsfm-omi5xdcl.txt"
+    },
+    "checksums": {
+        "baselinePathsSha256": "a54337eaee533013d8988289a2e0833ee87e8ef521f33f9ca5a88a1aaf809df0",
+        "deltasLogSha256": "20fccb029b026ea1179e4ed2b99f70e615ee804514ca2e681a96a755d40bdb8b",
+        "prjmapInjectSha256": "4995b066e10bcb397f5c5f732418a31aaea38745fc4d36fd4eb4ec8a9f34214d",
+        "prjorientInjectSha256": "522c41bb85c94fe67232875eb7a78425d735923233fa36e30aeec911a5d045d4"
+    }
+}

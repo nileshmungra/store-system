@@ -155,7 +155,12 @@
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/logs.js"></script>
     <script src="/static/js/english-ui.js"></script>
-    <script src="/static/js/page-loader.js"></script>
+<script src="/static/js/page-loader.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                window.PageLoader.hide();
+            }
+        });
+    </script>
 </body>
-
-</html>

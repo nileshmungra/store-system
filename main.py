@@ -1,16 +1,29 @@
-import os
-import sys
-import shutil
-import io
-import re
-import time
-import gc
-import json
-import sqlite3
-import hashlib
-import pdfplumber
-from datetime import datetime
 import asyncio
+import gc
+import hashlib
+import io
+import json
+import logging
+import os
+import re
+import shutil
+import sqlite3
+import sys
+import time
+from datetime import datetime
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
+import pdfplumber
 
 if sys.platform == 'win32':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -20,16 +33,26 @@ try:
 except Exception:
     mysql = None  # type: ignore
 
-from typing import Optional, Union
+
 import pandas as pd
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, WebSocket, WebSocketDisconnect, BackgroundTasks
+from fastapi import (
+    BackgroundTasks,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from database import get_db, init_db, get_db_ctx
+from database import get_db, get_db_ctx, init_db
+
 
 class CreatePlanFromLoadingEntryRequest(BaseModel):
     disp_plan_no: str
@@ -39,7 +62,13 @@ class PasswordRequest(BaseModel):
     password: str
 
 ADMIN_PASSWORD_SALT = "store_system_admin_salt_v1"
-ADMIN_PASSWORD_HASH = hashlib.sha256((ADMIN_PASSWORD_SALT + "admin123").encode()).hexdigest()
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+if not ADMIN_PASSWORD:
+    raise RuntimeError(
+        "ADMIN_PASSWORD environment variable is required. "
+        "Set it in your .env file or in your deployment environment (e.g. Railway dashboard)."
+    )
+ADMIN_PASSWORD_HASH = hashlib.sha256((ADMIN_PASSWORD_SALT + ADMIN_PASSWORD).encode()).hexdigest()
 
 app = FastAPI(title="Store QR Inventory System")
 
@@ -60,9 +89,11 @@ async def verify_admin_password(req: PasswordRequest):
         return {"valid": True}
     raise HTTPException(status_code=401, detail="Invalid password")
 
+_allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "*")
+_allowed_origins = [o.strip() for o in _allowed_origins_str.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow all origins
+    allow_origins=_allowed_origins, # Configured via ALLOWED_ORIGINS env var
     allow_origin_regex='.*', # Allow all origins via regex for ws/wss
     allow_credentials=True,
     allow_methods=["*"],
@@ -115,7 +146,7 @@ def add_log(conn, action: str, details: str, user_name: str = "Admin"):
             (user_name, action, details)
         )
     except Exception as e:
-        print(f"Log Error: {e}")
+        logging.debug(f"Log Error: {e}")
 
 # -----------------------------------------------
 # Authentication & Security Endpoints
@@ -123,8 +154,8 @@ def add_log(conn, action: str, details: str, user_name: str = "Admin"):
 API_SECRET_KEY = os.getenv("API_SECRET_KEY", "STORE_SECURE_TOKEN_V1")
 
 class TokenRequest(BaseModel):
-    username: Optional[str] = "admin"
-    password: Optional[str] = ""
+    username: str | None = "admin"
+    password: str | None = ""
 
 @app.post("/api/auth/token")
 def generate_auth_token(req: TokenRequest = None):
@@ -200,10 +231,10 @@ def get_challan_page():
     return FileResponse("challan.html")
 
 class VehicleInfoUpdateRequest(BaseModel):
-    plan_id: Union[int, str]
-    vehicle_no: Optional[str] = ""
-    transporter_name: Optional[str] = ""
-    driver_info: Optional[str] = ""
+    plan_id: int | str
+    vehicle_no: str | None = ""
+    transporter_name: str | None = ""
+    driver_info: str | None = ""
 
 # -----------------------------------------------
 # Request Models
@@ -212,61 +243,55 @@ class InwardRequest(BaseModel):
     item_name: str
     total_boxes: int
     qty_per_box: int
-    supplier_or_party: Optional[str] = "N/A"
-    location: Optional[str] = None
-    remark: Optional[str] = ""
+    supplier_or_party: str | None = "N/A"
+    location: str | None = None
+    remark: str | None = ""
 
 class OutwardRequest(BaseModel):
     box_id: str
     qty_issued: int
     issued_to: str
-    scanned_by: Optional[str] = "Store Keeper"
-    dispatch_plan_id: Optional[Union[int, str]] = None
-    dp_number: Optional[str] = None
-
-class StoreKitGenerateRequest(BaseModel):
-    so_number: str
-    dp_number: Optional[str] = ""
-    kit_code: Optional[str] = ""
-    items: Optional[list] = None
+    scanned_by: str | None = "Store Keeper"
+    dispatch_plan_id: int | str | None = None
+    dp_number: str | None = None
 
 class NonDpOutwardRequest(BaseModel):
     box_id: str
-    qty_issued: Optional[int] = 1
+    qty_issued: int | None = 1
     reason: str
-    issued_to: Optional[str] = "Internal Dept"
-    scanned_by: Optional[str] = "Store Keeper"
-    remark: Optional[str] = ""
+    issued_to: str | None = "Internal Dept"
+    scanned_by: str | None = "Store Keeper"
+    remark: str | None = ""
 
 
 class FifoOutwardRequest(BaseModel):
     item_name: str
     qty_issued: int
     issued_to: str
-    scanned_by: Optional[str] = "Store Keeper"
-    dispatch_plan_id: Optional[Union[int, str]] = None
-    dp_number: Optional[str] = None
-    reason: Optional[str] = "FIFO Outward"
+    scanned_by: str | None = "Store Keeper"
+    dispatch_plan_id: int | str | None = None
+    dp_number: str | None = None
+    reason: str | None = "FIFO Outward"
 
 
 
 class ProductionEntryRequest(BaseModel):
-    production_date: Optional[str] = None # YYYY-MM-DD format
+    production_date: str | None = None # YYYY-MM-DD format
     machine_name: str
     pipe_type: str  # HDPE, PVC, Emitting, Lateral
     pipe_size: str  # e.g., 16mm 30cm spacing / 50mm PN6
-    planned_qty: Optional[float] = 0.0
-    actual_qty: Optional[float] = 0.0
-    coil_length_meters: Optional[float] = 0.0
-    coil_weight_kg: Optional[float] = 0.0
-    raw_material_used_kg: Optional[float] = 0.0
-    shift_operator: Optional[str] = "Operator"
-    bundle_unit: Optional[str] = "MTR"
-    status: Optional[str] = "PENDING_APPROVAL" # 'PENDING_APPROVAL' or 'APPROVED'
+    planned_qty: float | None = 0.0
+    actual_qty: float | None = 0.0
+    coil_length_meters: float | None = 0.0
+    coil_weight_kg: float | None = 0.0
+    raw_material_used_kg: float | None = 0.0
+    shift_operator: str | None = "Operator"
+    bundle_unit: str | None = "MTR"
+    status: str | None = "PENDING_APPROVAL" # 'PENDING_APPROVAL' or 'APPROVED'
 
 class ProductionApprovalRequest(BaseModel):
-    actual_qty: Optional[float] = None
-    approved_by: Optional[str] = "Production Manager"
+    actual_qty: float | None = None
+    approved_by: str | None = "Production Manager"
 
 class InwardBatchUpdateRequest(BaseModel):
     item_name: str
@@ -325,7 +350,7 @@ def get_dashboard_stats():
                 WHERE DATE(inward_date) = CURDATE()
             """)
             inward_res = cursor.fetchone() or {'count': 0, 'total_qty': 0}
-            
+
             # 2. Production stats today
             cursor.execute("""
                 SELECT COUNT(*) as count, COALESCE(SUM(coil_weight_kg), 0) as total_weight 
@@ -333,11 +358,11 @@ def get_dashboard_stats():
                 WHERE DATE(created_at) = CURDATE()
             """)
             prod_res = cursor.fetchone() or {'count': 0, 'total_weight': 0}
-            
+
             # 3. Pending Dispatch Plans
             cursor.execute("SELECT COUNT(*) as count FROM dispatch_plans WHERE status != 'COMPLETED'")
             dp_res = cursor.fetchone() or {'count': 0}
-            
+
             # 4. Total Items
             cursor.execute("SELECT COUNT(*) as count FROM items")
             item_res = cursor.fetchone() or {'count': 0}
@@ -369,7 +394,7 @@ def get_dashboard_stats():
                 ORDER BY d.day ASC
             """)
             chart_rows = cursor.fetchall() or []
-            
+
             labels = [r['short_label'] for r in chart_rows]
             inward_data = [float(r['inward_qty']) for r in chart_rows]
             prod_data = [float(r['prod_qty']) for r in chart_rows]
@@ -397,7 +422,7 @@ def get_dashboard_stats():
                 }
             }
         except Exception as e:
-            print(f"Dashboard Stats Error: {e}")
+            logging.debug(f"Dashboard Stats Error: {e}")
             return {
                 "status": "error",
                 "today_inward_count": 0,
@@ -437,23 +462,7 @@ def get_end_to_end_summary():
             direct_dispatched = float(dpi_res['total_dispatched'])
             direct_fulfillment_pct = round((direct_dispatched / direct_planned * 100), 2) if direct_planned > 0 else 100.0
 
-            # Store Fitting Kit Bag
-            cursor.execute("""
-                SELECT 
-                    COUNT(*) as total_kits,
-                    COALESCE(SUM(CASE WHEN status IN ('COMPLETED', 'DISPATCHED') THEN 1 ELSE 0 END), 0) as completed_kits
-                FROM store_kits
-            """)
-            sk_res = cursor.fetchone() or {'total_kits': 0, 'completed_kits': 0}
-            total_kits = int(sk_res['total_kits'])
-            completed_kits = int(sk_res['completed_kits'])
-            store_kit_fulfillment_pct = round((completed_kits / total_kits * 100), 2) if total_kits > 0 else 100.0
-
-            # Overall Fulfillment Rate
-            if direct_planned > 0 or total_kits > 0:
-                overall_fulfillment_pct = round((direct_fulfillment_pct + store_kit_fulfillment_pct) / 2, 2)
-            else:
-                overall_fulfillment_pct = 100.0
+            overall_fulfillment_pct = direct_fulfillment_pct
 
             # 3. Non-DP Outward History & Grouped Breakdown
             cursor.execute("""
@@ -506,11 +515,6 @@ def get_end_to_end_summary():
                         "dispatched_qty": direct_dispatched,
                         "fulfillment_rate_pct": direct_fulfillment_pct
                     },
-                    "store_kits": {
-                        "total_kits": total_kits,
-                        "completed_kits": completed_kits,
-                        "fulfillment_rate_pct": store_kit_fulfillment_pct
-                    },
                     "overall_fulfillment_rate_pct": overall_fulfillment_pct
                 },
                 "non_dp_summary": {
@@ -521,14 +525,13 @@ def get_end_to_end_summary():
                 }
             }
         except Exception as e:
-            print(f"End-to-End Summary Error: {e}")
+            logging.debug(f"End-to-End Summary Error: {e}")
             return {
                 "status": "error",
                 "detail": str(e),
                 "stock_summary": {"total_inward_qty": 0, "total_dp_outward_qty": 0, "variance_qty": 0},
                 "fulfillment_summary": {
                     "direct_pipes": {"planned_qty": 0, "dispatched_qty": 0, "fulfillment_rate_pct": 100},
-                    "store_kits": {"total_kits": 0, "completed_kits": 0, "fulfillment_rate_pct": 100},
                     "overall_fulfillment_rate_pct": 100
                 },
                 "non_dp_summary": {"total_non_dp_qty": 0, "reason_labels": [], "reason_qtys": [], "history": []}
@@ -570,7 +573,7 @@ def add_item(
                 raise HTTPException(status_code=400, detail="Item Code already exists!")
             else:
                 raise HTTPException(status_code=500, detail=f"Database error: {err}")
-    
+
     return {"status": "Success", "message": "Item added successfully"}
 
 @app.get("/api/items/download-template")
@@ -615,7 +618,7 @@ async def upload_excel(file: UploadFile = File(...)):
     file_bytes = await file.read()
     header_row = find_excel_header_row(file_bytes)
     df = pd.read_excel(io.BytesIO(file_bytes), header=header_row)
-    
+
     col_map = {
         'item_code': ['code', 'item code', 'itemcode'],
         'item_name': ['item', 'item name', 'itemname'],
@@ -727,7 +730,7 @@ def list_items(page: int = 1, limit: int = 500, exclude_own: bool = False, only_
     with get_db_ctx() as (conn, cursor):
         where_clauses = []
         params = []
-        
+
         if exclude_own:
             where_clauses.append("(is_own_production = 0 AND (item_group != 'Own Production' OR item_group IS NULL OR item_group = ''))")
         elif only_own:
@@ -765,12 +768,12 @@ def list_items(page: int = 1, limit: int = 500, exclude_own: bool = False, only_
             offset = max(0, (page - 1) * limit)
             query += " LIMIT %s OFFSET %s"
             exec_params.extend([limit, offset])
-            
+
         cursor.execute(query, exec_params)
         items = cursor.fetchall()
-        
+
     return {
-        "status": "Success", 
+        "status": "Success",
         "items": items,
         "groups": groups,
         "total_items": total_items,
@@ -835,7 +838,7 @@ def toggle_own_production(item_id: int):
         item = cursor.fetchone()
         if not item:
             raise HTTPException(status_code=404, detail="Item not found")
-        
+
         curr_is_own = bool(item['is_own_production'] or item['item_group'] == 'Own Production')
         new_status = 0 if curr_is_own else 1
         new_group = 'Own Production' if new_status == 1 else ('General' if item['item_group'] == 'Own Production' else item['item_group'])
@@ -853,7 +856,7 @@ def toggle_outsourced(item_id: int):
         item = cursor.fetchone()
         if not item:
             raise HTTPException(status_code=404, detail="Item not found")
-        
+
         curr_is_out = bool(item['is_outsource'])
         new_status = 0 if curr_is_out else 1
 
@@ -897,10 +900,10 @@ def delete_item(item_id: int):
 
 class QcApprovalRequest(BaseModel):
     item_name: str
-    item_code: Optional[str] = ""
+    item_code: str | None = ""
     qty: float
-    supplier_or_party: Optional[str] = "N/A"
-    remark: Optional[str] = ""
+    supplier_or_party: str | None = "N/A"
+    remark: str | None = ""
 
 class QcApprovalAction(BaseModel):
     approved_by: str = "QC Manager"
@@ -992,7 +995,7 @@ def get_pending_qc():
         return {"status": "Success", "pending": pending, "count": len(pending)}
 
 @app.get("/api/qc/list")
-def list_qc_approvals(status: Optional[str] = None):
+def list_qc_approvals(status: str | None = None):
     """Retrieves QC approval history, optionally filtered by status."""
     with get_db_ctx() as (conn, cursor):
         if status:
@@ -1040,7 +1043,7 @@ def update_inward_batch(batch_id: int, data: InwardBatchUpdateRequest):
         raise HTTPException(status_code=500, detail=f"Database error: {err}")
     finally:
         conn.close()
-    
+
     return {"status": "Success", "message": f"Batch #{batch_id} updated successfully."}
 
 # A8. Delete Inward Batch (+ associated boxes)
@@ -1052,12 +1055,12 @@ def delete_inward_batch(batch_id: int):
         batch = cursor.fetchone()
         if not batch:
             raise HTTPException(status_code=404, detail="Inward Batch ID not found!")
-            
+
         cursor.execute("DELETE FROM boxes WHERE batch_id = %s", (batch_id,))
         cursor.execute("DELETE FROM inward_batches WHERE id = %s", (batch_id,))
-        
+
         add_log(conn, "INWARD_DELETE", f"Inward Batch #{batch_id} ({batch['item_name']}) and its boxes were deleted.")
-        
+
         if os.path.exists("inventory.db"):
             try:
                 sq_conn = sqlite3.connect("inventory.db")
@@ -1068,7 +1071,7 @@ def delete_inward_batch(batch_id: int):
                 sq_conn.close()
             except Exception:
                 pass
-                
+
         return {"status": "Success", "message": f"Inward Batch #{batch_id} ({batch['item_name']}) and all its boxes deleted successfully."}
 
 
@@ -1081,31 +1084,31 @@ def delete_inward_batch(batch_id: int):
 async def material_inward(data: InwardRequest):
     with get_db_ctx(commit=True) as (conn, cursor):
         total_qty = data.total_boxes * data.qty_per_box
-        
+
         cursor.execute(
             "INSERT INTO inward_batches (item_name, total_boxes, total_qty, supplier_or_party, remark) VALUES (%s, %s, %s, %s, %s)",
             (data.item_name, data.total_boxes, total_qty, data.supplier_or_party, data.remark)
         )
         batch_id = cursor.lastrowid
-        
+
         # Look up item_code for meaningful box ID
         cursor.execute("SELECT item_code FROM items WHERE item_name = %s", (data.item_name,))
         item_row = cursor.fetchone()
         item_code = item_row['item_code'] if item_row else data.item_name
-        
+
         # Create abbreviation: uppercase, remove special chars, max 20 chars
         abbrev = ''.join(c for c in item_code.upper() if c.isalnum())[:20]
-        
+
         # Date suffix YYMMDD
         date_suffix = datetime.now().strftime('%y%m%d')
-        
+
         # Count existing boxes for this item today to determine sequence
         cursor.execute("""
             SELECT COUNT(*) as cnt FROM boxes 
             WHERE item_name = %s AND DATE(created_at) = CURDATE()
         """, (data.item_name,))
         existing_count = cursor.fetchone()['cnt'] or 0
-        
+
         generated_boxes = []
         for i in range(1, data.total_boxes + 1):
             seq = existing_count + i
@@ -1119,9 +1122,10 @@ async def material_inward(data: InwardRequest):
                 "item_name": data.item_name,
                 "qty": data.qty_per_box,
                 "supplier": data.supplier_or_party,
-                "remark": data.remark
+                "remark": data.remark,
+                "inward_date": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             })
-            
+
         # 📌 Log Entry
         add_log(conn, "INWARD", f"Material received: {data.item_name} | {data.total_boxes} Boxes (Total Qty: {total_qty}) | Batch #{batch_id}")
 
@@ -1134,7 +1138,6 @@ async def material_inward(data: InwardRequest):
         "boxes": generated_boxes
     }
 
-import re
 
 def is_item_match(scanned_name: str, plan_item_name: str) -> bool:
     if not scanned_name or not plan_item_name:
@@ -1145,7 +1148,7 @@ def is_item_match(scanned_name: str, plan_item_name: str) -> bool:
         return False
     if s1 == s2:
         return True
-    
+
     # Check numeric dimensions (e.g. 16mm vs 20mm vs 25mm)
     nums1 = set(re.findall(r'\b\d+(?:\.\d+)?(?:mm|kg|cm2|x\d+|mtr|m)?\b', s1))
     nums2 = set(re.findall(r'\b\d+(?:\.\d+)?(?:mm|kg|cm2|x\d+|mtr|m)?\b', s2))
@@ -1221,7 +1224,7 @@ async def process_outward(req: OutwardRequest):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[OUTWARD_ERROR] box_id={req.box_id} dp={req.dispatch_plan_id} error={e}")
+        logging.error(f"[OUTWARD_ERROR] box_id={req.box_id} dp={req.dispatch_plan_id} error={e}")
         raise HTTPException(status_code=500, detail=f"Server error during outward processing: {str(e)}")
 
 
@@ -1233,82 +1236,19 @@ async def _process_outward_impl(req: OutwardRequest):
             plan = cursor.fetchone()
             if plan:
                 req.issued_to = f"DP: {plan['plan_no']} (SO: {plan['so_no']})"
-    # Store Kit Outward Processing (1-Click Completion of all Fittings)
-    if req.box_id.startswith("KIT-") or "KIT-" in req.box_id: # This part is async
-        with get_db_ctx(commit=True) as (conn, cursor):
-            cursor.execute("SELECT * FROM store_kits WHERE kit_code = %s", (req.box_id,))
-            kit = cursor.fetchone()
-            if not kit:
-                raise HTTPException(status_code=404, detail=f"Store Kit QR Code '{req.box_id}' not found in store inventory!")
-            if kit["status"] == 'DISPATCHED':
-                raise HTTPException(status_code=400, detail="This Store Kit QR Code is already DISPATCHED!")
-
-            cursor.execute("SELECT * FROM store_kit_items WHERE kit_code = %s", (req.box_id,))
-            k_items = cursor.fetchall()
-
-            for k_item in k_items:
-                cursor.execute("""
-                    UPDATE dispatch_verification 
-                    SET scanned_qty = required_qty, status = 'COMPLETED' 
-                    WHERE (so_number = %s OR dp_number = %s) AND item_name = %s
-                """, (kit["so_number"], kit.get("dp_number", ""), k_item["item_name"]))
-
-                if kit.get("dp_number"):
-                    cursor.execute("""
-                        UPDATE dp_plan_items 
-                        SET dispatched_qty = planned_qty 
-                        WHERE dp_number = %s AND item_name = %s
-                    """, (kit["dp_number"], k_item["item_name"]))
-
-                cursor.execute("""
-                    UPDATE dispatch_plan_items 
-                    SET dispatched_qty = planned_qty 
-                    WHERE item_name = %s AND dispatch_plan_id IN (
-                        SELECT id FROM dispatch_plans WHERE so_no = %s OR plan_no = %s
-                    )
-                """, (k_item["item_name"], kit["so_number"], kit.get("dp_number", "")))
-
-            cursor.execute("UPDATE store_kits SET status = 'DISPATCHED' WHERE kit_code = %s", (req.box_id,))
-            add_log(conn, "STORE_KIT_OUTWARD", f"Store Kit {req.box_id} (SO: {kit['so_number']}) scan outward complete. {len(k_items)} fittings COMPLETED.")
-
-        # Sync with SQLite inventory.db
-        if os.path.exists("inventory.db"):
-            try:
-                sq_conn = sqlite3.connect("inventory.db")
-                sq_cursor = sq_conn.cursor()
-                sq_cursor.execute("UPDATE store_kits SET status = 'DISPATCHED' WHERE kit_code = ?", (req.box_id,))
-                for k_item in k_items:
-                    sq_cursor.execute("UPDATE dispatch_verification SET scanned_qty = required_qty, status = 'COMPLETED' WHERE (so_number = ? OR dp_number = ?) AND item_name = ?", (kit["so_number"], kit.get("dp_number", ""), k_item["item_name"]))
-                    if kit.get("dp_number"):
-                        sq_cursor.execute("UPDATE dp_plan_items SET dispatched_qty = planned_qty WHERE dp_number = ? AND item_name = ?", (kit["dp_number"], k_item["item_name"]))
-                sq_conn.commit()
-                sq_conn.close()
-            except Exception as e:
-                print(f"[WARNING] SQLite Store Kit Outward Sync Error: {e}")
-
-        # 📢 Broadcast update to all connected clients
-        await manager.broadcast("STOCK_UPDATED")
-
-        return {
-            "status": "Success",
-            "message": f"✅ Store Kit '{req.box_id}' auto-dispatched in 1-click! All {len(k_items)} fittings COMPLETED!",
-            "kit_code": req.box_id,
-            "completed_items_count": len(k_items),
-            "completed_items": k_items
-        }
 
     with get_db_ctx(commit=True) as (conn, cursor): # This part is sync
         cursor.execute("SELECT * FROM boxes WHERE box_id = %s", (req.box_id,))
         box = cursor.fetchone()
-        
+
         if not box:
             raise HTTPException(status_code=404, detail="Box ID not found!")
-            
+
         if box['status'] == 'OUT' or box['status'] == 'DISPATCHED' or box['qty_in_box'] <= 0:
             raise HTTPException(status_code=400, detail="This Box/Coil is empty or has already been DISPATCHED / OUT!")
 
         current_qty = box['qty_in_box']
-        
+
         cursor.execute("SELECT unit FROM items WHERE item_name = %s", (box['item_name'],))
         itm = cursor.fetchone()
         unit = (itm['unit'] if (itm and itm.get('unit')) else '') or ('MTR' if (req.box_id.startswith('COIL-') or 'Pipe' in box['item_name']) else 'Pcs')
@@ -1361,7 +1301,7 @@ async def _process_outward_impl(req: OutwardRequest):
 
         if req.qty_issued > current_qty:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"Only {current_qty} {unit} remaining in box! Cannot issue {req.qty_issued}."
             )
 
@@ -1390,11 +1330,11 @@ async def _process_outward_impl(req: OutwardRequest):
                 update_query = "UPDATE dispatch_plan_items SET dispatched_qty = dispatched_qty + %s WHERE id = %s AND (dispatched_qty + %s) <= planned_qty"
 
             cursor.execute(update_query, (scanned_q, dp_item['id'], scanned_q))
-            
+
             if cursor.rowcount == 0:
                 # The update failed, likely due to overdispatch.
                 conn.rollback() # Rollback the outward log and box status update
-                cursor.execute("SELECT planned_qty, dispatched_qty FROM {} WHERE id = %s".format(dpi_type), (dp_item['id'],))
+                cursor.execute(f"SELECT planned_qty, dispatched_qty FROM {dpi_type} WHERE id = %s", (dp_item['id'],))
                 current_state = cursor.fetchone()
                 planned_q = float(current_state['planned_qty'])
                 disp_q = float(current_state['dispatched_qty'])
@@ -1419,7 +1359,7 @@ async def _process_outward_impl(req: OutwardRequest):
         if dp_target or (dp_item and (dp_item.get('dp_number') or dp_item.get('dispatch_plan_id'))):
             target_dp = dp_target or (dp_item.get('dp_number') if dp_item else "")
             target_so = (dp_item.get('so_no') if dp_item and 'so_no' in dp_item else "") or target_dp
-            
+
             cursor.execute("""
                 UPDATE dispatch_verification 
                 SET scanned_qty = LEAST(required_qty, scanned_qty + %s),
@@ -1450,7 +1390,7 @@ async def _process_outward_impl(req: OutwardRequest):
             sq_conn.commit()
             sq_conn.close()
         except Exception as e:
-            print(f"[WARNING] SQLite sync error in outward: {e}")
+            logging.warning(f"[WARNING] SQLite sync error in outward: {e}")
 
     # 📢 Broadcast update to all connected clients
     if dp_item:
@@ -1466,8 +1406,8 @@ async def _process_outward_impl(req: OutwardRequest):
 
     status_msg = "Box/Coil fully DISPATCHED!" if new_status == 'DISPATCHED' else f"Box now has {new_qty} {unit} remaining."
     return {
-        "status": "Success", 
-        "message": f"✅ {req.qty_issued} {unit} dispatched! ({status_msg})", 
+        "status": "Success",
+        "message": f"✅ {req.qty_issued} {unit} dispatched! ({status_msg})",
         "remaining_qty": new_qty,
         "unit": unit
     }
@@ -1483,10 +1423,10 @@ async def process_non_dp_outward(req: NonDpOutwardRequest):
     with get_db_ctx(commit=True) as (conn, cursor):
         cursor.execute("SELECT * FROM boxes WHERE box_id = %s", (req.box_id,))
         box = cursor.fetchone()
-        
+
         if not box:
             raise HTTPException(status_code=404, detail=f"Box/Coil ID ({req.box_id}) not found in store!")
-            
+
         if box['status'] in ['OUT', 'DISPATCHED', 'OUT_NON_DP'] or box['qty_in_box'] <= 0:
             raise HTTPException(status_code=400, detail="This Box/Coil is already OUT / DISPATCHED!")
 
@@ -1519,7 +1459,7 @@ async def process_non_dp_outward(req: NonDpOutwardRequest):
             sq_conn.commit()
             sq_conn.close()
         except Exception as e:
-            print(f"[WARNING] SQLite non-DP outward sync error: {e}")
+            logging.warning(f"[WARNING] SQLite non-DP outward sync error: {e}")
 
     # 📢 Broadcast update to all connected clients
     await manager.broadcast("STOCK_UPDATED")
@@ -1543,7 +1483,7 @@ async def process_fifo_outward(req: FifoOutwardRequest):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[FIFO_OUTWARD_ERROR] item={req.item_name} qty={req.qty_issued} error={e}")
+        logging.error(f"[FIFO_OUTWARD_ERROR] item={req.item_name} qty={req.qty_issued} error={e}")
         raise HTTPException(status_code=500, detail=f"Server error during FIFO outward processing: {str(e)}")
 
 
@@ -1571,7 +1511,7 @@ async def _process_fifo_outward_impl(req: FifoOutwardRequest):
         total_available = sum(float(b['qty_in_box']) for b in available_boxes)
         if total_available < req.qty_issued:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"Insufficient stock! Available: {total_available}, Requested: {req.qty_issued}"
             )
 
@@ -1681,8 +1621,8 @@ def get_stock_summary():
 def get_reports(
     page: int = 1,
     limit: int = 50,
-    search: Optional[str] = None,
-    item_filter: Optional[str] = None
+    search: str | None = None,
+    item_filter: str | None = None
 ):
     page = max(1, page)
     limit = max(1, min(limit, 200))
@@ -1796,45 +1736,25 @@ def reprint_batch_qrs(batch_id: int):
     with get_db_ctx() as (conn, cursor):
         cursor.execute("SELECT box_id, item_name, qty_in_box FROM boxes WHERE batch_id = %s", (batch_id,))
         boxes = cursor.fetchall()
-    
+
     if not boxes:
         raise HTTPException(status_code=404, detail="No boxes found for this Batch ID!")
-        
+
     return {"status": "Success", "boxes": boxes}
 
 # 7. Check Box Status & DP Plan Item Pre-Validation
 @app.get("/api/check-box/{box_id}")
-def check_box_status(box_id: str, dp_number: Optional[str] = None, dispatch_plan_id: Optional[Union[int, str]] = None):
+def check_box_status(box_id: str, dp_number: str | None = None, dispatch_plan_id: int | str | None = None):
     try:
         return _check_box_status_impl(box_id, dp_number, dispatch_plan_id)
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[CHECK_BOX_ERROR] box_id={box_id} dp={dp_number} dispatch_plan_id={dispatch_plan_id} error={e}")
+        logging.error(f"[CHECK_BOX_ERROR] box_id={box_id} dp={dp_number} dispatch_plan_id={dispatch_plan_id} error={e}")
         raise HTTPException(status_code=500, detail=f"Server error while checking box status: {str(e)}")
 
 
-def _check_box_status_impl(box_id: str, dp_number: Optional[str] = None, dispatch_plan_id: Optional[Union[int, str]] = None):
-    # Store Kit QR Code Check
-    if box_id.startswith("KIT-") or "KIT-" in box_id:
-        with get_db_ctx() as (conn, cursor):
-            cursor.execute("SELECT * FROM store_kits WHERE kit_code = %s", (box_id,))
-            kit = cursor.fetchone()
-            if kit:
-                if kit["status"] == 'DISPATCHED':
-                    raise HTTPException(status_code=400, detail="This Store Kit QR Code is already DISPATCHED!")
-                cursor.execute("SELECT * FROM store_kit_items WHERE kit_code = %s", (box_id,))
-                k_items = cursor.fetchall()
-                return {
-                    "box_id": kit["kit_code"],
-                    "item_name": f"Store Kit ({kit['so_number']}) - {kit['total_items_count']} Fittings",
-                    "qty": kit["total_items_count"],
-                    "unit": "Kits",
-                    "status": kit["status"],
-                    "is_store_kit": True,
-                    "items": k_items
-                }
-
+def _check_box_status_impl(box_id: str, dp_number: str | None = None, dispatch_plan_id: int | str | None = None):
     with get_db_ctx() as (conn, cursor):
         cursor.execute("""
             SELECT b.box_id, b.item_name, b.qty_in_box, b.status,
@@ -1844,17 +1764,33 @@ def _check_box_status_impl(box_id: str, dp_number: Optional[str] = None, dispatc
             WHERE b.box_id = %s
         """, (box_id,))
         box = cursor.fetchone()
-    
-    if not box:
-        raise HTTPException(status_code=404, detail="This Box/Coil/Store Kit ID was not found in store inventory!")
-    if box["status"] == 'OUT' or box["status"] == 'DISPATCHED':
-        raise HTTPException(status_code=400, detail="This Box/Coil has already been DISPATCHED / ISSUED OUT!")
+
+        if not box:
+            raise HTTPException(status_code=404, detail="This Box/Coil/Store Kit ID was not found in store inventory!")
+        if box["status"] == 'OUT' or box["status"] == 'DISPATCHED':
+            raise HTTPException(status_code=400, detail="This Box/Coil has already been DISPATCHED / ISSUED OUT!")
+
+        cursor.execute("""
+            SELECT COALESCE(SUM(qty_in_box), 0) as total_stock
+            FROM boxes
+            WHERE item_name = %s AND status = 'IN_STORE'
+        """, (box["item_name"],))
+        tot_row = cursor.fetchone()
+        tot_stock = float(tot_row["total_stock"]) if tot_row else float(box["qty_in_box"])
+
+    response = {
+        "status": "Success",
+        "item_name": box["item_name"],
+        "qty": box["qty_in_box"],
+        "unit": box["unit"],
+        "total_available_stock": tot_stock
+    }
 
     dp_target = dp_number or (str(dispatch_plan_id) if dispatch_plan_id else None)
     if dp_target:
         with get_db_ctx() as (conn, cursor):
             dpi_items = []
-            
+
             if dispatch_plan_id:
                 try:
                     cursor.execute("""
@@ -1865,7 +1801,7 @@ def _check_box_status_impl(box_id: str, dp_number: Optional[str] = None, dispatc
                     dpi_items = cursor.fetchall()
                 except (ValueError, TypeError):
                     pass
-                
+
                 if not dpi_items:
                     cursor.execute("""
                         SELECT dpi.id, dpi.planned_qty, dpi.dispatched_qty, dpi.item_name, dpi.unit
@@ -1908,35 +1844,25 @@ def _check_box_status_impl(box_id: str, dp_number: Optional[str] = None, dispatc
                         detail=f"⚠️ Overdispatch Warning! This item ('{matched_item.get('item_name')}') planned quantity ({planned_q} {unit}) is already fully dispatched!"
                     )
 
-            response = {
-                "status": "Success",
-                "item_name": box["item_name"],
-                "qty": box["qty_in_box"],
-                "unit": box["unit"]
-            }
-
-            if dpi_items and matched_item:
-                planned_q = float(matched_item['planned_qty'] or 0)
-                disp_q = float(matched_item['dispatched_qty'] or 0)
-                dp_remaining = max(0.0, planned_q - disp_q)
                 response["dp_planned_qty"] = planned_q
                 response["dp_dispatched_qty"] = disp_q
-                response["dp_remaining_qty"] = dp_remaining
-                response["dp_unit"] = matched_item.get('unit') or box.get('unit') or 'PCS'
+                response["dp_remaining_qty"] = remaining_q
+                response["dp_unit"] = unit
 
-            return response
+    return response
 
 # 8. Search QR Codes
 @app.get("/api/search-qrs")
 def search_qrs(
-    search_date: Optional[str] = None, 
-    batch_id: Optional[str] = None, 
-    item_name: Optional[str] = None,
-    q: Optional[str] = None,
+    search_date: str | None = None,
+    batch_id: str | None = None,
+    item_name: str | None = None,
+    q: str | None = None,
     supplier_only: bool = False
 ):
     query = """
         SELECT b.box_id, b.item_name, b.qty_in_box, b.status, b.created_at, b.batch_id,
+               COALESCE(b.created_at, ib.inward_date) as inward_date,
                COALESCE(ib.supplier_or_party, 'N/A') as supplier_or_party,
                COALESCE(ib.remark, 'N/A') as remark,
                COALESCE(NULLIF(itm.unit, ''), IF(b.box_id LIKE 'COIL-%%' OR b.item_name LIKE '%%Pipe%%', 'MTR', 'Pcs')) as unit,
@@ -1952,30 +1878,30 @@ def search_qrs(
     # The inward screen must show only supplier-received boxes, never production coils.
     if supplier_only:
         query += " AND b.box_id NOT LIKE 'COIL-%%' AND pl.qr_code IS NULL"
-    
+
     if q:
         query += " AND (b.box_id LIKE %s OR b.item_name LIKE %s OR CAST(b.batch_id AS CHAR) = %s OR ib.supplier_or_party LIKE %s)"
         pattern = f"%{q}%"
         params.extend([pattern, pattern, q, pattern])
-        
+
     if search_date:
         query += " AND DATE(b.created_at) = DATE(%s)"
         params.append(search_date)
-        
+
     if batch_id:
         query += " AND (b.batch_id = %s OR b.box_id LIKE %s)"
         params.extend([batch_id, f"%{batch_id}%"])
-        
+
     if item_name:
         query += " AND b.item_name LIKE %s"
         params.append(f"%{item_name}%")
-        
+
     query += " ORDER BY b.created_at DESC LIMIT 100"
-    
+
     with get_db_ctx() as (conn, cursor):
         cursor.execute(query, params)
         boxes = cursor.fetchall()
-        
+
     return {"status": "Success", "boxes": boxes}
 
 # 9. Date-Wise Ledger
@@ -2046,12 +1972,12 @@ async def favicon():
 def reset_all_data():
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
-    
+
     try:
         cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
     except Exception:
         pass
-    
+
     tables_to_clear = [
         "boxes",
         "inward_batches",
@@ -2059,13 +1985,11 @@ def reset_all_data():
         "production_logs",
         "dispatch_plan_items",
         "dispatch_plans",
-        "store_kit_items",
-        "store_kits",
         "challan_items",
         "delivery_challans",
         "activity_logs"
     ]
-    
+
     for tbl in tables_to_clear:
         try:
             cursor.execute(f"TRUNCATE TABLE {tbl};")
@@ -2073,18 +1997,18 @@ def reset_all_data():
             try:
                 cursor.execute(f"DELETE FROM {tbl};")
             except Exception as e:
-                print(f"Reset error for {tbl}: {e}")
-                
+                logging.debug(f"Reset error for {tbl}: {e}")
+
     try:
         cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
     except Exception:
         pass
-    
+
     add_log(conn, "RESET", "System factory reset executed: All operational stock, production, DP plans, challans and history cleared. Master Items preserved.")
 
     conn.commit()
     conn.close()
-    
+
     # Sync with SQLite if present
     if os.path.exists("inventory.db"):
         try:
@@ -2098,10 +2022,10 @@ def reset_all_data():
             sq_conn.commit()
             sq_conn.close()
         except Exception as e:
-            print(f"SQLite reset error: {e}")
-            
-    return {"status": "Success", "message": "All operational stock, production logs, DP plans, store kits, challans, and transaction logs have been reset! Master Items catalog remains intact."}
-    
+            logging.debug(f"SQLite reset error: {e}")
+
+    return {"status": "Success", "message": "All operational stock, production logs, DP plans, challans, and transaction logs have been reset! Master Items catalog remains intact."}
+
 # Item Master Protected Page Route
 @app.get("/items-page")
 def get_items_page():
@@ -2155,14 +2079,14 @@ def get_production_log_by_qr(qr_code: str):
 
 # 2. Add Machine
 @app.post("/api/machines/add")
-def add_machine(machine_name: Optional[str] = Form(None), req: Optional[MachineAddRequest] = None):
+def add_machine(machine_name: str | None = Form(None), req: MachineAddRequest | None = None):
     """Adds a new machine."""
     m_name = machine_name or (req.machine_name if req else None)
     if not m_name or not m_name.strip():
         raise HTTPException(status_code=400, detail="Machine name is required!")
-    
+
     m_name = m_name.strip()
-    
+
     # 1. Save to MySQL
     with get_db_ctx(commit=True) as (conn, cursor):
         try:
@@ -2183,7 +2107,7 @@ def add_machine(machine_name: Optional[str] = Form(None), req: Optional[MachineA
             sq_conn.commit()
             sq_conn.close()
         except Exception as e:
-            print(f"[WARNING] SQLite machine sync error: {e}")
+            logging.warning(f"[WARNING] SQLite machine sync error: {e}")
 
     return {"status": "Success", "message": f"Machine '{m_name}' added successfully"}
 
@@ -2226,7 +2150,7 @@ def update_production_log(log_id: int, data: ProductionLogUpdateRequest):
         old_log = cursor.fetchone()
         if not old_log:
             raise HTTPException(status_code=404, detail="Production log not found.")
-        
+
         old_qr_code = old_log['qr_code']
 
         # Update production_logs table
@@ -2277,23 +2201,23 @@ async def delete_production_log(log_id: int):
         log = cursor.fetchone()
         if not log:
             raise HTTPException(status_code=404, detail="Production Log not found or already deleted!")
-            
+
         qr_code = log.get('qr_code') or ''
-        
+
         if qr_code:
             cursor.execute("SELECT batch_id FROM boxes WHERE box_id = %s", (qr_code,))
             b_row = cursor.fetchone()
             if b_row and b_row.get('batch_id'):
                 batch_id_to_del = b_row['batch_id']
             cursor.execute("DELETE FROM boxes WHERE box_id = %s", (qr_code,))
-            
+
         if batch_id_to_del:
             cursor.execute("DELETE FROM inward_batches WHERE id = %s", (batch_id_to_del,))
-            
+
         cursor.execute("DELETE FROM production_logs WHERE id = %s", (log_id,))
-        
+
         add_log(conn, "PRODUCTION_DELETE", f"Production Entry #{log_id} ({qr_code}) was deleted.")
-        
+
         if os.path.exists("inventory.db"):
             try:
                 sq_conn = sqlite3.connect("inventory.db")
@@ -2312,7 +2236,7 @@ async def delete_production_log(log_id: int):
         await manager.broadcast("STOCK_UPDATED")
     except Exception:
         pass
-                
+
     return {"status": "Success", "message": f"Production Entry #{log_id} deleted successfully."}
 
 @app.delete("/api/machines/delete/{machine_id}")
@@ -2517,6 +2441,16 @@ def get_pending_production():
 @app.post("/api/production/approve/{log_id}")
 async def approve_production_entry(log_id: int, req: ProductionApprovalRequest):
     """Approves a pending production entry, enters it into store inventory and generates QR code."""
+    try:
+        return await _approve_production_entry_impl(log_id, req)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[PRODUCTION_APPROVE_ERROR] log_id={log_id} error={e}")
+        raise HTTPException(status_code=500, detail=f"Server error during production approval: {str(e)}")
+
+
+async def _approve_production_entry_impl(log_id: int, req: ProductionApprovalRequest):
     with get_db_ctx(commit=True) as (conn, cursor):
         cursor.execute("SELECT * FROM production_logs WHERE id = %s", (log_id,))
         log = cursor.fetchone()
@@ -2536,7 +2470,7 @@ async def approve_production_entry(log_id: int, req: ProductionApprovalRequest):
         machine_name = log['machine_name']
         operator_name = log.get('shift_operator', 'Operator')
         bundle_unit = log.get('bundle_unit') or 'MTR'
-        
+
         # Determine final actual qty
         actual_val = float(req.actual_qty if (req.actual_qty is not None and req.actual_qty > 0) else (log.get('actual_qty') or log.get('planned_qty') or log.get('coil_length_meters') or 0))
         approver = req.approved_by or "Production Incharge"
@@ -2680,7 +2614,7 @@ def get_plan_vs_actual_summary():
             FROM production_logs
         """)
         summary = cursor.fetchone() or {}
-        
+
         total_entries = int(summary.get('total_entries') or 0)
         pending_count = int(summary.get('pending_count') or 0)
         approved_count = int(summary.get('approved_count') or 0)
@@ -2702,7 +2636,7 @@ def get_plan_vs_actual_summary():
 
 # 7. Get Production Logs History (All or Approved)
 @app.get("/api/production/logs")
-def get_production_logs(status: Optional[str] = None):
+def get_production_logs(status: str | None = None):
     """Retrieves recent production logs (optionally filtered by status)."""
     with get_db_ctx(commit=False) as (conn, cursor):
         if status:
@@ -2729,7 +2663,7 @@ def parse_dispatch_plan_bytes(file_bytes: bytes, filename: str):
     plan_no = ""
     so_no = ""
     plan_date = ""
-    
+
     if filename.lower().endswith(".pdf"):
         doc = fitz.open(stream=file_bytes, filetype="pdf")
         text = ""
@@ -2747,19 +2681,19 @@ def parse_dispatch_plan_bytes(file_bytes: bytes, filename: str):
                 for y in sorted(lines_dict.keys()):
                     sorted_words = sorted(lines_dict[y], key=lambda w: w[0])
                     reconstructed_lines.append(" ".join(w[4] for w in sorted_words))
-            
+
         m_plan = re.search(r"Disp\.?\s*Plan\s*No\.?\s*:\s*([^\n\r]+)", text, re.IGNORECASE)
         if m_plan:
             plan_no = m_plan.group(1).strip()
-            
+
         m_so = re.search(r"SO\s*No\.?\s*:\s*([^,\n\r]+)", text, re.IGNORECASE)
         if m_so:
             so_no = m_so.group(1).strip()
-            
+
         m_date = re.search(r"Disp\.?\s*Plan\s*Date\s*:\s*([^\n\r]+)", text, re.IGNORECASE)
         if m_date:
             plan_date = m_date.group(1).strip()
-            
+
         # Strategy 1: Y-Coordinate Reconstructed Lines
         pattern_full = re.compile(r'^\s*(?:\d+\s+)?(.+?)\s+(\d+(?:\.\d+)?)\s+([A-Za-z\.]+)\s+(\d+(?:\.\d+)?)\s*')
         pattern_flex = re.compile(r'^\s*(?:\d+\s+)?(.+?)\s+(\d+(?:\.\d+)?)\s+([A-Za-z\.]+)\s*')
@@ -2829,7 +2763,7 @@ def parse_dispatch_plan_bytes(file_bytes: bytes, filename: str):
 
         df.columns = [str(c).strip() for c in df.columns]
         cols_lower = [str(c).strip().lower() for c in df.columns]
-        
+
         so_col = next((c for c in df.columns if 'so' in c.lower() or 'order' in c.lower()), None)
         desc_col = next((c for c in df.columns if 'item' in c.lower() or 'desc' in c.lower() or 'product' in c.lower() or 'name' in c.lower()), None)
         qty_col = next((c for c in df.columns if 'qty' in c.lower() or 'disp' in c.lower() or 'quantity' in c.lower() or 'planned' in c.lower() or 'pend' in c.lower()), None)
@@ -2840,7 +2774,7 @@ def parse_dispatch_plan_bytes(file_bytes: bytes, filename: str):
             first_so = df[so_col].dropna().astype(str).tolist()
             if first_so:
                 so_no = first_so[0].strip()
-        
+
         if desc_col and qty_col:
             for _, row in df.iterrows():
                 if pd.notna(row[desc_col]) and pd.notna(row[qty_col]):
@@ -2866,7 +2800,7 @@ def parse_dispatch_plan_bytes(file_bytes: bytes, filename: str):
     if not plan_no:
         clean_name = os.path.splitext(filename)[0].replace(" ", "_")
         plan_no = f"DP-{clean_name}"
-        
+
     return {
         "plan_no": plan_no,
         "so_no": so_no or "N/A",
@@ -3068,7 +3002,7 @@ async def upload_dp_plan_pdf(file: UploadFile = File(...)):
             sq_conn.commit()
             sq_conn.close()
         except Exception as e:
-            print(f"[WARNING] SQLite sync error: {e}")
+            logging.warning(f"[WARNING] SQLite sync error: {e}")
 
     return {
         "status": "Success",
@@ -3081,47 +3015,28 @@ async def upload_dp_plan_pdf(file: UploadFile = File(...)):
 
 
 def classify_item_type(item_name: str) -> str:
-    """
-    Classifies an item into DIRECT_DISPATCH or STORE_KIT.
-    Direct Dispatch: Pipes, Sand Filters, Screen Filters, Bundles, Coils, Large Drip Lines.
-    Store Kit: Poly Fittings, Compression Fittings, Valves, Joiners, PVC Fittings, Accessories.
-    """
-    name = (item_name or "").lower().strip()
-    direct_keywords = ["pipe", "hdpe", "pvc pipe", "emitting", "lateral", "sand filter", "screen filter", "filter station", "bundle", "coil", "drip line"]
-    store_keywords = ["fitting", "valve", "joiner", "coupling", "elbow", "tee", "adapter", "nipple", "clamp", "connector", "end cap", "grommet", "take off", "ball valve", "flush valve", "air valve", "mini valve"]
-
-    for sk in store_keywords:
-        if sk in name:
-            return "STORE_KIT"
-
-    for dk in direct_keywords:
-        if dk in name:
-            return "DIRECT_DISPATCH"
-
-    return "STORE_KIT" if ("pc" in name or "pcs" in name or "nos" in name) else "DIRECT_DISPATCH"
+    return "DIRECT_DISPATCH"
 
 
 @app.post("/api/dispatch/auto-connect-so-dp")
 async def auto_connect_so_dp(
-    dp_pdf: Optional[UploadFile] = File(None),
-    so_excel: Optional[UploadFile] = File(None),
-    dp_number: Optional[str] = Form(None),
-    so_number: Optional[str] = Form(None)
+    dp_pdf: UploadFile | None = File(None),
+    so_excel: UploadFile | None = File(None),
+    dp_number: str | None = Form(None),
+    so_number: str | None = Form(None)
 ):
     """
-    Links DP Plan PDF (Direct Items) and Pending SO Excel (Store Kit Items) 
-    into dispatch_verification with DIRECT_DISPATCH & STORE_KIT tags.
+    Links DP Plan PDF and Pending SO Excel into dispatch_verification with DIRECT_DISPATCH tags.
     """
     if not dp_pdf and not so_excel and not dp_number:
         raise HTTPException(status_code=400, detail="⚠️ Please select at least 1 DP Plan PDF or SO Excel file!")
 
     extracted_dp_number = (dp_number or "").strip()
     extracted_so_number = (so_number or "").strip()
-    
-    direct_items = []
-    store_kit_items = []
 
-    # 1. Process DP Plan PDF for DIRECT_DISPATCH Items (Pipes, Filters, Bundles)
+    direct_items = []
+
+    # 1. Process DP Plan PDF for Items
     if dp_pdf:
         pdf_bytes = await dp_pdf.read()
         try:
@@ -3138,27 +3053,17 @@ async def auto_connect_so_dp(
                 unit = itm.get("unit", "Mtr")
                 wt = float(itm.get("weight_per_pc", 0.0))
                 if name and qty > 0:
-                    item_type = classify_item_type(name)
-                    if item_type == "DIRECT_DISPATCH":
-                        direct_items.append({
-                            "item_name": name,
-                            "required_qty": qty,
-                            "unit": unit,
-                            "weight_per_pc": wt,
-                            "item_type": "DIRECT_DISPATCH"
-                        })
-                    else:
-                        store_kit_items.append({
-                            "item_name": name,
-                            "required_qty": qty,
-                            "unit": unit,
-                            "weight_per_pc": wt,
-                            "item_type": "STORE_KIT"
-                        })
+                    direct_items.append({
+                        "item_name": name,
+                        "required_qty": qty,
+                        "unit": unit,
+                        "weight_per_pc": wt,
+                        "item_type": "DIRECT_DISPATCH"
+                    })
         except Exception as e:
-            print(f"[WARNING] DP Plan PDF Parsing Error: {e}")
+            logging.warning(f"[WARNING] DP Plan PDF Parsing Error: {e}")
 
-    # 2. Process Pending SO Excel for STORE_KIT Items (Poly Fittings, Valves, Joiners)
+    # 2. Process Pending SO Excel for Items
     if so_excel:
         excel_bytes = await so_excel.read()
         try:
@@ -3178,7 +3083,7 @@ async def auto_connect_so_dp(
                 for idx, row in df.iterrows():
                     row_so = str(row[so_col]).strip() if so_col and pd.notna(row[so_col]) else ""
                     row_item = str(row[item_col]).strip() if pd.notna(row[item_col]) else ""
-                    
+
                     if extracted_so_number and row_so and (extracted_so_number.lower() not in row_so.lower() and row_so.lower() not in extracted_so_number.lower()):
                         continue
 
@@ -3196,26 +3101,15 @@ async def auto_connect_so_dp(
                         continue
 
                     unit_val = str(row[unit_col]).strip() if unit_col and pd.notna(row[unit_col]) else "Pcs"
-                    item_type = "STORE_KIT"
-                    if "pipe" in row_item.lower() or "hdpe" in row_item.lower():
-                        item_type = "DIRECT_DISPATCH"
-                        direct_items.append({
-                            "item_name": row_item,
-                            "required_qty": q_val,
-                            "unit": unit_val,
-                            "weight_per_pc": 0.0,
-                            "item_type": "DIRECT_DISPATCH"
-                        })
-                    else:
-                        store_kit_items.append({
-                            "item_name": row_item,
-                            "required_qty": q_val,
-                            "unit": unit_val,
-                            "weight_per_pc": 0.0,
-                            "item_type": "STORE_KIT"
-                        })
+                    direct_items.append({
+                        "item_name": row_item,
+                        "required_qty": q_val,
+                        "unit": unit_val,
+                        "weight_per_pc": 0.0,
+                        "item_type": "DIRECT_DISPATCH"
+                    })
         except Exception as e:
-            print(f"[WARNING] Pending SO Excel Parsing Error: {e}")
+            logging.warning(f"[WARNING] Pending SO Excel Parsing Error: {e}")
 
     if not extracted_dp_number:
         clean_ts = int(time.time())
@@ -3224,7 +3118,7 @@ async def auto_connect_so_dp(
     if not extracted_so_number:
         extracted_so_number = "N/A"
 
-    all_mapped_items = direct_items + store_kit_items
+    all_mapped_items = direct_items
 
     if not all_mapped_items:
         raise HTTPException(status_code=400, detail="⚠️ No items found in PDF or Excel! Please check the file format.")
@@ -3263,7 +3157,7 @@ async def auto_connect_so_dp(
                 VALUES (%s, %s, %s, %s, %s, 0.0)
             """, (extracted_dp_number, item["item_name"], item["required_qty"], item["unit"], item.get("weight_per_pc", 0.0)))
 
-        add_log(conn, "AUTO_CONNECT_SO_DP", f"DP {extracted_dp_number} and SO {extracted_so_number} linked: {len(direct_items)} Direct + {len(store_kit_items)} Store Kit items.")
+        add_log(conn, "AUTO_CONNECT_SO_DP", f"DP {extracted_dp_number} and SO {extracted_so_number} linked: {len(direct_items)} items.")
 
     # 4. Sync with SQLite inventory.db
     if os.path.exists("inventory.db"):
@@ -3277,7 +3171,7 @@ async def auto_connect_so_dp(
                     (dp_number, so_number, item_type, item_name, required_qty, scanned_qty, unit, status)
                     VALUES (?, ?, ?, ?, ?, 0.0, ?, 'PENDING')
                 """, (extracted_dp_number, extracted_so_number, item["item_type"], item["item_name"], item["required_qty"], item["unit"]))
-            
+
             sq_cursor.execute("SELECT dp_number FROM dp_plans WHERE dp_number = ?", (extracted_dp_number,))
             if sq_cursor.fetchone():
                 sq_cursor.execute("UPDATE dp_plans SET so_numbers = ?, total_items = ?, status = 'ACTIVE' WHERE dp_number = ?",
@@ -3296,15 +3190,13 @@ async def auto_connect_so_dp(
             sq_conn.commit()
             sq_conn.close()
         except Exception as e:
-            print(f"[WARNING] SQLite auto_connect_so_dp sync error: {e}")
+            logging.warning(f"[WARNING] SQLite auto_connect_so_dp sync error: {e}")
 
     return {
         "status": "Success",
         "message": f"✅ DP Plan '{extracted_dp_number}' and SO '{extracted_so_number}' connected successfully!",
         "dp_number": extracted_dp_number,
         "so_number": extracted_so_number,
-        "direct_dispatch_count": len(direct_items),
-        "store_kit_count": len(store_kit_items),
         "total_mapped_items": len(all_mapped_items),
         "items": all_mapped_items
     }
@@ -3320,7 +3212,7 @@ def process_excel_in_background(file_bytes: bytes, filename: str):
         df.columns = [str(c).strip() for c in df.columns]
     except Exception as e:
         # Since this is a background task, we log the error instead of returning an HTTPException
-        print(f"BACKGROUND_TASK_ERROR: Failed to read Excel file {filename}: {e}")
+        logging.debug(f"BACKGROUND_TASK_ERROR: Failed to read Excel file {filename}: {e}")
         return
 
     col_map = {
@@ -3334,7 +3226,7 @@ def process_excel_in_background(file_bytes: bytes, filename: str):
 
     if not all(col_map.values()):
         missing = [k for k, v in col_map.items() if v is None]
-        print(f"BACKGROUND_TASK_ERROR: Missing required columns in {filename}: {', '.join(missing)}")
+        logging.debug(f"BACKGROUND_TASK_ERROR: Missing required columns in {filename}: {', '.join(missing)}")
         return
 
     grouped = df.groupby([col_map['plan_no'], col_map['so_no']])
@@ -3347,7 +3239,7 @@ def process_excel_in_background(file_bytes: bytes, filename: str):
 
             plan_no = str(plan_no).strip()
             so_no = str(so_no).strip() if pd.notna(so_no) else 'N/A'
-            
+
             items = []
             for _, row in group.iterrows():
                 item_code = str(row[col_map['item_code']]).strip().upper()
@@ -3358,14 +3250,11 @@ def process_excel_in_background(file_bytes: bytes, filename: str):
                 if not item_name or pd.isna(planned_qty) or planned_qty <= 0:
                     continue
 
-                fitting_prefixes = ('PVF', 'NOZ', 'VLV', 'PFT', 'GI', 'FAC', 'HEA', 'MAP')
-                item_type = 'STORE_KIT' if item_code.startswith(fitting_prefixes) else 'DIRECT_DISPATCH'
-                
                 items.append({
                     "item_name": item_name,
                     "planned_qty": planned_qty,
                     "unit": unit,
-                    "item_type": item_type
+                    "item_type": "DIRECT_DISPATCH"
                 })
 
             if not items:
@@ -3387,7 +3276,7 @@ def process_excel_in_background(file_bytes: bytes, filename: str):
                     "INSERT INTO dispatch_plan_items (dispatch_plan_id, item_name, planned_qty, unit, item_type) VALUES (%s, %s, %s, %s, %s)",
                     (plan_id, item['item_name'], item['planned_qty'], item['unit'], item['item_type'])
                 )
-            
+
             processed_plans_count += 1
 
         add_log(conn, "EXCEL_PLAN_UPLOAD", f"Processed {processed_plans_count} dispatch plans from Excel file: {filename}")
@@ -3396,7 +3285,7 @@ def process_excel_in_background(file_bytes: bytes, filename: str):
     del df
     del grouped
     gc.collect()
-    print(f"BACKGROUND_TASK_SUCCESS: Successfully processed {filename}.")
+    logging.debug(f"BACKGROUND_TASK_SUCCESS: Successfully processed {filename}.")
 
 
 @app.post("/api/dispatch/upload-excel-plan")
@@ -3530,7 +3419,7 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
         df = pd.read_excel(io.BytesIO(file_bytes), header=header_row)
         df.columns = [str(c).strip().lower() for c in df.columns]
     except Exception as e:
-        print(f"BACKGROUND_TASK_ERROR: Failed to read loading entry Excel file {filename}: {e}")
+        logging.debug(f"BACKGROUND_TASK_ERROR: Failed to read loading entry Excel file {filename}: {e}")
         return {
             "inserted": 0,
             "updated": 0,
@@ -3548,7 +3437,7 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
                 "Please export it as a flat table with columns: "
                 "Disp. Plan No., SO No., Item, Code, Pend. Qty., Unit."
             )
-            print(f"BACKGROUND_TASK_ERROR: {error_msg}")
+            logging.debug(f"BACKGROUND_TASK_ERROR: {error_msg}")
             return {
                 "inserted": 0,
                 "updated": 0,
@@ -3571,14 +3460,14 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
         'item_name': next((c for c in df.columns if c == 'item' or 'item' in c and 'name' in c or 'product' in c and 'name' in c), None),
         'item_code': next((c for c in df.columns if c == 'code' or 'item' in c and 'code' in c or 'product' in c and 'code' in c or 'item code' in c or 'product code' in c), None),
         'pending_qty': next((c for c in df.columns if 'pend. qty' in c or 'pending qty' in c or 'pending' in c and 'qty' in c), None),
-        'unit': next((c for c in df.columns if 'unit' == c or c == 'uom' or 'unit' in c), None),
+        'unit': next((c for c in df.columns if c == 'unit' or c == 'uom' or 'unit' in c), None),
     }
 
     required_cols = ['disp_plan_no', 'so_no', 'item_name', 'item_code', 'pending_qty', 'unit']
     missing = [k for k in required_cols if col_map[k] is None]
     if missing:
         error_msg = f"Missing required columns in {filename}: {', '.join(missing)}. Detected columns: {df.columns.tolist()}. Column map: {col_map}"
-        print(f"BACKGROUND_TASK_ERROR: {error_msg}")
+        logging.debug(f"BACKGROUND_TASK_ERROR: {error_msg}")
         return {
             "inserted": 0,
             "updated": 0,
@@ -3603,7 +3492,7 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
 
                 if not all([disp_plan_no, so_no, item_code]) or pd.isna(pending_qty):
                     skipped_count += 1
-                    print(f"[LOADING_ENTRY] Skipped row {idx}: missing required values "
+                    logger.warning(f"[LOADING_ENTRY] Skipped row {idx}: missing required values "
                           f"disp_plan_no='{disp_plan_no}', so_no='{so_no}', item_code='{item_code}', pending_qty={pending_qty}")
                     continue
 
@@ -3653,12 +3542,12 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
 
             except Exception as e:
                 error_count += 1
-                print(f"[LOADING_ENTRY] Error processing row {idx}: {row.to_dict()}. Error: {e}")
+                logging.debug(f"[LOADING_ENTRY] Error processing row {idx}: {row.to_dict()}. Error: {e}")
 
         log_message = f"Processed '{filename}': {inserted_count} inserted, {updated_count} updated, {skipped_count} skipped, {error_count} errors."
         add_log(conn, "LOADING_ENTRY_UPLOAD", log_message)
 
-    print(f"BACKGROUND_TASK_SUCCESS: {log_message}")
+    logging.debug(f"BACKGROUND_TASK_SUCCESS: {log_message}")
     return {
         "inserted": inserted_count,
         "updated": updated_count,
@@ -3864,157 +3753,21 @@ async def create_dispatch_plan_from_loading_entry(req: CreatePlanFromLoadingEntr
 
     return {"status": "Success", "message": f"Dispatch Plan '{plan_no}' created successfully and is now available for scanning."}
 
-# 🎁 Store Kit QR Generation & Management APIs
-@app.get("/api/store-kit/so-list")
-def get_store_kit_so_list():
-    with get_db_ctx() as (conn, cursor):
-        cursor.execute("""
-            SELECT DISTINCT so_number, dp_number 
-            FROM dispatch_verification 
-            WHERE item_type = 'STORE_KIT' AND status != 'COMPLETED'
-        """)
-        so_list = cursor.fetchall()
-        
-        if not so_list:
-            cursor.execute("SELECT DISTINCT so_no as so_number, plan_no as dp_number FROM dispatch_plans WHERE status != 'COMPLETED'")
-            so_list = cursor.fetchall()
-
-    return {"status": "Success", "so_list": so_list}
-
-
-@app.get("/api/store-kit/so-items/{so_number}")
-def get_store_kit_so_items(so_number: str):
-    with get_db_ctx() as (conn, cursor):
-        cursor.execute("""
-            SELECT id, dp_number, so_number, item_name, required_qty, scanned_qty, unit, status 
-            FROM dispatch_verification 
-            WHERE so_number = %s AND item_type = 'STORE_KIT'
-        """, (so_number,))
-        items = cursor.fetchall()
-
-        if not items:
-            cursor.execute("""
-                SELECT dpi.id, dp.plan_no as dp_number, dp.so_no as so_number, dpi.item_name, dpi.planned_qty as required_qty, dpi.dispatched_qty as scanned_qty, dpi.unit, 'PENDING' as status
-                FROM dispatch_plan_items dpi
-                JOIN dispatch_plans dp ON dpi.dispatch_plan_id = dp.id
-                WHERE dp.so_no = %s
-            """, (so_number,))
-            items = cursor.fetchall()
-
-    return {"status": "Success", "so_number": so_number, "items": items}
-
-
-@app.post("/api/store-kit/generate")
-def generate_store_kit(req: StoreKitGenerateRequest):
-    so_num = req.so_number.strip()
-    if not so_num:
-        raise HTTPException(status_code=400, detail="⚠️ SO Number is required!")
-
-    clean_so = re.sub(r"[^\w\-]", "", so_num)
-    if clean_so.upper().startswith("SO-"):
-        clean_so = clean_so[3:]
-    kit_code = req.kit_code.strip() if req.kit_code else f"KIT-SO-{clean_so}-FITTINGS"
-
-    with get_db_ctx(commit=True) as (conn, cursor):
-        kit_items = req.items
-        if not kit_items:
-            cursor.execute("""
-                SELECT item_name, required_qty as quantity, unit 
-                FROM dispatch_verification 
-                WHERE so_number = %s AND item_type = 'STORE_KIT'
-            """, (so_num,))
-            kit_items = cursor.fetchall()
-
-        if not kit_items:
-            cursor.execute("""
-                SELECT dpi.item_name, dpi.planned_qty as quantity, dpi.unit 
-                FROM dispatch_plan_items dpi
-                JOIN dispatch_plans dp ON dpi.dispatch_plan_id = dp.id
-                WHERE dp.so_no = %s
-            """, (so_num,))
-            kit_items = cursor.fetchall()
-
-        if not kit_items:
-            raise HTTPException(status_code=404, detail=f"No fittings found for SO Number '{so_num}'!")
-
-        dp_num = req.dp_number or (kit_items[0].get('dp_number', '') if kit_items else '')
-
-        cursor.execute("SELECT kit_code FROM store_kits WHERE kit_code = %s", (kit_code,))
-        existing = cursor.fetchone()
-
-        if existing:
-            cursor.execute("DELETE FROM store_kit_items WHERE kit_code = %s", (kit_code,))
-            cursor.execute("UPDATE store_kits SET so_number = %s, dp_number = %s, total_items_count = %s, status = 'CREATED' WHERE kit_code = %s",
-                           (so_num, dp_num, len(kit_items), kit_code))
-        else:
-            cursor.execute("""
-                INSERT INTO store_kits (kit_code, so_number, dp_number, total_items_count, status)
-                VALUES (%s, %s, %s, %s, 'CREATED')
-            """, (kit_code, so_num, dp_num, len(kit_items)))
-
-        for itm in kit_items:
-            q_val = float(itm.get('quantity') or itm.get('required_qty') or 1.0)
-            u_val = itm.get('unit', 'Pcs')
-            cursor.execute("""
-                INSERT INTO store_kit_items (kit_code, item_name, quantity, unit)
-                VALUES (%s, %s, %s, %s)
-            """, (kit_code, itm['item_name'], q_val, u_val))
-
-        add_log(conn, "STORE_KIT_GENERATE", f"Store Kit QR jenerate thayo: {kit_code} for SO {so_num} with {len(kit_items)} fittings.")
-
-    # Sync with SQLite inventory.db
-    if os.path.exists("inventory.db"):
-        try:
-            sq_conn = sqlite3.connect("inventory.db")
-            sq_cursor = sq_conn.cursor()
-            sq_cursor.execute("SELECT kit_code FROM store_kits WHERE kit_code = ?", (kit_code,))
-            if sq_cursor.fetchone():
-                sq_cursor.execute("DELETE FROM store_kit_items WHERE kit_code = ?", (kit_code,))
-                sq_cursor.execute("UPDATE store_kits SET so_number = ?, dp_number = ?, total_items_count = ?, status = 'CREATED' WHERE kit_code = ?",
-                                   (so_num, dp_num, len(kit_items), kit_code))
-            else:
-                sq_cursor.execute("INSERT INTO store_kits (kit_code, so_number, dp_number, total_items_count, status) VALUES (?, ?, ?, ?, 'CREATED')",
-                                   (kit_code, so_num, dp_num, len(kit_items)))
-
-            for itm in kit_items:
-                q_val = float(itm.get('quantity') or itm.get('required_qty') or 1.0)
-                u_val = itm.get('unit', 'Pcs')
-                sq_cursor.execute("INSERT INTO store_kit_items (kit_code, item_name, quantity, unit) VALUES (?, ?, ?, ?)",
-                                   (kit_code, itm['item_name'], q_val, u_val))
-
-            sq_conn.commit()
-            sq_conn.close()
-        except Exception as e:
-            print(f"[WARNING] SQLite Store Kit Sync Error: {e}")
-
-    return {
-        "status": "Success",
-        "message": f"✅ Store Kit QR '{kit_code}' generated successfully!",
-        "kit_code": kit_code,
-        "so_number": so_num,
-        "dp_number": dp_num,
-        "total_items_count": len(kit_items),
-        "items": kit_items
-    }
-
-
-
-
 @app.post("/api/dispatch-plan/upload")
 async def upload_dispatch_plan(file: UploadFile = File(...)):
     if not file.filename.lower().endswith((".pdf", ".xlsx", ".xls")):
         raise HTTPException(status_code=400, detail="⚠️ Only PDF or Excel (.xlsx, .xls) files can be uploaded!")
-        
+
     file_bytes = await file.read()
     parsed_data = parse_dispatch_plan_bytes(file_bytes, file.filename)
-    
+
     if not parsed_data["items"]:
         raise HTTPException(status_code=400, detail="⚠️ No item records found in file! Please check the dispatch plan format.")
-        
+
     with get_db_ctx(commit=True) as (conn, cursor):
         cursor.execute("SELECT id FROM dispatch_plans WHERE plan_no = %s", (parsed_data["plan_no"],))
         existing = cursor.fetchone()
-        
+
         if existing:
             plan_id = existing["id"]
             cursor.execute("UPDATE dispatch_plans SET so_no = %s, status = 'ACTIVE' WHERE id = %s", (parsed_data["so_no"], plan_id))
@@ -4025,13 +3778,13 @@ async def upload_dispatch_plan(file: UploadFile = File(...)):
                 (parsed_data["plan_no"], parsed_data["so_no"])
             )
             plan_id = cursor.lastrowid
-            
+
         for item in parsed_data["items"]:
             cursor.execute("""
                 INSERT INTO dispatch_plan_items (dispatch_plan_id, item_name, planned_qty, dispatched_qty, unit, weight_per_pc)
                 VALUES (%s, %s, %s, 0.0, %s, %s)
             """, (plan_id, item["item_name"], item["planned_qty"], item["unit"], item["weight_per_pc"]))
-            
+
         add_log(conn, "DISPATCH_PLAN", f"New Dispatch Plan uploaded: {parsed_data['plan_no']} (SO: {parsed_data['so_no']}) | Items: {len(parsed_data['items'])}")
 
     return {
@@ -4049,7 +3802,7 @@ def list_dispatch_plans():
     with get_db_ctx() as (conn, cursor):
         cursor.execute("SELECT * FROM dispatch_plans ORDER BY created_at DESC LIMIT 50")
         plans = cursor.fetchall()
-        
+
         for plan in plans:
             cursor.execute("""
                 SELECT id, item_name, planned_qty, dispatched_qty, unit, weight_per_pc 
@@ -4057,15 +3810,15 @@ def list_dispatch_plans():
                 WHERE dispatch_plan_id = %s
             """, (plan["id"],))
             items = cursor.fetchall()
-            
+
             for item in items:
                 item['locations'] = 'STORE'
-            
+
             plan["items"] = items
-            
+
             total_planned = sum(float(i["planned_qty"]) for i in plan["items"])
             total_dispatched = sum(float(i["dispatched_qty"]) for i in plan["items"])
-            
+
             # Query dispatch_verification for Direct vs Store Kit breakdown
             cursor.execute("""
                 SELECT item_type, required_qty, scanned_qty, status 
@@ -4076,22 +3829,14 @@ def list_dispatch_plans():
 
             direct_tot = sum(float(v["required_qty"]) for v in ver_items if v["item_type"] == "DIRECT_DISPATCH")
             direct_disc = sum(float(v["scanned_qty"]) for v in ver_items if v["item_type"] == "DIRECT_DISPATCH")
-            
-            store_tot = sum(float(v["required_qty"]) for v in ver_items if v["item_type"] == "STORE_KIT")
-            store_disc = sum(float(v["scanned_qty"]) for v in ver_items if v["item_type"] == "STORE_KIT")
 
             if not ver_items:
                 for itm in plan["items"]:
-                    if classify_item_type(itm["item_name"]) == "DIRECT_DISPATCH":
-                        direct_tot += float(itm["planned_qty"])
-                        direct_disc += float(itm["dispatched_qty"])
-                    else:
-                        store_tot += float(itm["planned_qty"])
-                        store_disc += float(itm["dispatched_qty"])
+                    direct_tot += float(itm["planned_qty"])
+                    direct_disc += float(itm["dispatched_qty"])
 
             plan["direct_progress_pct"] = 100.0 if direct_tot == 0 else round(min(100.0, direct_disc / direct_tot * 100), 1)
-            plan["store_kit_progress_pct"] = 100.0 if store_tot == 0 else round(min(100.0, store_disc / store_tot * 100), 1)
-            plan["challan_unlocked"] = (plan["direct_progress_pct"] >= 100.0 and plan["store_kit_progress_pct"] >= 100.0)
+            plan["challan_unlocked"] = plan["direct_progress_pct"] >= 100.0
 
             is_completed = (total_planned > 0 and total_dispatched >= total_planned)
             if is_completed and plan["status"] != "COMPLETED":
@@ -4099,7 +3844,7 @@ def list_dispatch_plans():
                 plan["status"] = "COMPLETED"
 
             plan["progress_pct"] = 100.0 if is_completed else (round((total_dispatched / total_planned * 100), 1) if total_planned > 0 else 0)
-            
+
     return {"status": "Success", "plans": plans}
 
 @app.get("/api/dispatch-plan/{plan_id}")
@@ -4109,10 +3854,10 @@ def get_dispatch_plan_details(plan_id: int):
         plan = cursor.fetchone()
         if not plan:
             raise HTTPException(status_code=404, detail="Dispatch Plan not found!")
-            
+
         cursor.execute("SELECT * FROM dispatch_plan_items WHERE dispatch_plan_id = %s", (plan_id,))
         plan["items"] = cursor.fetchall()
-        
+
     return {"status": "Success", "plan": plan}
 
 @app.delete("/api/dispatch-plan/{plan_id}")
@@ -4122,10 +3867,10 @@ def delete_dispatch_plan(plan_id: int):
         plan = cursor.fetchone()
         if not plan:
             raise HTTPException(status_code=404, detail="Dispatch Plan not found!")
-            
+
         cursor.execute("DELETE FROM dispatch_plans WHERE id = %s", (plan_id,))
         add_log(conn, "DISPATCH_PLAN", f"Dispatch Plan deleted: {plan['plan_no']}")
-        
+
     return {"status": "Success", "message": f"🗑️ Dispatch Plan '{plan['plan_no']}' deleted successfully."}
 
 @app.put("/api/dispatch-plan/{plan_id}")
@@ -4177,12 +3922,12 @@ def add_item_to_dispatch_plan(plan_id: int, item_data: DispatchPlanItemAdd):
         cursor.execute("SELECT id FROM dispatch_plans WHERE id = %s", (plan_id,))
         if not cursor.fetchone():
             raise HTTPException(status_code=404, detail="Dispatch Plan not found.")
-        
+
         cursor.execute("""
             INSERT INTO dispatch_plan_items (dispatch_plan_id, item_name, planned_qty, unit, weight_per_pc)
             VALUES (%s, %s, %s, %s, 0.0)
         """, (plan_id, item_data.item_name, item_data.planned_qty, item_data.unit))
-        
+
         item_id = cursor.lastrowid
         add_log(conn, "DISPATCH_ITEM_ADD", f"New item '{item_data.item_name}' added to Plan ID #{plan_id}")
 
@@ -4211,7 +3956,7 @@ def list_boms():
                 WHERE bc.bom_id = %s
             """, (bom['bom_id'],))
             bom['components'] = cursor.fetchall()
-    
+
     return {"status": "Success", "boms": boms}
 
 @app.post("/api/boms/save")
@@ -4238,7 +3983,7 @@ def save_bom(req: BOMSaveRequest):
                 "INSERT INTO bom_components (bom_id, component_item_id, quantity) VALUES (%s, %s, %s)",
                 (bom_id, comp.component_item_id, comp.quantity)
             )
-        
+
         add_log(conn, "BOM_SAVE", f"BOM for Item ID #{req.finished_good_item_id} was saved with {len(req.components)} components.")
 
     return {"status": "Success", "message": "BOM saved successfully."}
@@ -4250,10 +3995,10 @@ def delete_bom(bom_id: int):
         bom = cursor.fetchone()
         if not bom:
             raise HTTPException(status_code=404, detail="BOM not found.")
-        
+
         cursor.execute("DELETE FROM boms WHERE id = %s", (bom_id,))
         add_log(conn, "BOM_DELETE", f"BOM for Item ID #{bom['finished_good_item_id']} was deleted.")
-    
+
     return {"status": "Success", "message": "BOM deleted successfully."}
 
 
@@ -4353,22 +4098,14 @@ def get_delivery_challan(plan_id: str):
 
             direct_tot = sum(float(v["required_qty"]) for v in ver_items if v["item_type"] == "DIRECT_DISPATCH")
             direct_disc = sum(float(v["scanned_qty"]) for v in ver_items if v["item_type"] == "DIRECT_DISPATCH")
-            
-            store_tot = sum(float(v["required_qty"]) for v in ver_items if v["item_type"] == "STORE_KIT")
-            store_disc = sum(float(v["scanned_qty"]) for v in ver_items if v["item_type"] == "STORE_KIT")
 
             if not ver_items:
                 for itm in processed_items:
-                    if classify_item_type(itm["item_name"]) == "DIRECT_DISPATCH":
-                        direct_tot += float(itm["planned_qty"])
-                        direct_disc += float(itm["dispatched_qty"])
-                    else:
-                        store_tot += float(itm["planned_qty"])
-                        store_disc += float(itm["dispatched_qty"])
+                    direct_tot += float(itm["planned_qty"])
+                    direct_disc += float(itm["dispatched_qty"])
 
             direct_progress_pct = 100.0 if direct_tot == 0 else round(min(100.0, direct_disc / direct_tot * 100), 1)
-            store_kit_progress_pct = 100.0 if store_tot == 0 else round(min(100.0, store_disc / store_tot * 100), 1)
-            challan_unlocked = (direct_progress_pct >= 100.0 and store_kit_progress_pct >= 100.0)
+            challan_unlocked = direct_progress_pct >= 100.0
 
     return {
         "status": "Success",
@@ -4385,7 +4122,6 @@ def get_delivery_challan(plan_id: str):
         "total_dispatched_qty": total_dispatched_qty,
         "grand_total_weight_kg": round(grand_total_weight, 2),
         "direct_progress_pct": direct_progress_pct,
-        "store_kit_progress_pct": store_kit_progress_pct,
         "challan_unlocked": challan_unlocked
     }
 
@@ -4435,7 +4171,7 @@ def update_vehicle_info(req: VehicleInfoUpdateRequest):
             sq_conn.commit()
             sq_conn.close()
         except Exception as e:
-            print(f"[WARNING] SQLite vehicle sync error: {e}")
+            logging.warning(f"[WARNING] SQLite vehicle sync error: {e}")
 
     return {"status": "Success", "message": "✅ Vehicle and transporter details saved successfully!"}
 
@@ -4454,7 +4190,7 @@ def health_check():
             if cursor.fetchone():
                 db_status = "connected"
     except Exception as e:
-        print(f"Health Check DB Error: {e}")
+        logging.debug(f"Health Check DB Error: {e}")
         db_status = "error"
 
     return {"server_status": "connected", "db_status": db_status}

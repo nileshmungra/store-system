@@ -194,23 +194,6 @@
                                 Dispatched</small>
                         </div>
                     </div>
-
-                    <!-- Store Kit Fulfillment Meter -->
-                    <div class="col-md-4">
-                        <div class="p-3 rounded-4 bg-info bg-opacity-10 border border-info">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <small class="text-muted fw-bold">🎁 Store Kit Fulfillment Rate</small>
-                                <span class="badge bg-info text-dark fw-bold" id="e2e-kit-pct">0%</span>
-                            </div>
-                            <div class="progress my-2" style="height: 10px;">
-                                <div id="e2e-kit-bar"
-                                    class="progress-bar bg-info progress-bar-striped progress-bar-animated"
-                                    role="progressbar" style="width: 0%;"></div>
-                            </div>
-                            <small class="text-muted d-block text-end extra-small" id="e2e-kit-text">0 / 0 Store Kits
-                                Completed</small>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- 2. Non-DP Outward (Testing, Sample, Damage) Graph & History -->
@@ -391,6 +374,13 @@
     <script src="/static/js/report.js"></script>
     <script src="/static/js/english-ui.js"></script>
     <script src="/static/js/page-loader.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                window.PageLoader.hide();
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -1,12 +1,20 @@
+import logging
 import os
-import sqlite3
 import socket
 import subprocess
 import time
-import mysql.connector
-from mysql.connector import Error, pooling
 from contextlib import contextmanager
 
+import mysql.connector
+import mysql.connector.pooling
+from mysql.connector import Error
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("database")
 
 # MySQL connection configuration
 MYSQL_CONFIG = {
@@ -32,8 +40,8 @@ def ensure_mysql_running(host='127.0.0.1', port=3307):
     except Exception:
         pass
 
-    print(f"[INFO] MySQL Server on {host}:{port} is NOT running. Attempting auto-start...")
-    
+    logger.info(f"[INFO] MySQL Server on {host}:{port} is NOT running. Attempting auto-start...")
+
     # Attempt 1: net start mysql
     try:
         subprocess.run(["net", "start", "mysql"], capture_output=True, text=True, timeout=3)
@@ -47,7 +55,7 @@ def ensure_mysql_running(host='127.0.0.1', port=3307):
         res = s.connect_ex((host, port))
         s.close()
         if res == 0:
-            print("[SUCCESS] MySQL started via Windows Service!")
+            logger.info("[SUCCESS] MySQL started via Windows Service!")
             return True
     except Exception:
         pass
@@ -63,7 +71,7 @@ def ensure_mysql_running(host='127.0.0.1', port=3307):
     for path in possible_paths:
         if os.path.exists(path):
             try:
-                print(f"[INFO] Launching MySQL from {path}...")
+                logger.info(f"[INFO] Launching MySQL from {path}...")
                 subprocess.Popen([path], creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
                 for _ in range(12):
                     time.sleep(0.5)
@@ -72,13 +80,13 @@ def ensure_mysql_running(host='127.0.0.1', port=3307):
                         s.settimeout(1)
                         if s.connect_ex((host, port)) == 0:
                             s.close()
-                            print("[SUCCESS] MySQL started successfully!")
+                            logger.info("[SUCCESS] MySQL started successfully!")
                             return True
                         s.close()
                     except Exception:
                         pass
             except Exception as e:
-                print(f"[WARNING] Failed to start from {path}: {e}")
+                logger.warning(f"[WARNING] Failed to start from {path}: {e}")
 
     return False
 
@@ -94,22 +102,22 @@ def get_db():
         ensure_mysql_running(host=db_host, port=db_port)
     if db_pool is None:
         try:
-            print("[INFO] Initializing MySQL Connection Pool...")
+            logger.info("[INFO] Initializing MySQL Connection Pool...")
             db_pool = mysql.connector.pooling.MySQLConnectionPool(
                 pool_name="inventory_pool",
                 pool_size=20,  # Increased pool size for fast concurrent requests
                 pool_reset_session=True,
                 **MYSQL_CONFIG
             )
-            print("[SUCCESS] MySQL Connection Pool initialized.")
+            logger.info("[SUCCESS] MySQL Connection Pool initialized.")
         except Error as e:
-            print(f"[ERROR] Error creating connection pool: {e}")
+            logger.error(f"[ERROR] Error creating connection pool: {e}")
             raise
     try:
         # Get a connection from the initialized pool
         return db_pool.get_connection()
     except Error as e:
-        print(f"Error getting connection from pool: {e}")
+        logger.debug(f"Error getting connection from pool: {e}")
         raise
 
 @contextmanager
@@ -156,13 +164,13 @@ def init_db():
         cursor_no_db.execute(f"CREATE DATABASE IF NOT EXISTS `{db_name}`")
         conn_no_db.close()
     except Error as e:
-        print(f"Error creating database: {e}")
+        logger.debug(f"Error creating database: {e}")
         raise
 
     # Use a connection from the pool to set up tables
     conn = get_db()
     cursor = conn.cursor()
-    
+
     # 1. Item Table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS items (
@@ -186,7 +194,7 @@ def init_db():
         cursor.execute("ALTER TABLE items ADD COLUMN is_outsource TINYINT DEFAULT 0")
     except Exception:
         pass
-    
+
     extra_item_cols = [
         "min_stock DECIMAL(10, 2) DEFAULT 0",
         "max_stock DECIMAL(10, 2) DEFAULT 0",
@@ -207,7 +215,7 @@ def init_db():
             cursor.execute(f"ALTER TABLE items ADD COLUMN {col_def}")
         except Exception:
             pass
-    
+
     # 0. Inward Batches Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS inward_batches (
@@ -239,7 +247,7 @@ def init_db():
         cursor.execute("ALTER TABLE boxes ADD COLUMN dp_number VARCHAR(255) DEFAULT NULL")
     except Exception:
         pass
-    
+
     # 2. Outward Logs Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS outward_logs (
@@ -272,7 +280,7 @@ def init_db():
             status VARCHAR(50) DEFAULT 'ACTIVE'
         );
     ''')
-    
+
     # Seed default machines if empty
     cursor.execute("SELECT COUNT(*) FROM machines")
     if cursor.fetchone()[0] == 0:
@@ -281,7 +289,7 @@ def init_db():
             ("Extruder Machine 02",),
             ("Extruder Machine 03",),
         ])
-    
+
     # Production_log
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS production_logs (
@@ -431,31 +439,6 @@ def init_db():
         );
     ''')
 
-    # Store Kits Master & Items Tables
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS store_kits (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            kit_code VARCHAR(255) UNIQUE NOT NULL,
-            so_number VARCHAR(100) NOT NULL,
-            dp_number VARCHAR(100),
-            total_items_count INT DEFAULT 0,
-            status VARCHAR(50) DEFAULT 'CREATED',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    ''')
-
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS store_kit_items (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            kit_code VARCHAR(255) NOT NULL,
-            item_name VARCHAR(255) NOT NULL,
-            quantity DECIMAL(10,2) NOT NULL,
-            unit VARCHAR(50) DEFAULT 'Pcs',
-            FOREIGN KEY (kit_code) REFERENCES store_kits(kit_code) ON DELETE CASCADE
-        );
-    ''')
-
-
     # 🚀 HIGH-PERFORMANCE INDEXING (<10ms query execution)
     indexes = [
         "CREATE INDEX IF NOT EXISTS idx_boxes_item ON boxes(item_name);",
@@ -580,26 +563,6 @@ def init_db():
                 );
             ''')
             sq_cursor.execute('''
-                CREATE TABLE IF NOT EXISTS store_kits (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    kit_code TEXT UNIQUE NOT NULL,
-                    so_number TEXT NOT NULL,
-                    dp_number TEXT,
-                    total_items_count INTEGER DEFAULT 0,
-                    status TEXT DEFAULT 'CREATED',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-            ''')
-            sq_cursor.execute('''
-                CREATE TABLE IF NOT EXISTS store_kit_items (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    kit_code TEXT NOT NULL,
-                    item_name TEXT NOT NULL,
-                    quantity REAL NOT NULL,
-                    unit TEXT DEFAULT 'Pcs'
-                );
-            ''')
-            sq_cursor.execute('''
                 CREATE TABLE IF NOT EXISTS qc_approvals (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     item_name TEXT NOT NULL,
@@ -618,11 +581,11 @@ def init_db():
             sq_conn.commit()
             sq_conn.close()
         except Exception as e:
-            print(f"[WARNING] SQLite init warning: {e}")
+            logger.warning(f"[WARNING] SQLite init warning: {e}")
 
 if __name__ == "__main__":
     try:
         init_db()
-        print("[SUCCESS] MySQL & SQLite Databases Initialized with Complete High-Performance Indexes!")
+        logger.info("[SUCCESS] MySQL & SQLite Databases Initialized with Complete High-Performance Indexes!")
     except Error as e:
-        print(f"[ERROR] Database initialization failed: {e}")
+        logger.error(f"[ERROR] Database initialization failed: {e}")

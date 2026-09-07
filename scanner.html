@@ -442,8 +442,12 @@
                             <span class="text-secondary small">Issued To:</span>
                             <strong id="modalIssuedTo" class="text-primary d-block"></strong>
                         </div>
+
+                        <!-- 📊 Dynamic Stock / DP Information Container -->
+                        <div id="modalStockInfoContainer" class="p-2 rounded mt-2 mb-2 border shadow-sm"></div>
+
                         <div class="small text-secondary mt-2 border-top pt-2">
-                            Available Balance in Box: <span id="modalMaxQty" class="badge bg-success"></span>
+                            Available Balance in this Box: <span id="modalMaxQty" class="badge bg-success"></span>
                         </div>
 
                         <!-- Quantity Selection Input & Presets -->
@@ -479,6 +483,7 @@
     </div>
 
     <!-- Client-Side Functionality & Safe Camera Scanner Script -->
+    <script src="/static/js/page-loader.js"></script>
     <script>
         const API_URL = window.location.origin;
         let pendingBoxId = "";
@@ -570,11 +575,25 @@
         async function handleDpSelection() {
             const planId = document.getElementById('dispatchPlanSelect').value;
             const progressContainer = document.getElementById('dpProgressContainer');
+            const readerWrapper = document.getElementById('reader-wrapper');
+
+            // 🎯 Reset completed state when switching plans
+            dpCompleted = false;
+            scannerPaused = false;
+            scannerPauseReason = "";
+
+            // Restore the camera viewfinder if it was hidden
+            if (readerWrapper) readerWrapper.style.display = 'block';
+
+            // Clear the completed banner
+            const resultDiv = document.getElementById('result');
+            if (resultDiv) {
+                resultDiv.className = "mb-3 text-center fw-bold fs-6";
+                resultDiv.innerHTML = "";
+            }
 
             if (planId) {
                 currentDpPlanId = planId;
-                scannerPaused = false;
-                scannerPauseReason = "";
                 progressContainer.style.display = 'block';
                 await loadAndDisplayDpProgress(planId);
             } else {
@@ -589,7 +608,9 @@
 
         async function loadAndDisplayDpProgress(planId) {
             const container = document.getElementById('dpProgressContainer');
-            container.innerHTML = `<div class="text-center py-3 text-secondary"><span class="spinner-border spinner-border-sm text-primary"></span> Loading DP Progress...</div>`;
+            if (!dpItemsCache || dpItemsCache.length === 0) {
+                container.innerHTML = `<div class="text-center py-3 text-secondary"><span class="spinner-border spinner-border-sm text-primary"></span> Loading DP Progress...</div>`;
+            }
 
             try {
                 const res = await fetch(`${API_URL}/api/dispatch-plan/${planId}?t=${Date.now()}`);
@@ -602,7 +623,7 @@
                 currentDpPlanNo = plan.plan_no;
 
                 // 🎯 Build DP Items Cache for Targeted Scanning
-                dpItemsCache = plan.items.map(item => ({
+                dpItemsCache = (plan.items || []).map(item => ({
                     id: item.id,
                     item_name: item.item_name,
                     planned_qty: parseFloat(item.planned_qty) || 0,
@@ -696,18 +717,15 @@
             `;
         }
 
-        // 🎯 Show DP Completed block and freeze scanner
+        // 🎯 Show DP Completed block with Packing List button
         function showDpCompletedBlock(planNo) {
+            dpCompleted = true;
             scannerPaused = true;
+            isScanning = false;
             scannerPauseReason = `✅ Dispatch Plan ${planNo} is fully completed!`;
 
             const readerWrapper = document.getElementById('reader-wrapper');
             if (readerWrapper) readerWrapper.style.display = 'none';
-
-            // Stop the live camera feed
-            if (html5QrcodeScanner) {
-                try { html5QrcodeScanner.pause(); } catch (e) {}
-            }
 
             // Show completed banner in result area
             const resultDiv = document.getElementById('result');
@@ -718,11 +736,14 @@
                     <div style="font-size:3rem;">✅</div>
                     <div class="fw-extrabold fs-5 text-success mt-2">DP COMPLETED!</div>
                     <div class="text-dark fw-bold mt-1">${planNo}</div>
-                    <div class="text-muted small mt-2">All items have been fully dispatched.<br>Scanner is blocked for this plan.</div>
+                    <div class="text-muted small mt-2">All items have been fully dispatched.</div>
                     <div class="mt-3">
                         <button class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('dispatchPlanSelect').value=''; handleDpSelection();">
                             <i class="bi bi-arrow-left-circle me-1"></i> Select Different Plan
                         </button>
+                        <a href="/challan-page?plan_id=${currentDpPlanId}" class="btn btn-info btn-sm ms-2">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> LOADING / PACKING LIST
+                        </a>
                     </div>
                 `;
             }
@@ -737,9 +758,25 @@
             const readerWrapper = document.getElementById('reader-wrapper');
             if (readerWrapper) readerWrapper.style.display = 'block';
 
-            if (html5QrcodeScanner) {
-                try { html5QrcodeScanner.resume(); } catch (e) {}
+            const resultDiv = document.getElementById('result');
+            if (resultDiv && resultDiv.style.background) {
+                resultDiv.className = "mb-3 text-center fw-bold fs-6";
+                resultDiv.style.background = "";
+                resultDiv.innerText = "";
             }
+        }
+
+        // 🎯 Resume scanning after DP completed - reset state and allow re-scan
+        function resumeScannerAfterDpComplete() {
+            dpCompleted = false;
+            scannerPaused = false;
+            scannerPauseReason = "";
+            isScanning = false;
+            dpItemsCache = [];
+            dpItemsStatus = {};
+
+            const readerWrapper = document.getElementById('reader-wrapper');
+            if (readerWrapper) readerWrapper.style.display = 'block';
 
             const resultDiv = document.getElementById('result');
             if (resultDiv) {
@@ -967,10 +1004,10 @@
             if (scannedBoxesHistory.has(boxId)) {
                 const lastScannedTime = scannedBoxesHistory.get(boxId);
                 const now = Date.now();
-                if ((now - lastScannedTime) < 300000) {
+                if ((now - lastScannedTime) < 15000) {
                     return {
                         valid: false,
-                        error: `⚠️ Box '${boxId}' was already scanned in this session! Duplicate scan prevented.`
+                        error: `⚠️ Box '${boxId}' was already scanned! Duplicate scan prevented.`
                     };
                 }
             }
@@ -984,24 +1021,27 @@
             scannerPauseReason = errorMessage;
             isScanning = false;
 
-            if (html5QrcodeScanner) {
-                try { html5QrcodeScanner.pause(); } catch (e) {}
-            }
-
             if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
             playErrorBeepSound();
 
             const resultDiv = document.getElementById('result');
             resultDiv.className = "mb-3 text-center p-3 bg-danger bg-opacity-10 rounded border border-danger shadow";
             resultDiv.innerHTML = `
-                <div class="text-danger fw-bold fs-6 mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>SCANNER PAUSED</div>
+                <div class="text-danger fw-bold fs-6 mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>SCAN ERROR</div>
                 <div class="text-dark mb-3">${errorMessage}</div>
                 <button type="button" class="btn btn-danger fw-bold px-4 py-2" onclick="resumeScanner()">
-                    <i class="bi bi-arrow-clockwise me-1"></i> Resume Scanner
+                    <i class="bi bi-arrow-clockwise me-1"></i> Scan Next Item
                 </button>
             `;
 
             if (window.showToast) window.showToast(errorMessage, "error");
+
+            // Auto-recover after 3 seconds so camera remains ready
+            setTimeout(() => {
+                if (scannerPaused && !dpCompleted) {
+                    resumeScanner();
+                }
+            }, 3000);
         }
 
         function resumeScanner() {
@@ -1010,11 +1050,88 @@
             isScanning = false;
 
             const resultDiv = document.getElementById('result');
-            resultDiv.innerText = "";
-            resultDiv.className = "mb-3 text-center fw-bold fs-6";
+            if (resultDiv) {
+                resultDiv.innerText = "";
+                resultDiv.className = "mb-3 text-center fw-bold fs-6";
+            }
+        }
 
-            if (html5QrcodeScanner) {
-                try { html5QrcodeScanner.resume(); } catch (e) {}
+        // 🎯 AUTO-ACCEPT: In DP mode, when an item matches, automatically issue
+        // the full remaining quantity without showing the modal. If the item does
+        // NOT belong to the DP, a warning is shown and the scanner pauses.
+        async function autoAcceptDpOutward(boxId, boxData, matchedItem, qtyIssued, issuedTo, dispatchPlanId, resultDiv) {
+            isScanning = true;
+
+            const selectedOption = document.getElementById('dispatchPlanSelect').options[
+                document.getElementById('dispatchPlanSelect').selectedIndex
+            ];
+            const finalIssuedTo = `DP: ${selectedOption ? selectedOption.text : ''}`;
+
+            try {
+                const response = await fetch(`${API_URL}/api/outward`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Bypass-Tunnel-Reminder': 'true'
+                    },
+                    body: JSON.stringify({
+                        box_id: boxId,
+                        qty_issued: qtyIssued,
+                        issued_to: finalIssuedTo,
+                        scanned_by: "Store Keeper",
+                        dispatch_plan_id: dispatchPlanId
+                    })
+                });
+
+                let data = null;
+                try { data = await response.json(); } catch (e) { data = {}; }
+
+                if (response.ok) {
+                    scannedBoxesHistory.set(boxId, Date.now());
+                    updateDpItemStatus(matchedItem.item_name, qtyIssued);
+
+                    const remaining = Math.max(0, matchedItem.remaining - qtyIssued);
+                    const isItemDone = remaining <= 0;
+
+                    if (window.showToast) window.showToast(
+                        `✅ ${matchedItem.item_name}: ${qtyIssued} issued (DP remaining: ${remaining})`,
+                        "success"
+                    );
+
+                    resultDiv.className = "mb-3 text-center p-2 bg-light rounded border border-success shadow";
+                    resultDiv.innerHTML = `
+                        <div class="text-success fw-bold small">
+                            ✅ ${matchedItem.item_name}<br>
+                            <span class="badge bg-success">${qtyIssued} ${matchedItem.unit || 'Pcs'} issued</span>
+                            ${isItemDone ? '<span class="badge bg-warning text-dark ms-1">ITEM DONE</span>' : ''}
+                        </div>
+                    `;
+
+                    // 1. Immediately reload fresh DP progress & cache
+                    await loadAndDisplayDpProgress(dispatchPlanId);
+                    checkDpCompletionAndRefresh(dispatchPlanId);
+
+                    // 2. If DP is completed, loadAndDisplayDpProgress already switched UI
+                    if (dpCompleted) {
+                        isScanning = false;
+                        return;
+                    }
+
+                    // 3. Auto-ready for next box after 1.2s cooldown
+                    setTimeout(() => {
+                        if (!dpCompleted && !scannerPaused) {
+                            resultDiv.innerHTML = "";
+                            resultDiv.className = "mb-3 text-center fw-bold fs-6";
+                            isScanning = false;
+                        }
+                    }, 1200);
+                } else {
+                    const detail = (data && (data.detail || data.message)) || `Server error (status ${response.status})`;
+                    pauseScannerWithError(`❌ ${detail}`);
+                }
+            } catch (error) {
+                console.error("Auto-accept outward failed:", error);
+                pauseScannerWithError(`❌ Unable to connect to server: ${error.message || 'Unknown error'}`);
             }
         }
 
@@ -1048,9 +1165,6 @@
             if (navigator.vibrate) navigator.vibrate(100);
             playBeepSound();
 
-            if (html5QrcodeScanner) {
-                try { html5QrcodeScanner.pause(); } catch (e) {}
-            }
             resultDiv.className = "mb-3 text-center fw-bold text-primary p-2 bg-light rounded border border-primary shadow-sm";
             resultDiv.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Verifying box QR code...`;
 
@@ -1082,11 +1196,10 @@
                 }
 
                 if (!checkRes.ok) {
-                    isScanning = false;
                     const detail = (boxData && (boxData.detail || boxData.message)) ? (boxData.detail || boxData.message) : (responseText || `Server error (status ${checkRes.status})`);
                     console.error("Check-box failed:", checkRes.status, boxData, responseText);
 
-                    // 🎯 If DP-related error, pause scanner
+                    // 🎯 If DP-related error, pause scanner with auto-recover
                     if (dispatchPlanId && (detail.includes("not in the selected Dispatch Plan") || detail.includes("Overdispatch"))) {
                         pauseScannerWithError(detail);
                         return;
@@ -1099,33 +1212,38 @@
                     setTimeout(() => {
                         resultDiv.innerText = "";
                         resultDiv.className = "mb-3 text-center fw-bold fs-6";
-                        if (!scannerPaused && html5QrcodeScanner) {
-                            try { html5QrcodeScanner.resume(); } catch (e) {}
-                        }
-                    }, 3000);
+                        isScanning = false;
+                    }, 2500);
                     return;
                 }
 
-                // 🎯 Additional client-side validation for DP mode
+                // 🎯 Validation for DP mode
+                let dpRemaining = null;
+                let dpPlanned = null;
+                let dpUnit = boxData.dp_unit || boxData.unit || 'Pcs';
+
                 if (dispatchPlanId && dpItemsCache.length > 0) {
                     const validation = validateScanAgainstDp(boxData.item_name, cleanBoxId);
                     if (!validation.valid) {
                         pauseScannerWithError(validation.error);
                         return;
                     }
+                    const matchedItem = validation.matchedItem;
+                    dpRemaining = matchedItem.remaining;
+                    dpPlanned = matchedItem.planned_qty;
+                    dpUnit = matchedItem.unit || dpUnit;
+                } else if (boxData.dp_remaining_qty !== undefined) {
+                    dpRemaining = boxData.dp_remaining_qty;
+                    dpPlanned = boxData.dp_planned_qty;
                 }
 
                 pendingBoxId = cleanBoxId;
 
                 const boxQty = boxData.qty || 0;
-                const dpRemaining = boxData.dp_remaining_qty !== undefined ? boxData.dp_remaining_qty : null;
-                const dpPlanned = boxData.dp_planned_qty !== undefined ? boxData.dp_planned_qty : null;
-                const dpDispatched = boxData.dp_dispatched_qty !== undefined ? boxData.dp_dispatched_qty : null;
-                const dpUnit = boxData.dp_unit || boxData.unit || 'Pcs';
 
                 // 🎯 Validate scan count doesn't exceed DP quantity
                 if (dpRemaining !== null && dpRemaining <= 0) {
-                    pauseScannerWithError(`⚠️ All items for '${boxData.item_name}' in DP ${currentDpPlanNo} have already been dispatched! Scan count would exceed planned quantity.`);
+                    pauseScannerWithError(`⚠️ All items for '${boxData.item_name}' in DP ${currentDpPlanNo} have already been dispatched!`);
                     return;
                 }
 
@@ -1140,16 +1258,60 @@
 
                 let finalIssuedTo = issuedTo;
                 if (dispatchPlanId && !issuedTo) {
-                    const selectedOption = document.getElementById('dispatchPlanSelect').options[document.getElementById('dispatchPlanSelect').selectedIndex];
-                    finalIssuedTo = `DP: ${selectedOption ? selectedOption.text : ''}`;
+                    finalIssuedTo = `DP: ${currentDpPlanNo}`;
                 }
                 document.getElementById('modalIssuedTo').innerText = finalIssuedTo;
 
+                // 📊 Populate DP Total & Remaining OR Store Available Stock
+                const stockContainer = document.getElementById('modalStockInfoContainer');
+                if (stockContainer) {
+                    if (dispatchPlanId && dpPlanned !== null) {
+                        const alreadyDisp = Math.max(0, dpPlanned - (dpRemaining || 0));
+                        stockContainer.style.background = "#eef2ff";
+                        stockContainer.style.borderColor = "#c7d2fe";
+                        stockContainer.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="text-primary fw-bold small"><i class="bi bi-truck me-1"></i> Dispatch Plan Target:</span>
+                                <span class="badge bg-primary">${currentDpPlanNo || 'DP Plan'}</span>
+                            </div>
+                            <div class="row g-1 text-center small mt-1">
+                                <div class="col-4 border-end">
+                                    <span class="text-muted d-block" style="font-size: 11px;">DP Total Qty:</span>
+                                    <strong class="text-dark fs-6">${dpPlanned} ${dpUnit}</strong>
+                                </div>
+                                <div class="col-4 border-end">
+                                    <span class="text-muted d-block" style="font-size: 11px;">Dispatched:</span>
+                                    <strong class="text-secondary fs-6">${alreadyDisp} ${dpUnit}</strong>
+                                </div>
+                                <div class="col-4">
+                                    <span class="text-muted d-block" style="font-size: 11px;">DP Remaining:</span>
+                                    <strong class="text-success fs-6">${dpRemaining} ${dpUnit}</strong>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        const totStock = (boxData.total_available_stock !== undefined) ? boxData.total_available_stock : boxQty;
+                        stockContainer.style.background = "#f0fdf4";
+                        stockContainer.style.borderColor = "#bbf7d0";
+                        stockContainer.innerHTML = `
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="text-success fw-bold small"><i class="bi bi-box-seam me-1"></i> Total Store Available Stock:</span>
+                                    <strong class="text-dark d-block fs-5 mt-1">${totStock} ${dpUnit}</strong>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-success text-white">Manual Outward</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+
                 let qtyDisplay = `${boxQty} ${dpUnit}`;
                 if (dpRemaining !== null && dpRemaining < boxQty) {
-                    qtyDisplay = `${dpRemaining} ${dpUnit} <span class="badge bg-info ms-2">DP Remaining</span>`;
-                } else if (dpRemaining !== null && dpRemaining === boxQty && boxQty > 0) {
-                    qtyDisplay = `${boxQty} ${dpUnit}`;
+                    qtyDisplay = `${boxQty} ${dpUnit} <span class="badge bg-warning text-dark ms-2">DP Limit: ${dpRemaining}</span>`;
+                } else if (dpRemaining !== null) {
+                    qtyDisplay = `${boxQty} ${dpUnit} <span class="badge bg-info ms-2">DP Rem: ${dpRemaining}</span>`;
                 }
                 document.getElementById('modalMaxQty').innerHTML = qtyDisplay;
                 document.getElementById('modalQty').value = maxBoxQty;
@@ -1157,13 +1319,6 @@
 
                 resultDiv.innerText = "";
                 resultDiv.className = "mb-3 text-center fw-bold fs-6";
-
-                const modalBody = document.getElementById('modalMaxQty');
-                if (maxBoxQty === 1) {
-                    modalBody.innerHTML = `1 ${dpUnit} <span class="badge bg-danger ms-2">⚠️ LAST PIECE</span>`;
-                } else {
-                    modalBody.innerHTML = qtyDisplay;
-                }
 
                 const fullBoxBtn = document.querySelector("button[onclick='setMaxQty()']");
                 if (fullBoxBtn) {
@@ -1184,9 +1339,8 @@
                 if (window.showToast) window.showToast(`❌ ${errMsg}`, "error");
                 setTimeout(() => {
                     resultDiv.innerText = "";
-                    if (!scannerPaused && html5QrcodeScanner) {
-                        try { html5QrcodeScanner.resume(); } catch (e) {}
-                    }
+                    resultDiv.className = "mb-3 text-center fw-bold fs-6";
+                    isScanning = false;
                 }, 2500);
             }
         }
@@ -1211,6 +1365,16 @@
             }
         });
 
+        document.getElementById('approvalModal').addEventListener('hidden.bs.modal', function () {
+            isScanning = false;
+            scannerPaused = false;
+            const resultDiv = document.getElementById('result');
+            if (resultDiv && !dpCompleted) {
+                resultDiv.innerText = "";
+                resultDiv.className = "mb-3 text-center fw-bold fs-6";
+            }
+        });
+
         document.getElementById('modalQty').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -1226,8 +1390,7 @@
 
             let finalIssuedTo = issuedTo;
             if (dispatchPlanId && !issuedTo) {
-                const selectedOption = document.getElementById('dispatchPlanSelect').options[document.getElementById('dispatchPlanSelect').selectedIndex];
-                finalIssuedTo = `DP: ${selectedOption ? selectedOption.text : ''}`;
+                finalIssuedTo = `DP: ${currentDpPlanNo}`;
             }
 
             const resultDiv = document.getElementById('result');
@@ -1306,9 +1469,14 @@
                     if (dispatchPlanId) {
                         setTimeout(async () => {
                             await loadAndDisplayDpProgress(dispatchPlanId);
-                            await checkDpCompletionAndRefresh(dispatchPlanId);
-                        }, 300);
+                            checkDpCompletionAndRefresh(dispatchPlanId);
+                        }, 200);
                     }
+
+                    // Auto-ready after 1.5 seconds so manual tap isn't strictly required
+                    setTimeout(() => {
+                        startNextScan();
+                    }, 1500);
                 } else {
                     const detail = (data && (data.detail || data.message)) ? (data.detail || data.message) : (responseText || `Server error (status ${response.status})`);
                     console.error("Outward failed:", response.status, data, responseText);
@@ -1348,11 +1516,11 @@
 
         function startNextScan() {
             isScanning = false;
+            scannerPaused = false;
             const resultDiv = document.getElementById('result');
-            resultDiv.innerText = "";
-            resultDiv.className = "mb-3 text-center fw-bold fs-6";
-            if (html5QrcodeScanner && !scannerPaused) {
-                try { html5QrcodeScanner.resume(); } catch (e) {}
+            if (resultDiv && !dpCompleted) {
+                resultDiv.innerText = "";
+                resultDiv.className = "mb-3 text-center fw-bold fs-6";
             }
         }
 
@@ -1381,20 +1549,15 @@
 
         function cancelScan() {
             approvalModal.hide();
-            showNextScanButton();
-        }
-
-        function showNextScanButton() {
+            isScanning = false;
+            scannerPaused = false;
             const resultDiv = document.getElementById('result');
-            resultDiv.className = "mb-3 text-center p-2 bg-light rounded border border-info shadow";
-            resultDiv.innerHTML = `
-                <button type="button" class="btn btn-info text-white fw-bold px-4 py-2" onclick="startNextScan()">
-                    📸 Scan Next Box
-                </button>
-            `;
+            if (resultDiv && !dpCompleted) {
+                resultDiv.innerText = "";
+                resultDiv.className = "mb-3 text-center fw-bold fs-6";
+            }
         }
     </script>
-    <script src="/static/js/page-loader.js"></script>
 </body>
 
 </html>

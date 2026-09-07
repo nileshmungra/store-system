@@ -1,7 +1,9 @@
 import sqlite3
+
 import mysql.connector
 from mysql.connector import Error
-from database import MYSQL_CONFIG # database.py  MySQL   
+
+from database import MYSQL_CONFIG
 
 # --- Configuration ---
 SQLITE_DB_FILE = 'inventory.db'
@@ -21,74 +23,74 @@ TABLES_TO_MIGRATE = [
 
 def migrate_data():
     """
-    SQLite       MySQL    .
+    Migrates data from SQLite (inventory.db) to MySQL.
     """
     try:
-        # SQLite    
+        # SQLite connection
         sqlite_conn = sqlite3.connect(SQLITE_DB_FILE)
         sqlite_conn.row_factory = sqlite3.Row
         sqlite_cursor = sqlite_conn.cursor()
-        print("✅ SQLite     .")
+        logging.debug("Connected to SQLite database:", SQLITE_DB_FILE)
 
-        # MySQL    
+        # MySQL connection
         mysql_conn = mysql.connector.connect(**MYSQL_CONFIG)
         mysql_cursor = mysql_conn.cursor()
-        print("✅ MySQL     .")
+        logging.debug("Connected to MySQL database.")
 
     except Error as e:
-        print(f"❌   : {e}")
+        logging.debug(f"MySQL connection error: {e}")
         return
     except sqlite3.Error as e:
-        print(f"❌ SQLite  : {e}")
+        logging.debug(f"SQLite connection error: {e}")
         return
 
-    #    Foreign Key   
+    # Disable Foreign Key checks for smooth migration
     mysql_cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
-    print("\nℹ️ MySQL foreign key checks      .")
+    logging.debug("\nMySQL foreign key checks disabled.")
 
     for table_name in TABLES_TO_MIGRATE:
         try:
-            print(f"\n---     : {table_name} ---")
+            logging.debug(f"\n--- Migrating table: {table_name} ---")
 
-            # 1. SQLite    
+            # 1. Read all rows from SQLite
             sqlite_cursor.execute(f"SELECT * FROM {table_name}")
             rows = sqlite_cursor.fetchall()
 
             if not rows:
-                print(f"  - SQLite  '{table_name}'     .    .")
+                logging.debug(f"  - SQLite table '{table_name}' is empty. Skipping.")
                 continue
 
-            # 2.   MySQL   
+            # 2. Truncate the MySQL table (clear existing data)
             mysql_cursor.execute(f"TRUNCATE TABLE `{table_name}`")
-            print(f"  - ℹ️ MySQL  '{table_name}'   .")
+            logging.debug(f"  - Truncated MySQL table '{table_name}'.")
 
-            # 2. MySQL      
+            # 2. Prepare insert: build column list and placeholders
             columns = rows[0].keys()
             column_list = ', '.join(f"`{col}`" for col in columns)
             placeholders = ', '.join(['%s'] * len(columns))
-            
+
             data_to_insert = [tuple(row) for row in rows]
 
-            # 3. MySQL    
+            # 3. Insert rows into MySQL
             insert_query = f"INSERT INTO {table_name} ({column_list}) VALUES ({placeholders})"
             mysql_cursor.executemany(insert_query, data_to_insert)
             mysql_conn.commit()
 
-            print(f"  - ✅ {mysql_cursor.rowcount}  MySQL  '{table_name}'    .")
+            logging.debug(f"  - Successfully migrated {mysql_cursor.rowcount} rows into '{table_name}'.")
 
         except (sqlite3.Error, Error, IndexError) as e:
-            print(f"  - ❌  '{table_name}'   : {e}")
+            logging.debug(f"  - Error migrating '{table_name}': {e}")
             mysql_conn.rollback()
 
-    # Foreign Key    
+    # Re-enable Foreign Key checks
     mysql_cursor.execute("SET FOREIGN_KEY_CHECKS=1;")
-    print("\nℹ️ MySQL foreign key checks     .")
+    logging.debug("\nMySQL foreign key checks re-enabled.")
 
     sqlite_conn.close()
     mysql_conn.close()
-    print("\n🎉   !      .")
+    logging.debug("\nMigration complete! All tables processed successfully.")
 
 if __name__ == "__main__":
-    print("SQLite  MySQL       ...")
-    print("="*50)
+    logging.debug("Starting SQLite to MySQL data migration...")
+    logging.debug("=" * 50)
     migrate_data()

@@ -13,6 +13,8 @@
         rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/page-loader.css">
+    <script src="/static/js/page-loader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <!-- Styles from production.html -->
@@ -525,6 +527,46 @@
             background-color: #e2e8f0 !important;
             color: #0f172a !important;
         }
+
+        /* DP Filter Tabs Styling */
+        #dpFilterTabs .nav-link {
+            border-radius: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            transition: all 0.2s ease;
+            color: #475569;
+            background-color: #ffffff;
+        }
+        #dpFilterTabs .nav-link:hover {
+            background-color: #f1f5f9;
+        }
+        #dpFilterTabs .nav-link.active {
+            background: linear-gradient(135deg, #4f46e5, #6366f1) !important;
+            color: #ffffff !important;
+            border-color: #4f46e5 !important;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3) !important;
+        }
+        #dpFilterTabs .nav-link.active .badge {
+            background-color: #ffffff !important;
+            color: #4f46e5 !important;
+        }
+        [data-theme="dark"] #dpFilterTabs .nav-link {
+            color: #cbd5e1;
+            background-color: rgba(30, 41, 59, 0.7);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+        [data-theme="dark"] #dpFilterTabs .nav-link:hover {
+            background-color: rgba(51, 65, 85, 0.9);
+            color: #ffffff;
+        }
+        [data-theme="dark"] #dpFilterTabs .nav-link.active {
+            background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+            color: #ffffff !important;
+            border-color: #6366f1 !important;
+        }
+        [data-theme="dark"] .dp-tabs-container {
+            background-color: rgba(15, 23, 42, 0.6) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
     </style>
 
     <link rel="stylesheet" href="/static/css/style.css">
@@ -704,93 +746,72 @@
         <div class="card glass-card mt-4 overflow-hidden no-print">
             <div
                 class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h5 class="m-0 fw-bold">
-                    <i class="bi bi-speedometer2 text-warning me-2"></i> Live Dispatch Plan (DP) Tracking & Progress
-                    Progress)
-                </h5>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h5 class="m-0 fw-bold">
+                        <i class="bi bi-speedometer2 text-warning me-2"></i> Live Dispatch Plan (DP) Tracking & Progress
+                    </h5>
+                    <span class="badge bg-warning text-dark fw-bold px-2.5 py-1.5" id="activeDpCountBadge">0 Pending / 0 Total</span>
+                </div>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-warning text-dark fw-bold px-2.5 py-1.5" id="activeDpCountBadge">0 Active DP
-                        Plans</span>
                     <button onclick="loadDashboardDpPlans()" class="btn btn-outline-light btn-sm rounded-pill px-3">
                         <i class="bi bi-arrow-clockwise me-1"></i> Refresh
                     </button>
                 </div>
             </div>
+
+            <!-- Tabs / Pills for Pending vs Completed vs All -->
+            <div class="dp-tabs-container bg-light px-4 pt-3 pb-2 border-bottom">
+                <ul class="nav nav-pills gap-2" id="dpFilterTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-bold py-2 px-3 d-flex align-items-center gap-2 shadow-sm" id="dp-pending-tab" data-bs-toggle="pill" data-bs-target="#dp-pending-pane" type="button" role="tab" aria-controls="dp-pending-pane" aria-selected="true">
+                            <i class="bi bi-hourglass-split text-warning"></i>
+                            <span>Pending / In Progress</span>
+                            <span class="badge bg-warning text-dark rounded-pill ms-1" id="pendingDpCountBadge">0</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold py-2 px-3 d-flex align-items-center gap-2 shadow-sm" id="dp-completed-tab" data-bs-toggle="pill" data-bs-target="#dp-completed-pane" type="button" role="tab" aria-controls="dp-completed-pane" aria-selected="false">
+                            <i class="bi bi-check2-circle text-success"></i>
+                            <span>Completed</span>
+                            <span class="badge bg-success text-white rounded-pill ms-1" id="completedDpCountBadge">0</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold py-2 px-3 d-flex align-items-center gap-2 shadow-sm" id="dp-all-tab" data-bs-toggle="pill" data-bs-target="#dp-all-pane" type="button" role="tab" aria-controls="dp-all-pane" aria-selected="false">
+                            <i class="bi bi-collection text-info"></i>
+                            <span>All Plans</span>
+                            <span class="badge bg-secondary text-white rounded-pill ms-1" id="allDpCountBadge">0</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
             <div class="card-body p-4">
                 <div id="dp-plans-loading" class="text-center py-4">
                     <div class="spinner-border text-primary" role="status"></div>
                     <p class="text-muted small mt-2">Loading Dispatch Plan progress...</p>
                 </div>
 
-                <div id="dp-plans-container" class="row g-3">
-                    <!-- Dynamic DP Plan Cards -->
+                <div class="tab-content" id="dpFilterTabsContent">
+                    <!-- Tab 1: Pending & In-Progress -->
+                    <div class="tab-pane fade show active" id="dp-pending-pane" role="tabpanel" aria-labelledby="dp-pending-tab" tabindex="0">
+                        <div id="dp-pending-container" class="row g-3"></div>
+                    </div>
+
+                    <!-- Tab 2: Completed -->
+                    <div class="tab-pane fade" id="dp-completed-pane" role="tabpanel" aria-labelledby="dp-completed-tab" tabindex="0">
+                        <div id="dp-completed-container" class="row g-3"></div>
+                    </div>
+
+                    <!-- Tab 3: All Plans -->
+                    <div class="tab-pane fade" id="dp-all-pane" role="tabpanel" aria-labelledby="dp-all-tab" tabindex="0">
+                        <div id="dp-all-container" class="row g-3"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 🎁 Generate Store Kit QR Card (Store Admin) -->
-        <div class="card glass-card mt-4 overflow-hidden no-print">
-            <div
-                class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h5 class="m-0 fw-bold">
-                    <i class="bi bi-box-seam-fill text-warning me-2"></i> Combined Store Kit QR Sticker Generator
-                    (Generate
-                    Store Kit QR)
-                </h5>
-                <span class="badge bg-warning text-dark fw-bold px-2.5 py-1.5">SO Fittings Kit Generator</span>
-            </div>
-            <div class="card-body p-4">
-                <div class="row g-3 align-items-end mb-3">
-                    <div class="col-md-5">
-                        <label class="input-label-custom">Select Sales Order (SO No.) *</label>
-                        <select id="store_kit_so_select" class="form-select form-control-custom"
-                            onchange="loadStoreKitSoItems()">
-                            <option value="">-- Select SO No. --</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="input-label-custom">Kit Code (Auto / Custom)</label>
-                        <input type="text" id="store_kit_code_input"
-                            class="form-control form-control-custom font-monospace"
-                            placeholder="e.g. KIT-SO-4301-FITTINGS">
-                    </div>
-                    <div class="col-md-3">
-                        <button onclick="generateAndPrintStoreKitQr()"
-                            class="btn btn-warning text-dark fw-bold w-100 py-2">
-                            <i class="bi bi-qr-code-scan me-1"></i> Print Kit QR (1-Click)
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Preview Table of Kit Items -->
-                <div id="store-kit-preview-area" class="mt-3" style="display:none;">
-                    <div class="p-3 bg-light rounded-3 border">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <strong class="text-dark small"><i class="bi bi-list-stars me-1 text-primary"></i> All
-                                Fittings for this SO (Store Kit Items Preview):</strong>
-                            <span class="badge bg-dark font-monospace" id="store_kit_items_count_badge">0
-                                Fittings</span>
-                        </div>
-                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-                            <table class="table table-sm table-hover align-middle mb-0 extra-small">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Fitting Item Description</th>
-                                        <th class="text-center">Required Qty</th>
-                                        <th class="text-center">Unit</th>
-                                        <th class="text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="storeKitPreviewTbody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="store-kit-qr-output" class="mt-3 row g-3"></div>
-            </div>
-        </div>
+        <!-- QR Search & Batch Reprint Card -->
 
         <!-- QR Search & Batch Reprint Card -->
         <div class="card glass-card mt-4 overflow-hidden no-print">
@@ -925,6 +946,26 @@
             } catch (err) { alert("❌ Connection Error"); } finally { saveBtn.disabled = false; }
         }
 
+        function formatInwardDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            try {
+                const d = new Date(dateStr);
+                if (!isNaN(d.getTime())) {
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const year = d.getFullYear();
+                    return `${day}/${month}/${year}`;
+                }
+                const parts = String(dateStr).split(' ')[0].split('T')[0].split('-');
+                if (parts.length === 3) {
+                    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+                return String(dateStr);
+            } catch (e) {
+                return String(dateStr);
+            }
+        }
+
         function displayQrCodes(boxes) {
             const qrArea = document.getElementById('qr-container');
             qrArea.innerHTML = `
@@ -944,8 +985,9 @@
                                         <div class="fw-bold text-dark small text-truncate" title="${box.box_id}">${box.box_id}</div>
                                         <div class="text-muted small mt-1">${box.item_name}</div>
                                         <span class="badge bg-light text-dark border mt-2">Qty: ${box.qty || box.qty_in_box || 0} Pcs</span>
+                                        <small class="text-secondary d-block mt-1 fw-semibold">📅 Inward Date: ${formatInwardDate(box.inward_date || new Date())}</small>
                                     </div>
-                                    <button onclick="window.print()" class="btn btn-sm btn-outline-primary mt-2 w-100">
+                                    <button onclick="printSingleBoxQr('${box.box_id}', '${box.item_name.replace(/'/g, "\\'")}', '${box.qty || box.qty_in_box || 0}', '${box.inward_date || new Date().toISOString()}')" class="btn btn-sm btn-outline-primary mt-2 w-100">
                                         <i class="bi bi-printer-fill me-1"></i> Print
                                     </button>
                                 </div>
@@ -1019,9 +1061,32 @@
 
         function renderSearchResults(boxes) {
             const resultsArea = document.getElementById('search-results-area');
+
+            // 🎯 Filter out boxes with qty=0 (already fully dispatched/consumed)
+            const activeBoxes = (boxes || []).filter(box => {
+                const qty = parseFloat(box.qty_in_box) || 0;
+                const coilWeight = parseFloat(box.coil_weight_kg) || 0;
+                const coilLength = parseFloat(box.coil_length_meters) || 0;
+                const isProduction = box.box_id.startsWith('COIL-') || box.machine_name;
+                // For production coils, filter by weight or length
+                if (isProduction) {
+                    return coilWeight > 0 || coilLength > 0;
+                }
+                // For supplier boxes, filter by qty
+                return qty > 0;
+            });
+
+            if (activeBoxes.length === 0) {
+                resultsArea.innerHTML = `<div class="alert alert-info text-center m-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    No active QR codes found (all items with qty=0 are hidden — they have already been dispatched).
+                </div>`;
+                return;
+            }
+
             resultsArea.innerHTML = `
             <div class="row g-3">
-                ${boxes.map(box => {
+                ${activeBoxes.map(box => {
                 const isProduction = box.box_id.startsWith('COIL-') || box.machine_name;
                 return `
                         <div class="col-md-4 qr-card-printable">
@@ -1036,6 +1101,9 @@
                                     <small class="text-muted d-block mt-1">
                                         ${isProduction ? `Weight: ${box.coil_weight_kg || '-'} KG | Length: ${box.coil_length_meters || box.qty_in_box || '-'} ${box.unit || 'MTR'}` : `Qty: ${box.qty_in_box} ${box.unit || 'Pcs'} | Party: ${box.supplier_or_party || 'N/A'}`}
                                     </small>
+                                    <small class="text-secondary d-block mt-1 fw-semibold">
+                                        <i class="bi bi-calendar-event me-1"></i> Inward Date: ${formatInwardDate(box.inward_date || box.created_at)}
+                                    </small>
                                 </div>
                                 <div class="mt-3">
                                     ${isProduction ? `
@@ -1043,7 +1111,7 @@
                                             <i class="bi bi-printer-fill me-1"></i> Print Sticker
                                         </button>
                                     ` : ` 
-                                        <button onclick='printSingleBoxQr(${JSON.stringify(box.box_id)}, ${JSON.stringify(box.item_name)}, ${JSON.stringify(box.qty_in_box)})' class="btn btn-sm btn-dark w-100 fw-bold">
+                                        <button onclick='printSingleBoxQr(${JSON.stringify(box.box_id)}, ${JSON.stringify(box.item_name)}, ${JSON.stringify(box.qty_in_box)}, ${JSON.stringify(box.inward_date || box.created_at || "")})' class="btn btn-sm btn-dark w-100 fw-bold">
                                             <i class="bi bi-qr-code me-1"></i> Print QR
                                         </button>
                                     `}
@@ -1055,7 +1123,7 @@
             </div>
         `;
 
-            boxes.forEach(box => {
+            activeBoxes.forEach(box => {
                 const container = document.getElementById(`search-qr-${box.box_id}`);
                 if (container) {
                     new QRCode(container, {
@@ -1079,15 +1147,17 @@
             triggerLabelPrint(data, box.box_id);
         }
 
-        function printSingleBoxQr(boxId, itemName, qty) {
+        function printSingleBoxQr(boxId, itemName, qty, inwardDate) {
             const printArea = document.getElementById('single-qr-print-area');
             if (!printArea) return;
+
+            const formattedDate = formatInwardDate(inwardDate);
 
             // Populate data
             document.getElementById('single-qr-item-name').innerText = itemName;
             document.getElementById('single-qr-qty').innerText = `Qty: ${qty}`;
             document.getElementById('single-qr-box-id').innerText = boxId;
-            document.getElementById('single-qr-date').innerText = `Date: ${new Date().toLocaleDateString()}`;
+            document.getElementById('single-qr-date').innerText = `Inward Date: ${formattedDate}`;
 
             // Generate QR
             const qrCanvas = document.getElementById('single-qrcode-canvas');
@@ -1153,10 +1223,14 @@
             window.print();
         }
         async function loadDashboardDpPlans() {
-            const container = document.getElementById('dp-plans-container');
+            const containerPending = document.getElementById('dp-pending-container');
+            const containerCompleted = document.getElementById('dp-completed-container');
+            const containerAll = document.getElementById('dp-all-container');
             const loadingDiv = document.getElementById('dp-plans-loading');
-            const badge = document.getElementById('activeDpCountBadge');
-            if (!container) return;
+            const headerBadge = document.getElementById('activeDpCountBadge');
+            const pendingBadge = document.getElementById('pendingDpCountBadge');
+            const completedBadge = document.getElementById('completedDpCountBadge');
+            const allBadge = document.getElementById('allDpCountBadge');
 
             try {
                 const res = await fetch(`${API_URL}/api/dispatch-plans/list`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
@@ -1165,22 +1239,16 @@
 
                 if (loadingDiv) loadingDiv.style.display = 'none';
 
-                if (plans.length === 0) {
-                    container.innerHTML = `
-                    <div class="col-12 text-center py-4 text-muted">
-                        <i class="bi bi-inbox fs-2 text-secondary d-block mb-2"></i>
-                        No Dispatch Plans added yet.
-                    </div>
-                `;
-                    if (badge) badge.innerText = `0 DP Plans`;
-                    return;
-                }
+                const pendingPlans = plans.filter(p => p.status !== 'COMPLETED' && (parseFloat(p.progress_pct) || 0) < 100);
+                const completedPlans = plans.filter(p => p.status === 'COMPLETED' || (parseFloat(p.progress_pct) || 0) >= 100);
 
-                const activeCount = plans.filter(p => p.status !== 'COMPLETED' && p.progress_pct < 100).length;
-                if (badge) badge.innerText = `${activeCount} Active / ${plans.length} Total DP Plans`;
+                if (headerBadge) headerBadge.innerText = `${pendingPlans.length} Pending / ${plans.length} Total`;
+                if (pendingBadge) pendingBadge.innerText = pendingPlans.length;
+                if (completedBadge) completedBadge.innerText = completedPlans.length;
+                if (allBadge) allBadge.innerText = plans.length;
 
-                container.innerHTML = plans.map(plan => {
-                    const isCompleted = plan.status === 'COMPLETED' || plan.progress_pct >= 100;
+                function renderPlanCard(plan) {
+                    const isCompleted = plan.status === 'COMPLETED' || (parseFloat(plan.progress_pct) || 0) >= 100;
                     const statusBadge = isCompleted
                         ? `<span class="badge bg-success fw-bold px-2.5 py-1.5"><i class="bi bi-check-circle-fill me-1"></i> COMPLETED (100%)</span>`
                         : (plan.progress_pct > 0
@@ -1266,131 +1334,64 @@
                         </div>
                     </div>
                 `;
-                }).join('');
+                }
+
+                // Populate Pending Tab
+                if (containerPending) {
+                    if (pendingPlans.length === 0) {
+                        containerPending.innerHTML = `
+                            <div class="col-12 text-center py-5 text-muted">
+                                <i class="bi bi-check2-circle fs-1 text-success d-block mb-2"></i>
+                                <h6 class="fw-bold text-success">All Dispatch Plans Completed!</h6>
+                                <p class="small text-muted mb-0">No pending or in-progress dispatch plans right now.</p>
+                            </div>
+                        `;
+                    } else {
+                        containerPending.innerHTML = pendingPlans.map(renderPlanCard).join('');
+                    }
+                }
+
+                // Populate Completed Tab
+                if (containerCompleted) {
+                    if (completedPlans.length === 0) {
+                        containerCompleted.innerHTML = `
+                            <div class="col-12 text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 text-secondary d-block mb-2"></i>
+                                <h6 class="fw-bold">No Completed Dispatch Plans Yet</h6>
+                                <p class="small text-muted mb-0">Plans will appear here once 100% dispatched.</p>
+                            </div>
+                        `;
+                    } else {
+                        containerCompleted.innerHTML = completedPlans.map(renderPlanCard).join('');
+                    }
+                }
+
+                // Populate All Tab
+                if (containerAll) {
+                    if (plans.length === 0) {
+                        containerAll.innerHTML = `
+                            <div class="col-12 text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 text-secondary d-block mb-2"></i>
+                                <h6 class="fw-bold">No Dispatch Plans Available</h6>
+                                <p class="small text-muted mb-0">Create a Dispatch Plan from the dispatch page to start tracking.</p>
+                            </div>
+                        `;
+                    } else {
+                        containerAll.innerHTML = plans.map(renderPlanCard).join('');
+                    }
+                }
+
             } catch (err) {
                 console.error("Error loading dashboard DP plans:", err);
                 if (loadingDiv) loadingDiv.style.display = 'none';
-            }
-        }
-
-        async function loadStoreKitSoList() {
-            const select = document.getElementById('store_kit_so_select');
-            if (!select) return;
-
-            try {
-                const res = await fetch(`${API_URL}/api/store-kit/so-list`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
-                const data = await res.json();
-                const list = data.so_list || [];
-
-                select.innerHTML = '<option value="">-- Select SO No. --</option>' +
-                    list.map(s => `<option value="${s.so_number}">${s.so_number} (DP: ${s.dp_number || 'N/A'})</option>`).join('');
-            } catch (err) {
-                console.error("Error loading Store Kit SO list:", err);
-            }
-        }
-
-        let currentStoreKitItems = [];
-
-        async function loadStoreKitSoItems() {
-            const soNum = document.getElementById('store_kit_so_select').value;
-            const previewArea = document.getElementById('store-kit-preview-area');
-            const tbody = document.getElementById('storeKitPreviewTbody');
-            const badge = document.getElementById('store_kit_items_count_badge');
-            const kitInput = document.getElementById('store_kit_code_input');
-
-            if (!soNum) {
-                if (previewArea) previewArea.style.display = 'none';
-                if (kitInput) kitInput.value = '';
-                currentStoreKitItems = [];
-                return;
-            }
-
-            const cleanSo = soNum.replace(/[^\w\-]/g, '');
-            if (kitInput) kitInput.value = `KIT-SO-${cleanSo}-FITTINGS`;
-
-            try {
-                const res = await fetch(`${API_URL}/api/store-kit/so-items/${encodeURIComponent(soNum)}`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
-                const data = await res.json();
-                currentStoreKitItems = data.items || [];
-
-                if (previewArea) previewArea.style.display = 'block';
-                if (badge) badge.innerText = `${currentStoreKitItems.length} Fittings`;
-
-                if (currentStoreKitItems.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-muted">No fitting items found.</td></tr>`;
-                    return;
+                if (containerPending) {
+                    containerPending.innerHTML = `
+                        <div class="col-12 text-center text-danger py-4">
+                            <i class="bi bi-exclamation-triangle fs-2 d-block mb-2"></i>
+                            Failed to load dispatch plans. Please click Refresh to try again.
+                        </div>
+                    `;
                 }
-
-                tbody.innerHTML = currentStoreKitItems.map((itm, idx) => `
-                <tr>
-                    <td class="fw-bold">${idx + 1}</td>
-                    <td class="fw-extrabold text-dark">${itm.item_name}</td>
-                    <td class="text-center font-monospace fw-bold text-primary">${itm.required_qty}</td>
-                    <td class="text-center fw-bold">${itm.unit || 'Pcs'}</td>
-                    <td class="text-center"><span class="badge ${itm.status === 'COMPLETED' ? 'bg-success' : 'bg-secondary'}">${itm.status || 'PENDING'}</span></td>
-                </tr>
-            `).join('');
-
-            } catch (err) {
-                console.error("Error loading Store Kit SO items:", err);
-            }
-        }
-
-        async function generateAndPrintStoreKitQr() {
-            const soNum = document.getElementById('store_kit_so_select').value;
-            const kitCode = document.getElementById('store_kit_code_input').value.trim();
-
-            if (!soNum) {
-                alert("⚠️ Please select a Sales Order (SO No.) first!");
-                return;
-            }
-
-            try {
-                const res = await fetch(`${API_URL}/api/store-kit/generate`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Bypass-Tunnel-Reminder': 'true'
-                    },
-                    body: JSON.stringify({
-                        so_number: soNum,
-                        kit_code: kitCode,
-                        items: currentStoreKitItems
-                    })
-                });
-                const data = await res.json();
-
-                if (!res.ok) {
-                    alert("❌ Error: " + (data.detail || "Could not generate Kit QR"));
-                    return;
-                }
-
-                const outputDiv = document.getElementById('store-kit-qr-output');
-                outputDiv.innerHTML = `
-                <div class="col-md-6 col-lg-5 mx-auto">
-                    <div class="card glass-card text-center p-3 border-2 border-warning shadow">
-                        <h6 class="fw-extrabold text-dark m-0 mb-1">🎁 STORE KIT UNIFIED QR STICKER</h6>
-                        <small class="text-muted fw-bold d-block mb-2">SO: ${data.so_number} | Items: ${data.total_items_count} Fittings</small>
-                        <div id="store-kit-qr-canvas" class="d-flex justify-content-center py-2 bg-white rounded border"></div>
-                        <div class="mt-2 font-monospace fw-extrabold text-primary fs-6">${data.kit_code}</div>
-                        <small class="text-success extra-small fw-bold d-block mt-1">📲 1-Click scan will auto-dispatch all ${data.total_items_count} fittings</small>
-                        <button onclick="window.print()" class="btn btn-success btn-sm fw-bold mt-2 px-3">
-                            <i class="bi bi-printer-fill me-1"></i> Print Sticker (100x100mm)
-                        </button>
-                    </div>
-                </div>
-            `;
-
-                new QRCode(document.getElementById('store-kit-qr-canvas'), {
-                    text: data.kit_code,
-                    width: 140,
-                    height: 140
-                });
-
-                alert(`✅ Store Kit QR '${data.kit_code}' generated successfully!`);
-
-            } catch (err) {
-                alert("❌ Server Connection Error");
             }
         }
 
@@ -1439,22 +1440,32 @@
 
         // Initial Load & Auto Refresh Every 5 Seconds
         applyGlobalTheme();
-        loadItems();
 
         const showOwnToggle = document.getElementById('showOwnProductionItemsToggle');
         if (showOwnToggle) {
             showOwnToggle.addEventListener('change', loadItems);
         }
 
-        (async function () {
-            await Promise.all([
-                loadDashboardDpPlans(),
-                loadStoreKitSoList(),
-                searchOldQrs(true)
-            ]);
+        // Show page progress bar until all initial data is loaded
+        if (window.PageLoader && typeof window.PageLoader.show === 'function') {
+            window.PageLoader.show();
+        }
 
-            if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
-                window.PageLoader.hide();
+        (async function () {
+            try {
+                await Promise.allSettled([
+                    loadItems(),
+                    loadDashboardDpPlans(),
+                    searchOldQrs(true)
+                ]);
+            } catch (err) {
+                console.error("Initial data load error:", err);
+            } finally {
+                if (window.PageLoader && typeof window.PageLoader.complete === 'function') {
+                    window.PageLoader.complete();
+                } else if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                    window.PageLoader.hide();
+                }
             }
         })();
 
@@ -1612,7 +1623,6 @@
     </script>
 
     <script src="/static/js/english-ui.js"></script>
-    <script src="/static/js/page-loader.js"></script>
 </body>
 
 </html>

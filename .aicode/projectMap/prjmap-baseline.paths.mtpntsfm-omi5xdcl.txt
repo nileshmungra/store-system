@@ -1,0 +1,57 @@
+# PRJMAP_BASELINE_PATHS v1
+roots_id: 19eef445444e283ce39614c0dc2821299cda3e1685fbc5925bbfcf3b63c8e71d
+baseline_id: 23d87585f36ee3093182c123f0e2fd083b48f9e3d50ef7489e84de95b130a4f2
+
+store_system/.env.example
+store_system/.github/workflows/ci.yml
+store_system/.gitignore
+store_system/.jarvisignore
+store_system/.kilo/kilo.jsonc
+store_system/AGENTS.md
+store_system/bom.html
+store_system/challan.html
+store_system/cloudflared.exe
+store_system/database.py
+store_system/DEPLOY.md
+store_system/deployment process.docx
+store_system/dispatch.html
+store_system/favicon.ico
+store_system/index.html
+store_system/items.html
+store_system/LATEST_LIVE_LINK.txt
+store_system/logs.html
+store_system/main.py
+store_system/main_dashboard.html
+store_system/migrate_data.py
+store_system/mkcert.exe
+store_system/Procfile
+store_system/production.html
+store_system/PROJECT_MASTER_BLUEPRINT.txt
+store_system/pyproject.toml
+store_system/pyrefly.toml
+store_system/railway.toml
+store_system/README.docx
+store_system/README.md
+store_system/render.yaml
+store_system/report.html
+store_system/requirements-dev.txt
+store_system/requirements.txt
+store_system/ruff.toml
+store_system/runtime.txt
+store_system/scanner.html
+store_system/start_app.bat
+store_system/start_local.bat
+store_system/start_tunnels.py
+store_system/static/css/page-loader.css
+store_system/static/css/style.css
+store_system/static/js/dashboard.js
+store_system/static/js/english-ui.js
+store_system/static/js/logs.js
+store_system/static/js/page-loader.js
+store_system/static/js/report.js
+store_system/static/js/security.js
+store_system/static/js/theme.js
+store_system/static/js/toast.js
+store_system/static/uploads/.gitkeep
+store_system/TEST_AND_DEPLOY.bat
+store_system/test_app.py

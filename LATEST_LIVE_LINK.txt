@@ -1,4 +1,4 @@
-Dashboard: https://introductory-webmaster-specially-insert.trycloudflare.com/dashboard
-Scanner:   https://introductory-webmaster-specially-insert.trycloudflare.com/scanner
-Reports:   https://introductory-webmaster-specially-insert.trycloudflare.com/report-page
-Log Book:  https://introductory-webmaster-specially-insert.trycloudflare.com/logs-page
+Dashboard: https://excellence-interior-trail-wayne.trycloudflare.com/dashboard
+Scanner:   https://excellence-interior-trail-wayne.trycloudflare.com/scanner
+Reports:   https://excellence-interior-trail-wayne.trycloudflare.com/report-page
+Log Book:  https://excellence-interior-trail-wayne.trycloudflare.com/logs-page

@@ -1,0 +1,109 @@
+# PROJECT MAP (HINT)
+descr: Non-authoritative workspace snapshot. It may be intentionally stale within a bounded tolerance. Never treat paths in this block as verified; verify with fs_* and/or index_* / symbol_* / file_load* before acting.
+
+FORMAT:
+format: orientation report
+format_descr: A deterministic, bounded orientation report derived from the file listing (paths only).
+
+GUIDANCE:
+- Use this report for orientation; verify before edits or claims.
+- If the snapshot and the workspace disagree, the workspace wins.
+
+## WORKSPACE ROOTS
+descr: List of workspace roots (multi-root). Each root is the prefix of a CAN path: "<projectName>/<relativePosixPath>".
+- store_system/
+
+## ROOT: store_system/
+descr: This block summarizes one workspace root: counts, directory structure (macro + detail), and detected configuration files.
+
+### SNAPSHOT METRICS
+descr: High-level counts derived from the project map listing snapshot (paths only; no file content reads).
+- Files: 53
+- Directories: 8
+
+### ROOT FILES
+descr: Files directly under the workspace root (no subdirectories), printed as full CAN paths.
+- store_system/.env.example
+- store_system/.gitignore
+- store_system/.jarvisignore
+- store_system/AGENTS.md
+- store_system/DEPLOY.md
+- store_system/LATEST_LIVE_LINK.txt
+- store_system/PROJECT_MASTER_BLUEPRINT.txt
+- store_system/Procfile
+- store_system/README.docx
+- store_system/README.md
+- store_system/TEST_AND_DEPLOY.bat
+- store_system/bom.html
+- store_system/challan.html
+- store_system/cloudflared.exe
+- store_system/database.py
+- store_system/deployment process.docx
+- store_system/dispatch.html
+- store_system/favicon.ico
+- store_system/index.html
+- store_system/items.html
+- store_system/logs.html
+- store_system/main.py
+- store_system/main_dashboard.html
+- store_system/migrate_data.py
+- store_system/mkcert.exe
+- store_system/production.html
+- store_system/pyproject.toml
+- store_system/pyrefly.toml
+- store_system/railway.toml
+- store_system/render.yaml
+- store_system/report.html
+- store_system/requirements-dev.txt
+- store_system/requirements.txt
+- store_system/ruff.toml
+- store_system/runtime.txt
+- store_system/scanner.html
+- store_system/start_app.bat
+- store_system/start_local.bat
+- store_system/start_tunnels.py
+- store_system/test_app.py
+
+### EXTENSIONS HISTOGRAM
+descr: File extension counts computed from basenames (e.g. ".ts"). This is a purely statistical signal used for orientation.
+- .html=10, .js=8, .py=5, .txt=5, .toml=4, (dotfile)=3, .bat=3, .md=3, .css=2, .docx=2, .exe=2, (no-ext)=1, .example=1, .ico=1, .jsonc=1, .yaml=1, .yml=1
+
+### MACRO PARTITION
+descr: Deterministic selection of major child directories (coverage-based) to provide a coarse structure view.
+- Split (store_system/): selected=['store_system/static/', 'store_system/.github/', 'store_system/.kilo/'], other_files=40, other_dirs=0
+
+### DETAIL TREE CUT
+descr: Deterministic subtree cut (PARTIAL view; NOT a full directory listing). Expansion is limited by a fixed node budget (see budget_nodes=... on each root line) and max_depth=7.
+store_system/static/ — 11 files — child_dirs=3 tree_height=1 — budget_nodes=76 — .js(8) .css(2) (dotfile)(1)
+↳ store_system/static/css/ — 2 files — child_dirs=0 tree_height=0 — .css(2)
+↳ store_system/static/js/ — 8 files — child_dirs=0 tree_height=0 — .js(8)
+↳ store_system/static/uploads/ — 1 files — child_dirs=0 tree_height=0 — (dotfile)(1)
+store_system/.github/ — 1 files — child_dirs=1 tree_height=1 — budget_nodes=32 — .yml(1)
+↳ store_system/.github/workflows/ — 1 files — child_dirs=0 tree_height=0 — .yml(1)
+store_system/.kilo/ — 1 files — child_dirs=0 tree_height=0 — budget_nodes=32 — .jsonc(1)
+
+### POSSIBLE CONFIGURATION FILES
+descr: Deterministic detection of common configuration files across ecosystems. Only existing paths are printed. max_per_section=60.
+
+#### REPO META / DOCS
+descr: Project-level documentation and governance files that describe the repository purpose, policies, and conventions.
+- store_system/README.md
+
+#### VCS / SCM
+descr: Version control configuration files that affect ignore rules, diffs, blame behavior, and checkout behavior.
+- store_system/.gitignore
+
+#### EDITOR / IDE
+descr: Editor and IDE configuration files (VS Code, JetBrains, EditorConfig) and common local environment files (.env*).
+- store_system/.env.example
+
+#### CI / CD
+descr: Continuous Integration / Continuous Delivery configuration (GitHub Actions, GitLab CI, Jenkins, CircleCI, dependency automation).
+- store_system/.github/workflows/ci.yml
+
+#### PYTHON
+descr: Python packaging, dependency, environment, and common tooling configuration (linters, type checkers, test runners).
+- store_system/pyproject.toml
+- store_system/requirements.txt
+- store_system/requirements-dev.txt
+- store_system/ruff.toml

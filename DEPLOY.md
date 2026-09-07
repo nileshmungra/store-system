@@ -1,8 +1,11 @@
-# 🚀 Deployment Guide - Render.com
+# 🚀 Deployment Guide - Railway
 
 ## Prerequisites
+
 - GitHub account
-- Render.com account (free)
+- Railway account (free - https://railway.app)
+- Python 3.12 (for local testing)
+- MySQL database (Railway provisioned or local)
 
 ---
 
@@ -21,108 +24,120 @@ git push -u origin main
 
 ---
 
-## Step 2: Deploy on Render
+## Step 2: Deploy on Railway
 
-### Option A: Using render.yaml (RECOMMENDED - Easiest)
+### Option A: Using Railway CLI (RECOMMENDED - Easiest)
 
-1. Go to [Render Dashboard](https://dashboard.render.com)
-2. Click **"New"** → **"Blueprint"**
+1. **Install Railway CLI:**
+   ```bash
+   npm install -g @railway/cli
+   ```
+
+2. **Login to Railway:**
+   ```bash
+   railway login
+   ```
+
+3. **Initialize project from GitHub repo:**
+   ```bash
+   railway init
+   ```
+   - Select **"Create new project"**
+   - Enter project name: `store-system`
+   - Select your GitHub repository
+
+4. **Add MySQL plugin:**
+   ```bash
+   railway add --plugin mysql
+   ```
+   Railway automatically provisions a MySQL database and sets the following environment variables:
+   - `MYSQLHOST`
+   - `MYSQLPORT`
+   - `MYSQLUSER`
+   - `MYSQLPASSWORD`
+   - `MYSQLDATABASE`
+
+5. **Set remaining environment variables:**
+   ```bash
+   railway variables set ADMIN_PASSWORD="your_secure_admin_password"
+   railway variables set API_SECRET_KEY="your_random_secret_key_here"
+   railway variables set ALLOWED_ORIGINS="https://your-domain.com"
+   ```
+
+6. **Deploy:**
+   ```bash
+   railway up
+   ```
+   Railway will:
+   - Detect `railway.toml`
+   - Install dependencies from `requirements.txt`
+   - Set up MySQL via the plugin
+   - Deploy the API using the `Procfile`
+   - Assign a live URL
+
+### Option B: Via Railway Dashboard (GitHub Integration)
+
+1. Go to [Railway Dashboard](https://railway.app/dashboard)
+2. Click **"New Project"** → **"Deploy from GitHub"**
 3. Connect your GitHub repository
-4. Select `store-system` repo
-5. Click **"Apply"**
-
-Render will automatically:
-- Detect `render.yaml`
-- Create MySQL database
-- Set all environment variables
-- Deploy the API
-
-### Option B: Manual Setup
-
-If blueprint doesn't work:
-
-1. **Create MySQL Database:**
-   - Click **"New"** → **"MySQL"**
-   - Name: `store-system-db`
-   - Plan: `Free`
-   - Click **"Create"**
-
-2. **Create Web Service:**
-   - Click **"New"** → **"Web Service"**
-   - Connect GitHub repo
-   - Name: `store-system-api`
-   - Runtime: `Python 3`
-   - Plan: `Free`
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2`
-
-3. **Add Environment Variables:**
-   - Go to **Environment** tab
-   - Add these variables:
+4. Select the `store-system` repo
+5. **Add a Plugin:**
+   - Click **"+ New"** → **"Plugin"** → Select **"MySQL"**
+   - Railway creates MySQL and injects env vars automatically
+6. **Add Variables** (Settings → Variables):
    ```
-   MYSQL_HOST = <your-mysql-host>
-   MYSQL_PORT = <your-mysql-port>
-   MYSQL_USER = root
-   MYSQL_PASSWORD = <your-mysql-password>
-   MYSQL_DATABASE = inventory_db
-   API_SECRET_KEY = <generate-random-string>
+   ADMIN_PASSWORD = your_secure_admin_password
+   API_SECRET_KEY = your_random_secret_key_here
+   ALLOWED_ORIGINS = https://your-domain.com
    ```
+7. Click **"Deploy"** — Railway auto-builds using `requirements.txt` and `Procfile`
 
 ---
 
-## Step 3: Update database.py
+## Step 3: Environment Variables
 
-**Already done!** The code now uses environment variables:
-```python
-MYSQL_CONFIG = {
-    'host': os.getenv('MYSQL_HOST', 'localhost'),
-    'port': int(os.getenv('MYSQL_PORT', 3306)),
-    'user': os.getenv('MYSQL_USER', 'root'),
-    'password': os.getenv('MYSQL_PASSWORD', ''),
-    'database': os.getenv('MYSQL_DATABASE', 'inventory_db'),
-}
-```
+### Auto-provisioned by Railway MySQL plugin:
+| Variable | Description |
+|----------|-------------|
+| `MYSQLHOST` | MySQL host address |
+| `MYSQLPORT` | MySQL port (MySQL 8: 3306) |
+| `MYSQLUSER` | MySQL user |
+| `MYSQLPASSWORD` | MySQL password |
+| `MYSQLDATABASE` | Database name |
+| `MYSQL_URL` | Full connection URL |
 
----
+### Manually configured:
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `ADMIN_PASSWORD` | Admin login password | `securePass123!` |
+| `API_SECRET_KEY` | JWT/API token secret | `a1b2c3d4e5f6...` |
+| `ALLOWED_ORIGINS` | Comma-separated allowed CORS origins | `https://myapp.com` |
 
-## Step 4: Deploy
-
-```bash
-# Push any changes to GitHub:
-git add .
-git commit -m "Deploy to Render"
-git push origin main
-
-# Render will automatically:
-# 1. Detect changes
-# 2. Build the app
-# 3. Deploy (2-3 minutes)
-```
+**Note:** The code in `database.py` automatically reads env vars with fallback to `MYSQLHOST`/`MYSQLPORT` (Railway-style) and `MYSQL_HOST`/`MYSQL_PORT` (custom-style).
 
 ---
 
-## Step 5: Test Deployment
+## Step 4: Verify Deployment
 
-1. Render dashboard ma **"Events"** tab check karo
-2. Build successful thaya pachhi **"URL"** copy karo
-3. Browser ma URL open karo
-4. Test karo:
-   - Homepage loads
-   - Inward page works
-   - Scanner works
-   - Reports generate
+1. Check the **"Deployments"** tab for build status
+2. Once deployed, go to **"Settings"** → **"Domain"** to find your live URL
+3. Open the URL and verify:
+   - Homepage loads at `/`
+   - Dashboard loads at `/dashboard`
+   - Scanner page at `/scanner`
+   - API responds at `/api/auth/token`
 
 ---
 
 ## 🔄 Future Updates
 
 ```bash
-# Jab pan code update karo:
+# Whenever you make code changes:
 
-# 1. Changes check karo:
+# 1. Check working tree:
 git status
 
-# 2. Add all files:
+# 2. Add files:
 git add .
 
 # 3. Commit:
@@ -131,7 +146,10 @@ git commit -m "Update: description of changes"
 # 4. Push:
 git push origin main
 
-# Render automatically deploy thase (2-3 min)
+# 5. Trigger deploy (if auto-deploy is off):
+railway up
+
+# Railway automatically deploys on push to main (2-3 minutes)
 ```
 
 ---
@@ -142,10 +160,10 @@ git push origin main
 # Status check
 git status
 
-# Changes dekhva
+# View changes
 git diff
 
-# Specific file commit
+# Stage and commit a specific file
 git add filename.py
 git commit -m "Fix bug"
 
@@ -155,49 +173,58 @@ git reset --soft HEAD~1
 # Pull latest changes
 git pull origin main
 
-# Create new branch (new feature mate)
+# Create a new branch for a feature
 git checkout -b feature-name
 
-# Push branch
+# Push a branch
 git push origin feature-name
 ```
 
 ---
 
-## 📊 Free Tier Limits (Render)
+## 📊 Free Tier Limits (Railway)
 
 | Resource | Limit |
 |----------|-------|
-| RAM | 512 MB |
-| CPU | Shared |
-| Bandwidth | 100 GB/month |
+| RAM | 512 MB (shared) |
+| Disk Storage | 1 GB |
+| Bandwidth | 1 TB/month |
 | MySQL Storage | 1 GB |
-| Always-on | ❌ Spins down after 15 min inactivity |
+| Always-on | ❌ Spins down after 30 min inactivity |
+| Deployments | 500 hours/month |
 
-**Note:** Free tier spins down after 15 minutes of inactivity. First request after spin-down takes ~30 seconds to wake up.
+**Note:** The free tier includes $5 of credit per month. The MySQL plugin uses MySQL 8 and spins down after 30 minutes of inactivity on free plans.
 
 ---
 
 ## ⚠️ Important Notes
 
-1. **File Uploads:** `static/uploads/` ma uploaded images che. Render free tier ma **disk ephemeral** che (restart/reset thay). Persistent storage mate:
-   - Render dashboard → **Disks** → **New Disk**
-   - Mount path: `/app/static/uploads`
-   - Size: 1 GB (free)
+1. **File Uploads:** `static/uploads/` stores uploaded images. Railway's filesystem is **ephemeral** on the free tier (resets on redeploy/restart). For production:
+   - Use a persistent volume via Railway's **"Storage"** plugin, or
+   - Use an object storage service (S3-compatible)
 
-2. **Database Backup:** Render automatic backups kare che, but manually:
+2. **Database Backup:** Railway provides automatic backups for the MySQL plugin. Manual export:
    ```bash
-   # Render Dashboard → Database → Backups → Export
+   railway connect mysql
+   ```
+   Or via the Railway dashboard → Database → Backups.
+
+3. **Custom Domain:** Railway assigns a free subdomain like `store-system.up.railway.app`. To add a custom domain:
+   - Settings → Domains → "Add Domain"
+   - Enter your domain and follow DNS setup instructions
+
+4. **Logs:** Real-time logs are available in the Railway dashboard under **"Deployments"** → click a deployment → **"Logs"**
+   ```bash
+   # Or stream logs locally:
+   railway logs
    ```
 
-3. **Custom Domain:** Free subdomain aapse: `store-system-api.onrender.com`. Custom domain add karva mate:
-   - Settings → Custom Domains
-   - Domain add karo
-   - DNS settings update karo
+5. **HTTPS:** Automatic SSL/TLS certificate via Let's Encrypt (free, included).
 
-4. **Logs:** Render dashboard → Logs tab ma real-time logs dekhay
-
-5. **HTTPS:** Automatic SSL certificate (free)
+6. **`runtime.txt`:** Pin your Python version for reproducible builds.
+   ```
+   python-3.12.0
+   ```
 
 ---
 
@@ -206,37 +233,49 @@ git push origin feature-name
 ### Build Failed
 ```bash
 # Common issues:
-# 1. Missing requirements.txt → Check karo ke file exists
-# 2. Procfile syntax error → Check karo ke correct che
-# 3. Port configuration → $PORT variable use karo
+# 1. Missing requirements.txt -> ensure the file exists at project root
+# 2. Procfile syntax -> check it reads: web: uvicorn main:app --host 0.0.0.0 --port $PORT
+# 3. Port configuration -> always use $PORT env var, never hardcode
+# 4. Check build logs:
+railway logs --tail
 ```
 
 ### Database Connection Error
 ```bash
-# Check karo:
-# 1. Environment variables set correctly che ke?
-# 2. MySQL service running che ke?
-# 3. init_db() properly call thay che ke?
+# Check:
+# 1. MySQL plugin is added and started in Railway dashboard
+# 2. Environment variables MYSQLHOST, MYSQLPORT, etc. are set
+# 3. database.py auto-reads MYSQLHOST/MYSQLPORT (Railway convention)
+# 4. init_db() runs on startup to create tables
 ```
 
-### App Crashes
+### App Crashes on Startup
 ```bash
-# Render logs check karo:
-# Dashboard → Your Service → Logs
+# Check Railway deployment logs:
+railway logs --tail
+
 # Common issues:
-# - Import errors
-# - Missing dependencies
-# - Port binding issues
+# - Import errors (missing packages in requirements.txt)
+# - Missing environment variables (ADMIN_PASSWORD, API_SECRET_KEY)
+# - Port binding issues (must use $PORT)
+```
+
+### "address already in use" on local
+```bash
+# If running locally, check port 8000:
+netstat -ano | findstr :8000
+# Then kill the PID if needed:
+taskkill /PID <PID> /F
 ```
 
 ---
 
 ## 📞 Support
 
-- **Render Docs:** https://render.com/docs
-- **FastAPI Docs:** https://fastapi.tiangolo.com/deployment/
+- **Railway Docs:** https://docs.railway.app
+- **FastAPI Deployment:** https://fastapi.tiangoli.com/deployment/
 - **Project Issues:** GitHub Issues
 
 ---
 
-**Deployment successful? Test karo ane enjoy karo! 🎉**
+**Deployment successful? Test it and enjoy! 🎉**

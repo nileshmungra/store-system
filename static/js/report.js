@@ -322,19 +322,6 @@ async function loadEndToEndSummary() {
                 directTextEl.innerText = `${disp} / ${plan} Meters Dispatched`;
             }
 
-            const kitPct = data.fulfillment_summary?.store_kits?.fulfillment_rate_pct || 0;
-            const kitPctEl = document.getElementById('e2e-kit-pct');
-            const kitBarEl = document.getElementById('e2e-kit-bar');
-            const kitTextEl = document.getElementById('e2e-kit-text');
-
-            if (kitPctEl) kitPctEl.innerText = kitPct + '%';
-            if (kitBarEl) kitBarEl.style.width = Math.min(100, Math.max(0, kitPct)) + '%';
-            if (kitTextEl) {
-                const comp = data.fulfillment_summary?.store_kits?.completed_kits || 0;
-                const tot = data.fulfillment_summary?.store_kits?.total_kits || 0;
-                kitTextEl.innerText = `${comp} / ${tot} Store Kits Completed`;
-            }
-
             renderNonDpChart(data.non_dp_summary?.reason_labels, data.non_dp_summary?.reason_qtys);
 
             const tbody = document.getElementById('nondpTableBody');

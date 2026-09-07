@@ -1,33 +1,27 @@
-/**
- * 📦 Page Loader / Progress Bar Module
- * Store Management System
- *
- * Usage:
- *   PageLoader.show()          - Show full overlay + start/reset progress bar
- *   PageLoader.hide()          - Finish progress, then hide overlay
- *   PageLoader.start()         - Start progress bar only (for AJAX)
- *   PageLoader.complete()      - Complete progress bar only (for AJAX)
- *   PageLoader.setProgress(n)  - Set progress bar to n% (0-100)
- */
-
 const PageLoader = (function () {
     let progressBar = null;
     let overlay = null;
     let isVisible = false;
     let progressInterval = null;
     let fallbackTimer = null;
+    let windowLoadHandled = false;
 
-    const FALLBACK_DELAY = 8000;
+    const FALLBACK_DELAY = 15000; // 15 seconds safe ceiling
 
     function init() {
         progressBar = document.getElementById('page-progress-bar');
         overlay = document.getElementById('page-loader-overlay');
 
-        if (!progressBar && !overlay) {
-            console.warn('[PageLoader] Elements not found. Ensure loader HTML is present.');
-            return false;
+        if (!progressBar) {
+            // Auto create top progress bar if not present yet
+            progressBar = document.createElement('div');
+            progressBar.id = 'page-progress-bar';
+            const target = document.body || document.documentElement;
+            if (target) {
+                target.insertBefore(progressBar, target.firstChild);
+            }
         }
-        return true;
+        return !!progressBar;
     }
 
     function resetProgress() {
@@ -53,7 +47,7 @@ const PageLoader = (function () {
         if (progressBar) {
             progressBar.classList.add('active');
             progressBar.classList.remove('complete');
-            progressBar.style.width = '0%';
+            progressBar.style.width = '10%';
             simulateProgress();
         }
 
@@ -89,41 +83,11 @@ const PageLoader = (function () {
     }
 
     function start() {
-        if (!init()) return;
-
-        if (progressBar && !progressBar.classList.contains('active')) {
-            progressBar.classList.add('active');
-            progressBar.classList.remove('complete');
-            progressBar.style.width = '0%';
-            simulateProgress();
-        }
+        show();
     }
 
     function complete() {
-        if (!progressBar && !overlay) init();
-
-        clearInterval(progressInterval);
-        progressInterval = null;
-        clearTimeout(fallbackTimer);
-        fallbackTimer = null;
-
-        if (progressBar) {
-            progressBar.style.width = '100%';
-            progressBar.classList.add('complete');
-
-            setTimeout(function () {
-                if (progressBar) {
-                    progressBar.classList.remove('active', 'complete');
-                    progressBar.style.width = '0%';
-                }
-            }, 500);
-        }
-
-        if (overlay) {
-            overlay.classList.remove('active');
-        }
-
-        isVisible = false;
+        hide();
     }
 
     function setProgress(percent) {
@@ -136,51 +100,58 @@ const PageLoader = (function () {
 
     function simulateProgress() {
         clearInterval(progressInterval);
-        let width = 5;
+        let width = 12;
+        if (progressBar) progressBar.style.width = width + '%';
         progressInterval = setInterval(function () {
-            if (width >= 88) {
-                clearInterval(progressInterval);
-                progressInterval = null;
+            if (width >= 85) {
+                if (width < 93) {
+                    width += 0.5;
+                    if (progressBar) progressBar.style.width = width + '%';
+                }
                 return;
             }
-            width += Math.random() * 12;
-            if (width > 88) width = 88;
+            width += Math.random() * 12 + 4;
+            if (width > 85) width = 85;
             if (progressBar) {
                 progressBar.style.width = width + '%';
             }
-        }, 180);
+        }, 160);
     }
 
     function scheduleFallback() {
         clearTimeout(fallbackTimer);
         fallbackTimer = setTimeout(function () {
             if (isVisible) {
-                console.warn('[PageLoader] Fallback auto-hide triggered.');
+                console.warn('[PageLoader] Safety fallback auto-hide triggered after 15s.');
                 hide();
             }
         }, FALLBACK_DELAY);
     }
 
-    // Auto-initialize on DOM ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
+    // On window load, don't immediately hide if page has async data to fetch; provide grace period
+    function handleWindowLoad() {
+        if (windowLoadHandled) return;
+        windowLoadHandled = true;
+        setTimeout(function () {
+            if (isVisible) {
+                hide();
+            }
+        }, 7000);
     }
 
-    // Show loader on page start
+    window.addEventListener('load', handleWindowLoad);
+
+    // Auto-initialize on DOM ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {
+            init();
             show();
         });
     } else {
+        init();
         show();
     }
 
-    // Do NOT auto-hide on window.load.
-    // Pages should call PageLoader.hide() when they are actually ready.
-
-    // Expose public API
     return {
         show: show,
         hide: hide,

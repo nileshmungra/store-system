@@ -101,7 +101,12 @@
         <!-- ── Control Bar (hidden in print) ── -->
         <div class="card glass-card p-3 mb-4 no-print" id="planSelectorCard">
             <div class="row g-3 align-items-center">
-                <div class="col-md-12 text-end d-flex gap-2 justify-content-end flex-wrap">
+                <div class="col-md-4">
+                    <select id="planSelector" class="form-select bg-dark text-white border-secondary">
+                        <option value="">-- Select DP Plan --</option>
+                    </select>
+                </div>
+                <div class="col-md-8 text-end d-flex gap-2 justify-content-end flex-wrap">
                     <button class="btn btn-outline-secondary fw-semibold rounded-3 btn-sm px-3"
                         onclick="window.print()">
                         <i class="bi bi-file-pdf me-1"></i> Save PDF
@@ -132,18 +137,13 @@
                 </div>
             </div>
 
+            <!-- ── DP PLAN NUMBER (Large, prominent) ── -->
+            <div id="dpPlanNumberBanner">
+                <span id="dpPlanNumberDisplay">DP PLAN: —</span>
+            </div>
+
             <!-- ── META INFO ROW ── -->
             <div class="ch-meta-grid">
-                <div class="ch-meta-cell">
-                    <span class="ch-meta-label">Select DP Plan</span>
-                    <select id="planSelector" class="form-select form-select-sm">
-                        <option value="">-- Select DP Plan --</option>
-                    </select>
-                </div>
-                <div class="ch-meta-cell">
-                    <span class="ch-meta-label">PAN Number</span>
-                    <span class="ch-meta-value" id="lbl_pan_number">—</span>
-                </div>
                 <div class="ch-meta-cell">
                     <span class="ch-meta-label">Sales Order (SO No)</span>
                     <span class="ch-meta-value" id="lbl_so_no">—</span>
@@ -151,6 +151,10 @@
                 <div class="ch-meta-cell">
                     <span class="ch-meta-label">Challan Date &amp; Time</span>
                     <span class="ch-meta-value" id="lbl_challan_date">—</span>
+                </div>
+                <div class="ch-meta-cell">
+                    <span class="ch-meta-label">Status</span>
+                    <span class="ch-meta-value" id="lbl_status_badge">STATUS: —</span>
                 </div>
             </div>
 
@@ -269,7 +273,7 @@
                 </div>
             </div>
 
-            <!-- ── SIGNATURES ── -->
+<!-- ── SIGNATURES ── -->
             <div class="ch-signatures" id="signatureSection">
                 <div class="ch-sig-col">
                     <div class="ch-sig-line"></div>
@@ -287,9 +291,213 @@
                     <div class="ch-sig-role">Loading Staff Sign</div>
                 </div>
             </div>
-
         </div><!-- /challan-card -->
     </div><!-- /container -->
+
+    <style>
+        @media print {
+            body { margin: 0; padding: 0; background: #fff; }
+            body * { visibility: hidden; }
+            #challanPrintArea, #challanPrintArea * { visibility: visible; }
+            #challanPrintArea { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+                padding: 12mm;
+            }
+            .no-print { display: none !important; }
+
+            @page { 
+                size: A4 portrait;
+                margin: 15mm 10mm 12mm 10mm;
+            }
+
+            .challan-card {
+                font-family: 'Courier New', Courier, monospace;
+                font-size: 9px;
+                line-height: 1.2;
+                max-height: none;
+                overflow: visible;
+            }
+
+            .ch-header { 
+                margin-bottom: 10px;
+                border-bottom: 2px solid #000;
+                padding-bottom: 8px;
+            }
+            .ch-company-name { 
+                font-size: 20px; 
+                font-weight: bold;
+                text-align: center;
+                text-transform: uppercase;
+            }
+            .ch-company-tagline { font-size: 10px; text-align: center; }
+            .ch-company-address { 
+                font-size: 9px; 
+                text-align: center;
+            }
+
+            .ch-header-right {
+                display: none;
+            }
+
+            /* DP Plan Number Banner - Prints prominently */
+            #dpPlanNumberBanner {
+                display: block !important;
+                text-align: center;
+                margin: 8px 0 4px 0;
+                padding: 8px 0;
+                border-bottom: 2px solid #000;
+                border-top: 2px solid #000;
+                background: #f8f8f8;
+            }
+
+            #dpPlanNumberDisplay {
+                display: block;
+                font-size: 22px;
+                font-weight: bold;
+                color: #000;
+                font-family: 'Courier New', Courier, monospace;
+                letter-spacing: 4px;
+            }
+
+            .ch-meta-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 3px 10px;
+                margin-bottom: 10px;
+            }
+            .ch-meta-cell { 
+                border: 1px solid #000; 
+                padding: 4px 6px;
+            }
+            .ch-meta-label { 
+                font-size: 7px; 
+                display: block; 
+                color: #000;
+                font-weight: bold;
+            }
+            .ch-meta-value { 
+                font-size: 9px; 
+                font-weight: bold; 
+                display: block; 
+                color: #000;
+            }
+
+            .ch-details-card { 
+                margin-bottom: 5px;
+            }
+            .ch-details-header { 
+                font-size: 10px; 
+                padding: 3px 6px;
+                border-bottom: 1px solid #000;
+                font-weight: bold;
+            }
+            .ch-fields-grid { 
+                display: grid; 
+                grid-template-columns: repeat(3, 1fr); 
+                gap: 3px 10px; 
+            }
+            .ch-field { 
+                margin-bottom: 2px; 
+            }
+            .ch-field-label { 
+                font-size: 7px; 
+                display: block; 
+                color: #000;
+                font-weight: 500;
+            }
+
+            .ch-details-border-top { 
+                border-top: 1px solid #000; 
+                padding-top: 4px; 
+                margin-top: 4px;
+            }
+            .ch-table { 
+                font-size: 8.5px;
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .ch-table th, .ch-table td { 
+                padding: 3px 4px; 
+                border: 1px solid #000; 
+                vertical-align: middle;
+            }
+            .ch-table th { 
+                background: #f0f0f0; 
+                font-size: 8px; 
+                font-weight: bold;
+            }
+
+            .ch-totals { 
+                margin-top: 5px;
+                border-top: 1px solid #000;
+                padding-top: 3px;
+            }
+            .ch-totals div { 
+                font-size: 9px; 
+                padding: 2px 0; 
+            }
+            .ch-totals td:first-child {
+                font-weight: bold;
+            }
+            .ch-net-value { 
+                font-weight: bold; 
+                font-size: 10px;
+            }
+
+            .ch-signatures { 
+                display: flex; 
+                justify-content: space-between; 
+                gap: 8px; 
+                margin-top: 12px;
+                border-top: 1px solid #000;
+                padding-top: 8px;
+            }
+            .ch-sig-col { 
+                flex: 1; 
+                text-align: center; 
+            }
+            .ch-sig-line { 
+                border-top: 1px solid #000; 
+                margin: 25px 4px 4px 4px;
+            }
+            .ch-sig-name { 
+                font-size: 9px; 
+                font-weight: bold; 
+            }
+            .ch-sig-role { 
+                font-size: 8px; 
+                color: #000;
+            }
+
+            .ch-summary {
+                margin-top: 8px;
+                border-top: 1px solid #000;
+                padding-top: 5px;
+            }
+            .ch-summary-row {
+                display: flex;
+                justify-content: space-between;
+                font-size: 9px;
+            }
+            .ch-summary-divider {
+                border-top: 1px dashed #000;
+                margin: 3px 0;
+            }
+
+            .ch-loaded-qty {
+                font-weight: bold;
+            }
+
+            #challanTypeBadge {
+                font-size: 11px;
+                padding: 4px 8px;
+                text-align: center;
+            }
+        }
+    </style>
 
     <script>
         let currentPlanId = null;
@@ -335,10 +543,14 @@
             document.getElementById('planSelector').value = '';
             document.getElementById('challanItemsTbody').innerHTML =
                 `<tr><td colspan="8" class="text-center py-4 ch-empty-msg"><i class="bi bi-inbox me-2"></i>Please select a DP Plan.</td></tr>`;
-            document.getElementById('lbl_pan_number').innerText = '—';
             document.getElementById('lbl_so_no').innerText = '—';
             document.getElementById('lbl_challan_date').innerText = '—';
             document.getElementById('lbl_status_badge').innerText = 'STATUS: —';
+            
+            const dpPlanDisplay = document.getElementById('dpPlanNumberDisplay');
+            if (dpPlanDisplay) {
+                dpPlanDisplay.innerText = 'DP PLAN: —';
+            }
         }
 
         async function loadPlanSelector() {
@@ -370,9 +582,14 @@
                     return;
                 }
 
-                document.getElementById('lbl_pan_number').innerText = data.pan_number || '—';
                 document.getElementById('lbl_so_no').innerText = data.so_no || 'N/A';
                 document.getElementById('lbl_status_badge').innerText = `STATUS: ${data.plan_status || 'UNKNOWN'}`;
+
+                // Update DP Plan Number banner for printing
+                const dpPlanDisplay = document.getElementById('dpPlanNumberDisplay');
+                if (dpPlanDisplay && data.plan_no) {
+                    dpPlanDisplay.innerText = `DP PLAN: ${data.plan_no}`;
+                }
 
                 const now = new Date(data.created_at || Date.now());
                 document.getElementById('lbl_challan_date').innerText =
