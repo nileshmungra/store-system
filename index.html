@@ -704,14 +704,58 @@
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <label class="input-label-custom">Total Boxes *</label>
+                                <label class="input-label-custom fw-bold">
+                                    Number of Bundles
+                                    <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="Total ketla bundles/boxes che? (e.g. 10 bundles)"></i>
+                                </label>
                                 <input type="number" id="total_boxes" class="form-control form-control-custom"
-                                    placeholder="e.g., 10" required>
+                                    placeholder="e.g., 10" required min="1">
                             </div>
                             <div class="col-md-3">
-                                <label class="input-label-custom">Qty per Box *</label>
+                                <label class="input-label-custom fw-bold">
+                                    Items per Bundle
+                                    <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="Ek bundle/box ma ketla pieces che? (e.g. 6 pipes per bundle)"></i>
+                                </label>
                                 <input type="number" id="qty_per_box" class="form-control form-control-custom"
-                                    placeholder="e.g., 50" required>
+                                    placeholder="e.g., 50" required min="1">
+                            </div>
+                            <!-- Bundle Configuration -->
+                            <div class="col-12 mt-2">
+                                <div class="card p-3 border-warning bg-warning bg-opacity-10">
+                                    <h6 class="fw-bold text-warning mb-3">
+                                        <i class="bi bi-box-seam me-2"></i>Bundle Configuration
+                                    </h6>
+                                    <div class="row g-3 align-items-center">
+                                        <div class="col-md-3">
+                                            <label class="input-label-custom fw-bold">
+                                                Items per Bundle
+                                                <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="Ek bundle/box ma ketla pieces che? (e.g. 6 pipes per bundle)"></i>
+                                            </label>
+                                            <input type="number" id="items_per_bundle" class="form-control form-control-custom" value="1" min="1" placeholder="e.g. 6">
+                                        </div>
+                                        <div class="col-md-2 text-center">
+                                            <span class="input-group-text bg-dark text-white fw-bold mt-4">×</span>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="input-label-custom fw-bold">
+                                                Number of Bundles
+                                                <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="Total ketla bundles/boxes che? (e.g. 10 bundles)"></i>
+                                            </label>
+                                            <input type="number" id="num_bundles" class="form-control form-control-custom" value="1" min="1" placeholder="e.g. 10">
+                                        </div>
+                                        <div class="col-md-2 text-center">
+                                            <span class="input-group-text bg-success text-white fw-bold mt-4">=</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="input-label-custom fw-bold">Total Pieces</label>
+                                            <input type="number" id="bundle_total_qty" class="form-control form-control-custom bg-light" placeholder="Enter total qty" value="">
+                                        </div>
+                                    </div>
+                                    <div class="form-text text-muted mt-2">
+                                        <i class="bi bi-lightbulb me-1"></i>
+                                        Example: 6 items/bundle × 10 bundles = <strong>60 total pieces</strong>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="input-label-custom">Supplier / Party Name</label>
@@ -945,6 +989,46 @@
                 if (res.ok) { alert(`✅ Batch #${result.batch_id} added successfully!`); supplierForm.reset(); }
             } catch (err) { alert("❌ Connection Error"); } finally { saveBtn.disabled = false; }
         }
+
+        function calculateInwardBundleTotal(source) {
+            const itemsPerBundleEl = document.getElementById('items_per_bundle');
+            const numBundlesEl = document.getElementById('num_bundles');
+            const totalEl = document.getElementById('bundle_total_qty');
+            
+            if (!itemsPerBundleEl || !numBundlesEl || !totalEl) return;
+            
+            const itemsPerBundle = parseFloat(itemsPerBundleEl.value) || 0;
+            const numBundles = parseFloat(numBundlesEl.value) || 0;
+            const total = parseFloat(totalEl.value) || 0;
+            
+            if (source === 'total') {
+                if (itemsPerBundle > 0) {
+                    const calculatedBundles = total / itemsPerBundle;
+                    numBundlesEl.value = Math.round(calculatedBundles * 100) / 100;
+                }
+            } else {
+                if (itemsPerBundle > 0 && numBundles > 0) {
+                    totalEl.value = Math.round(itemsPerBundle * numBundles * 100) / 100;
+                }
+            }
+            
+            const qtyPerBoxEl = document.getElementById('qty_per_box');
+            const totalBoxesEl = document.getElementById('total_boxes');
+            if (qtyPerBoxEl && itemsPerBundle > 0) qtyPerBoxEl.value = itemsPerBundle;
+            if (totalBoxesEl && numBundles > 0) totalBoxesEl.value = numBundles;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const itemsPerBundleEl = document.getElementById('items_per_bundle');
+            const numBundlesEl = document.getElementById('num_bundles');
+            const totalEl = document.getElementById('bundle_total_qty');
+            
+            if (itemsPerBundleEl) itemsPerBundleEl.addEventListener('input', () => calculateInwardBundleTotal('items'));
+            if (numBundlesEl) numBundlesEl.addEventListener('input', () => calculateInwardBundleTotal('bundles'));
+            if (totalEl) totalEl.addEventListener('input', () => calculateInwardBundleTotal('total'));
+            
+            calculateInwardBundleTotal('items');
+        });
 
         function formatInwardDate(dateStr) {
             if (!dateStr) return 'N/A';

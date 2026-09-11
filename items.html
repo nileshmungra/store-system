@@ -8,7 +8,6 @@
     <!-- Google Fonts, Bootstrap, Bootstrap Icons & Font Awesome -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -24,11 +23,21 @@
             --success-hover: #059669;
             --danger-color: #ef4444;
             --danger-hover: #dc2626;
-            --bg-color: #f3f4f6;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f1f5f9;
             --card-bg: #ffffff;
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --border-color: #e5e7eb;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border-color: #cbd5e1;
+            --input-bg: #ffffff;
         }
 
         * {
@@ -39,17 +48,17 @@
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding: 0;
+            background-color: var(--bg-color) !important;
+            color: var(--text-main) !important;
+            padding: 20px 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
-        /* Header Bar */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -58,7 +67,7 @@
             background: var(--card-bg);
             padding: 20px 25px;
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
         }
 
         .page-header h2 {
@@ -67,9 +76,9 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            margin: 0;
         }
 
-        /* 🔒 Login Box */
         .login-card {
             max-width: 420px;
             margin: 80px auto;
@@ -77,13 +86,14 @@
             padding: 35px 30px;
             border-radius: 16px;
             text-align: center;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
         }
 
         .login-card .icon-box {
             width: 70px;
             height: 70px;
-            background: #eef2ff;
+            background: rgba(79, 70, 229, 0.15);
             color: var(--primary-color);
             border-radius: 50%;
             display: flex;
@@ -93,7 +103,6 @@
             margin: 0 auto 20px;
         }
 
-        /* Dashboard Cards Grid */
         .grid-2 {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -108,11 +117,11 @@
         }
 
         .card {
-            background: var(--card-bg);
+            background: var(--card-bg) !important;
             border-radius: 12px;
             padding: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-main) !important;
         }
 
         .card-title {
@@ -125,7 +134,6 @@
             gap: 8px;
         }
 
-        /* Form Layout */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -161,23 +169,25 @@
         }
 
         input,
-        select {
+        select,
+        textarea {
             width: 100%;
             padding: 10px 14px;
             border: 1.5px solid var(--border-color);
             border-radius: 8px;
             font-size: 0.9rem;
             outline: none;
+            background-color: var(--input-bg) !important;
+            color: var(--text-main) !important;
             transition: all 0.2s;
         }
 
         input:focus,
         select:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
         }
 
-        /* Buttons */
         .btn {
             padding: 10px 18px;
             border-radius: 8px;
@@ -219,7 +229,6 @@
             background-color: var(--danger-hover);
         }
 
-        /* Responsive Table */
         .table-responsive {
             overflow-x: auto;
             border-radius: 8px;
@@ -234,7 +243,7 @@
         }
 
         th {
-            background-color: #f9fafb;
+            background-color: rgba(255, 255, 255, 0.03);
             color: var(--text-muted);
             font-weight: 600;
             padding: 12px 16px;
@@ -248,186 +257,38 @@
             color: var(--text-main);
         }
 
-        tr:last-child td {
-            border-bottom: none;
-        }
-
         tr:hover {
-            background-color: var(--hover-bg, #f1f5f9) !important;
+            background-color: rgba(255, 255, 255, 0.05);
         }
 
-        :root {
-            --hover-bg: rgba(255, 255, 255, 0.06);
-        }
-
-        [data-theme="light"] {
-            --hover-bg: #f1f5f9;
-        }
-
-        /* Table text color safety for both themes */
-        .table td,
-        .table th {
-            color: var(--text-main) !important;
-            transition: background-color 0.2s ease, color 0.2s ease;
-        }
-
-        /* 🌓 Global Dark / Light Theme System */
-        :root {
-            --primary-color: #4f46e5;
-            --primary-hover: #4338ca;
-            --success-color: #10b981;
-            --danger-color: #ef4444;
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-            --input-bg: #0f172a;
-        }
-
-        [data-theme="light"] {
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #475569;
-            --border-color: #cbd5e1;
-            --input-bg: #ffffff;
-        }
-
-        body {
-            background-color: var(--bg-color) !important;
-            color: var(--text-main) !important;
-            padding: 30px 15px;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        .card,
-        .page-header,
-        .login-card {
-            background-color: var(--card-bg) !important;
-            color: var(--text-main) !important;
-            border: 1px solid var(--border-color) !important;
-        }
-
-        input,
-        select,
-        textarea {
-            background-color: var(--input-bg) !important;
-            color: var(--text-main) !important;
-            border-color: var(--border-color) !important;
-        }
-
-        .table th,
-        .table td {
-            color: var(--text-main) !important;
-            border-color: var(--border-color) !important;
-        }
-
-        /* 🚀 High-End Pill Navigation Buttons & 4 Clean Dropdowns */
+        /* Navbar Styling */
         .navbar-custom {
             background-color: rgba(15, 23, 42, 0.95) !important;
             backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-bottom: 1px solid var(--border-color) !important;
         }
 
         .nav-pill-custom {
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-            padding: 8px 16px !important;
-            border-radius: 12px !important;
-            font-size: 13.5px !important;
-            font-weight: 600 !important;
-            color: #cbd5e1 !important;
-            text-decoration: none !important;
-            background: rgba(255, 255, 255, 0.06) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            transition: all 0.2s ease-in-out !important;
-            white-space: nowrap !important;
-        }
-
-        .nav-pill-custom:hover,
-        .nav-pill-custom:focus {
-            color: #ffffff !important;
-            background: rgba(255, 255, 255, 0.16) !important;
-            border-color: rgba(255, 255, 255, 0.25) !important;
-            transform: translateY(-1.5px) !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
-            text-decoration: none !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #cbd5e1;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease-in-out;
         }
 
         .nav-pill-custom.active {
-            color: #ffffff !important;
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
-            border-color: #818cf8 !important;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45) !important;
-            font-weight: 700 !important;
-            text-decoration: none !important;
+            color: #ffffff;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            border-color: #818cf8;
         }
 
-        .dropdown-menu-custom {
-            background-color: var(--bg-card) !important;
-            border: 1px solid var(--border-color) !important;
-            border-radius: 12px !important;
-            box-shadow: 0 10px 30px var(--shadow-glow) !important;
-            padding: 8px !important;
-            margin-top: 8px !important;
-        }
-
-        .dropdown-item-custom {
-            color: var(--text-main) !important;
-            border-radius: 8px !important;
-            padding: 9px 14px !important;
-            font-size: 13.5px !important;
-            font-weight: 600 !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            transition: all 0.2s ease !important;
-        }
-
-        .dropdown-item-custom:hover {
-            background-color: rgba(99, 102, 241, 0.15) !important;
-            color: #818cf8 !important;
-            transform: translateX(3px) !important;
-        }
-
-        [data-theme="light"] .navbar-custom {
-            background-color: #ffffff !important;
-            border-bottom: 1px solid #cbd5e1 !important;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
-        }
-
-        [data-theme="light"] .nav-pill-custom {
-            color: #334155 !important;
-            background: #f1f5f9 !important;
-            border-color: #cbd5e1 !important;
-        }
-
-        [data-theme="light"] .nav-pill-custom:hover {
-            color: #0f172a !important;
-            background: #e2e8f0 !important;
-            border-color: #94a3b8 !important;
-        }
-
-        [data-theme="light"] .nav-pill-custom.active {
-            color: #ffffff !important;
-            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
-            border-color: #4338ca !important;
-            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
-        }
-
-        [data-theme="light"] .dropdown-menu-custom {
-            background-color: #ffffff !important;
-            border-color: #cbd5e1 !important;
-        }
-
-        [data-theme="light"] .dropdown-item-custom:hover {
-            background-color: #e2e8f0 !important;
-            color: #0f172a !important;
-        }
-
-        /* 🔒 Hide Protected Content Until Password Login */
         #protected-content {
             display: none;
         }
@@ -439,7 +300,6 @@
 
 <body>
 
-    <!-- 📦 Global Page Loader Elements -->
     <div id="page-progress-bar"></div>
     <div id="page-loader-overlay">
         <div class="loader-spinner"></div>
@@ -475,12 +335,11 @@
         </p>
     </div>
 
-    <!-- 📦 MAIN DASHBOARD CONTENT (PROTECTED BEHIND PASSWORD) -->
+    <!-- 📦 MAIN DASHBOARD CONTENT -->
     <div id="protected-content" class="container-fluid px-0">
 
-        <!-- Standard Top Navbar -->
         <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
+        <nav class="navbar navbar-expand-lg navbar-custom sticky-top py-2 mb-4">
             <div class="container-fluid px-4">
                 <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
                     <span class="fs-4 text-warning">📦</span>
@@ -494,72 +353,36 @@
 
                 <div class="collapse navbar-collapse" id="topNavbarMenu">
                     <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
-
-                        <!-- 1. Inward & Factory Dropdown -->
                         <div class="nav-item dropdown">
-                            <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown"
-                                aria-expanded="false">
+                            <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-box-seam me-1 text-info"></i> Inward & Production
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                                <li><a class="dropdown-item dropdown-item-custom" href="/inward-page"><i
-                                            class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
-                                <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i
-                                            class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a>
-                                </li>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="/inward-page"><i
+                                            class="bi bi-box-arrow-in-down text-info me-2"></i>Inward & QR Code</a></li>
+                                <li><a class="dropdown-item" href="/production-page"><i
+                                            class="bi bi-gear-wide-connected text-warning me-2"></i>Extruder
+                                        Production</a></li>
                             </ul>
                         </div>
 
-                        <!-- 2. Dispatch & Yard Dropdown -->
-                        <div class="nav-item dropdown">
-                            <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown"
-                                aria-expanded="false">
-                                <i class="bi bi-truck me-1 text-success"></i> Dispatch & Scanning
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                                <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i
-                                            class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
-                                <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i
-                                            class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
-                                <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i
-                                            class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan
-                                        Generator</a></li>
-                            </ul>
-                        </div>
-
-                        <!-- 3. Master Controls Dropdown -->
                         <div class="nav-item dropdown">
                             <a class="nav-pill-custom dropdown-toggle active" href="#" role="button"
-                                data-bs-toggle="dropdown" aria-expanded="false">
+                                data-bs-toggle="dropdown">
                                 <i class="bi bi-sliders me-1 text-warning"></i> Master Control
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                                <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i
-                                            class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
-                                <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i
-                                            class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li><a class="dropdown-item" href="/bom-page"><i
+                                            class="bi bi-diagram-3 text-warning me-2"></i>BOM Master</a></li>
+                                <li><a class="dropdown-item" href="/items-page"><i
+                                            class="bi bi-boxes text-info me-2"></i>Item Master & Admin</a></li>
                             </ul>
                         </div>
 
-                        <!-- 4. Reports & Logs Dropdown -->
-                        <div class="nav-item dropdown">
-                            <a class="nav-pill-custom dropdown-toggle " href="#" role="button" data-bs-toggle="dropdown"
-                                aria-expanded="false">
-                                <i class="bi bi-bar-chart-line me-1 text-primary"></i> Reports & Logs
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
-                                <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i
-                                            class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a>
-                                </li>
-                                <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i
-                                            class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
-                            </ul>
-                        </div>
-
-                        <!-- 🌓 Global Theme Toggle Button -->
-                        <button id="globalThemeBtn" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
-                            <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
-                            <span id="themeText">Dark Mode</span>
+                        <button id="globalThemeBtn"
+                            class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold ms-2"
+                            onclick="toggleGlobalTheme()">
+                            <span id="themeText">🌙 Dark Mode</span>
                         </button>
                     </div>
                 </div>
@@ -567,8 +390,7 @@
         </nav>
 
         <div class="container px-3 py-4">
-            <!-- Top Page Header -->
-            <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="page-header">
                 <h2><i class="fa-solid fa-boxes-stacked" style="color: var(--primary-color);"></i> Item Master & Admin
                     Panel</h2>
             </div>
@@ -633,7 +455,6 @@
 
                 <!-- B. Excel Upload & Erase Controls Card -->
                 <div style="display: flex; flex-direction: column; gap: 20px;">
-                    <!-- Excel Upload -->
                     <div class="card">
                         <div class="card-title">
                             <i class="fa-solid fa-file-excel" style="color: var(--success-color);"></i> Excel Bulk
@@ -647,8 +468,7 @@
                         </button>
                     </div>
 
-                    <!-- System Erase -->
-                    <div class="card" style="border-color: #fecaca; background: #fff5f5;">
+                    <div class="card" style="border-color: rgba(239, 68, 68, 0.4);">
                         <div class="card-title" style="color: var(--danger-color);">
                             <i class="fa-solid fa-triangle-exclamation"></i> Danger Zone
                         </div>
@@ -662,14 +482,12 @@
                 </div>
             </div>
 
-            <!-- Machine Management Section -->
+            <!-- C. Machine Management -->
             <div class="card" style="margin-bottom: 25px;">
                 <div class="card-title">
                     <i class="fa-solid fa-gears" style="color: var(--primary-color);"></i> Machine Master Management
-                    Management)
                 </div>
                 <div class="grid-2">
-                    <!-- Add Machine Form -->
                     <div>
                         <form id="addMachineForm" onsubmit="addMachine(event)">
                             <div class="form-group" style="margin-bottom: 15px;">
@@ -682,7 +500,6 @@
                             </button>
                         </form>
                     </div>
-                    <!-- Machine List Table -->
                     <div>
                         <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
                             <table>
@@ -694,7 +511,6 @@
                                     </tr>
                                 </thead>
                                 <tbody id="machinesTableBody">
-                                    <!-- Dynamic JS Rows -->
                                 </tbody>
                             </table>
                         </div>
@@ -702,120 +518,21 @@
                 </div>
             </div>
 
-            <!-- D. Transaction Edit Section -->
-            <div class="card" style="margin-bottom: 25px;">
-                <div class="card-title">
-                    <i class="fa-solid fa-pen-to-square" style="color: var(--primary-color);"></i> Edit Inward
-                    Transactions
-                </div>
-                <div class="grid-2">
-                    <!-- Edit Inward Entry -->
-                    <div>
-                        <h4
-                            style="font-size: 1rem; font-weight: 600; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-                            Inward Batch Edit</h4>
-                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                            <input type="number" id="search_batch_id" placeholder="Enter Inward Batch ID..."
-                                style="flex-grow: 1;">
-                            <button class="btn btn-primary" onclick="searchInwardBatch()">
-                                <i class="fa-solid fa-search"></i> Search
-                            </button>
-                        </div>
-                        <form id="editInwardForm" class="hidden-form" onsubmit="updateInwardBatch(event)">
-                            <input type="hidden" id="edit_batch_id">
-                            <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Item Name (Search or Type) *</label>
-                                <input type="text" id="edit_inward_item_name" list="edit_items_datalist"
-                                    class="form-control" placeholder="🔍 Search or type..." required autocomplete="off">
-                                <datalist id="edit_items_datalist"></datalist>
-                            </div>
-                            <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Supplier / Party Name</label>
-                                <input type="text" id="edit_inward_supplier" placeholder="e.g. ABC Traders">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 10px;">
-                                <label>Remark</label>
-                                <input type="text" id="edit_inward_remark" placeholder="e.g. Bill No. 123">
-                            </div>
-                            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                                <button type="submit" class="btn btn-success" style="flex: 1;">
-                                    <i class="fa-solid fa-save"></i> Save Changes
-                                </button>
-                                <button type="button" class="btn" style="background: #ef4444; color: white;"
-                                    onclick="deleteInwardBatch()">
-                                    <i class="fa-solid fa-trash"></i> Delete Batch
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Edit Production Entry -->
-                    <div>
-                        <h4
-                            style="font-size: 1rem; font-weight: 600; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-                            Production Coil Edit</h4>
-                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                            <input type="text" id="search_qr_code" placeholder="Enter Coil QR Code..."
-                                style="flex-grow: 1;">
-                            <button class="btn btn-primary" onclick="searchProductionLog()">
-                                <i class="fa-solid fa-search"></i> Search
-                            </button>
-                        </div>
-                        <form id="editProdForm" class="hidden-form" onsubmit="updateProductionLog(event)">
-                            <input type="hidden" id="edit_prod_log_id">
-                            <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
-                                <div class="form-group"><label>Machine Name</label><input type="text"
-                                        id="edit_prod_machine_name" list="edit_machines_datalist" class="form-control"
-                                        placeholder="🔍 Search..." required autocomplete="off"><datalist
-                                        id="edit_machines_datalist"></datalist></div>
-                                <div class="form-group"><label>Pipe Type</label><select id="edit_prod_pipe_type"
-                                        required>
-                                        <option value="Emitting Pipe">Emitting Pipe (Drip)</option>
-                                        <option value="HDPE Pipe">HDPE Pipe</option>
-                                        <option value="PVC Pipe">PVC Pipe</option>
-                                        <option value="Lateral Pipe">Lateral Pipe</option>
-                                        <option value="Column Pipe">Column Pipe</option>
-                                    </select></div>
-                                <div class="form-group"><label>Pipe Size / Spec</label><input type="text"
-                                        id="edit_prod_pipe_size" required></div>
-                                <div class="form-group"><label>Coil Length (Mtr)</label><input type="number"
-                                        id="edit_prod_coil_length" required></div>
-                                <div class="form-group"><label>Coil Weight (KG)</label><input type="number" step="0.01"
-                                        id="edit_prod_coil_weight" required></div>
-                                <div class="form-group"><label>Raw Material Used (KG)</label><input type="number"
-                                        step="0.01" id="edit_prod_raw_material"></div>
-                                <div class="form-group full-width"><label>Operator</label><input type="text"
-                                        id="edit_prod_operator"></div>
-                            </div>
-                            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                                <button type="submit" class="btn btn-success" style="flex: 1;">
-                                    <i class="fa-solid fa-save"></i> Save Changes
-                                </button>
-                                <button type="button" class="btn" style="background: #ef4444; color: white;"
-                                    onclick="deleteProductionLog()">
-                                    <i class="fa-solid fa-trash"></i> Delete Coil Entry
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- C. Items Data Table -->
+            <!-- D. Items Master List Table -->
             <div class="card">
                 <div class="card-title"
                     style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <span><i class="fa-solid fa-list-check" style="color: var(--primary-color);"></i> Item Master
                         List</span>
-                    <button onclick="downloadTemplate()" class="btn"
-                        style="padding: 4px 10px; font-size: 0.75rem; background: #e0e7ff; color: var(--primary-color);">
+                    <button onclick="downloadTemplate()" class="btn btn-sm"
+                        style="background: rgba(79, 70, 229, 0.2); color: var(--primary-color);">
                         <i class="fa-solid fa-download"></i> Download Template
                     </button>
                 </div>
 
-                <!-- Search & Group Filters Bar -->
+                <!-- Filters Bar -->
                 <div
-                    style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border-color);">
+                    style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--border-color);">
                     <div style="flex: 2; min-width: 200px;">
                         <input type="text" id="itemSearchInput" placeholder="🔍 Search name, code or group..."
                             onkeyup="debouncedSearch()">
@@ -842,14 +559,6 @@
                             <option value="0">All Items (Unlimited)</option>
                         </select>
                     </div>
-                    <button type="button" class="btn btn-primary" onclick="bulkSetGroupOwnProduction()"
-                        style="font-size: 0.8rem; padding: 6px 12px;">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Filtered Group -> Own Production [Yes]
-                    </button>
-                    <button type="button" class="btn btn-warning" onclick="bulkSetGroupOutsourced()"
-                        style="font-size: 0.8rem; padding: 6px 12px;">
-                        <i class="fa-solid fa-truck"></i> Filtered Group -> Outsourced [Yes]
-                    </button>
                 </div>
 
                 <div class="table-responsive">
@@ -859,7 +568,6 @@
                                 <th>Code</th>
                                 <th>Item Name</th>
                                 <th>Group</th>
-                                <!--<th>HSN</th>-->
                                 <th>Unit</th>
                                 <th>Rate (₹)</th>
                                 <th style="text-align: center;">Own Production?</th>
@@ -868,695 +576,407 @@
                             </tr>
                         </thead>
                         <tbody id="itemsTableBody">
-                            <!-- Dynamic JavaScript Rows -->
                         </tbody>
                     </table>
                 </div>
+
                 <div id="pagination-controls"
                     style="padding: 15px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color);">
-                    <button id="prev-btn" class="btn btn-primary"
-                        style="background: #eef2ff; color: var(--primary-color);"><i class="fa-solid fa-arrow-left"></i>
-                        Previous</button>
-                    <span id="page-info" style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted);"></span>
-                    <button id="next-btn" class="btn btn-primary"
-                        style="background: #eef2ff; color: var(--primary-color);">Next <i
+                    <button id="prev-btn" class="btn btn-primary" onclick="changePage(-1)"><i
+                            class="fa-solid fa-arrow-left"></i> Previous</button>
+                    <span id="page-info" style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted);">Page
+                        1</span>
+                    <button id="next-btn" class="btn btn-primary" onclick="changePage(1)">Next <i
                             class="fa-solid fa-arrow-right"></i></button>
                 </div>
             </div>
 
         </div>
+    </div>
 
-        <script>
-            const SECRET_PASS = "";
+    <!-- Edit Machine Modal -->
+    <div class="modal fade" id="editMachineModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content"
+                style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Machine</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="editMachineInput" class="form-control" placeholder="Enter new machine name">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveMachineEdit()"><i
+                            class="fa-solid fa-save me-1"></i>Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            let currentPage = 1;
-            let limit = 50; // Items per page
+    <!-- ⚙️ SCRIPT SECTION -->
+    <script>
+        let currentPage = 1;
+        let limit = 50;
+        let editingMachineId = null;
 
-            function setTableLoading(tbodyId, isLoading) {
-                const tbody = document.getElementById(tbodyId);
-                if (!tbody) return;
-                tbody.innerHTML = isLoading
-                    ? `<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary" role="status"></div></td></tr>`
-                    : '';
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            applyGlobalTheme();
+            // Try initial load if password isn't required or already authenticated
+            loadItems();
+            loadMachines();
+        });
 
-            function changePageSize() {
-                const val = document.getElementById("pageSizeSelect").value;
-                limit = parseInt(val, 10);
-                currentPage = 1;
-                loadItems(1);
-            }
+        async function checkPassword() {
+            const pass = document.getElementById("admin-pass").value;
+            if (!pass) return;
 
-            async function checkPassword() {
-                const pass = document.getElementById("admin-pass").value;
-                if (!pass) return;
+            try {
+                const res = await fetch('/api/admin/verify-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pass })
+                });
+                const data = await res.json();
 
-                try {
-                    const res = await fetch('/api/admin/verify-password', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ password: pass })
-                    });
-                    const data = await res.json();
+                if (data.valid) {
+                    document.getElementById("login-box").style.display = "none";
+                    document.getElementById("protected-content").style.display = "block";
+                    document.getElementById("error-msg").style.display = "none";
 
-                    if (data.valid) {
-                        document.getElementById("login-box").style.setProperty("display", "none", "important");
-                        const protContent = document.getElementById("protected-content");
-                        protContent.style.setProperty("display", "block", "important");
-                        document.getElementById("error-msg").style.display = "none";
-                        await Promise.all([loadItems(), loadMachines()]);
-                        if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
-                            window.PageLoader.hide();
-                        }
-                    } else {
-                        document.getElementById("error-msg").style.display = "block";
-                    }
-                } catch (err) {
-                    console.error("Password verification error:", err);
+                    // Reload Data after auth
+                    await Promise.all([loadItems(1), loadMachines()]);
+                    if (window.PageLoader) window.PageLoader.hide();
+                } else {
                     document.getElementById("error-msg").style.display = "block";
                 }
+            } catch (err) {
+                console.error("Password verification error:", err);
+                document.getElementById("error-msg").style.display = "block";
             }
+        }
 
-            async function loadItems(page = 1) {
-                const search = document.getElementById("itemSearchInput") ? document.getElementById("itemSearchInput").value.trim() : "";
-                const group = document.getElementById("groupFilterSelect") ? document.getElementById("groupFilterSelect").value : "";
-                const ownFilter = document.getElementById("ownFilterSelect") ? document.getElementById("ownFilterSelect").value : "";
+        async function loadItems(page = 1) {
+            currentPage = page;
+            const searchInput = document.getElementById("itemSearchInput");
+            const search = searchInput ? searchInput.value.trim() : "";
+            const groupSelect = document.getElementById("groupFilterSelect");
+            const group = groupSelect ? groupSelect.value : "";
+            const ownFilterSelect = document.getElementById("ownFilterSelect");
+            const ownFilter = ownFilterSelect ? ownFilterSelect.value : "";
 
-                setTableLoading('itemsTableBody', true);
+            const tbody = document.getElementById("itemsTableBody");
+            if (!tbody) return;
 
-                let url = `/api/items/list?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&group=${encodeURIComponent(group)}`;
-                if (ownFilter === "only_own") url += "&only_own=true";
-                if (ownFilter === "exclude_own") url += "&exclude_own=true";
-                if (ownFilter === "only_outsource") url += "&only_outsource=true";
-                if (ownFilter === "exclude_outsource") url += "&exclude_outsource=true";
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></td></tr>`;
 
-                try {
-                    const res = await fetch(url);
-                    const data = await res.json();
-                    const tbody = document.getElementById("itemsTableBody");
-                    tbody.innerHTML = "";
+            let url = `/api/items/list?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}&group=${encodeURIComponent(group)}`;
+            if (ownFilter === "only_own") url += "&only_own=true";
+            if (ownFilter === "exclude_own") url += "&exclude_own=true";
+            if (ownFilter === "only_outsource") url += "&only_outsource=true";
+            if (ownFilter === "exclude_outsource") url += "&exclude_outsource=true";
 
-                    if (data.groups && document.getElementById("groupFilterSelect")) {
-                        const groupSel = document.getElementById("groupFilterSelect");
-                        const currVal = groupSel.value;
-                        let opts = '<option value="">All Item Groups</option>';
-                        data.groups.forEach(g => {
-                            opts += `<option value="${g}" ${g === currVal ? 'selected' : ''}>${g}</option>`;
-                        });
-                        groupSel.innerHTML = opts;
-                    }
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("Failed to fetch data");
+                const data = await res.json();
 
-                    if (data.items && data.items.length > 0) {
-                        data.items.forEach(item => {
-                            const isOwn = (item.is_own_production || item.item_group === 'Own Production');
-                            const isOut = (item.is_outsource == 1);
-                            tbody.innerHTML += `
+                tbody.innerHTML = "";
+
+                // Populate Group Dropdown
+                if (data.groups && groupSelect) {
+                    const currVal = groupSelect.value;
+                    let opts = '<option value="">All Item Groups</option>';
+                    data.groups.forEach(g => {
+                        opts += `<option value="${escapeHtml(g)}" ${g === currVal ? 'selected' : ''}>${escapeHtml(g)}</option>`;
+                    });
+                    groupSelect.innerHTML = opts;
+                }
+
+                // Handle items response array vs object
+                const itemList = Array.isArray(data) ? data : (data.items || []);
+                const totalItems = data.total_items || itemList.length;
+
+                if (itemList.length > 0) {
+                    itemList.forEach(item => {
+                        const isOwn = (item.is_own_production || item.item_group === 'Own Production');
+                        const isOut = (item.is_outsource == 1 || item.is_outsource === true);
+
+                        tbody.innerHTML += `
                             <tr>
-                                <td><span class="badge">${item.item_code}</span></td>
-                                <td style="font-weight: 500;">${item.item_name}</td>
-                                <td>${item.item_group || '-'}</td>
-                                <!--<td>${item.hsn_code || '-'}</td>-->
-                                <td>${item.unit}</td>
+                                <td><span class="badge bg-secondary">${escapeHtml(item.item_code || '-')}</span></td>
+                                <td style="font-weight: 500;">${escapeHtml(item.item_name || '')}</td>
+                                <td>${escapeHtml(item.item_group || '-')}</td>
+                                <td>${escapeHtml(item.unit || 'PCS')}</td>
                                 <td>₹${parseFloat(item.rate || 0).toFixed(2)}</td>
                                 <td style="text-align: center;">
-                                    <button onclick="toggleOwnProd(${item.id})" class="btn" style="padding: 3px 8px; font-size: 0.75rem; background: ${isOwn ? '#dcfce7' : '#f1f5f9'}; color: ${isOwn ? '#15803d' : '#64748b'}; border: 1px solid ${isOwn ? '#bbf7d0' : '#cbd5e1'}; font-weight: 600;">
-                                        ${isOwn ? '🟢 Yes (Own Prod)' : '⚪ No (Supplier)'}
+                                    <button onclick="toggleOwnProd(${item.id})" class="btn btn-sm" style="padding: 3px 8px; font-size: 0.75rem; background: ${isOwn ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.05)'}; color: ${isOwn ? '#10b981' : '#94a3b8'}; border: 1px solid ${isOwn ? '#10b981' : '#334155'};">
+                                        ${isOwn ? '🟢 Yes (Own)' : '⚪ No'}
                                     </button>
                                 </td>
                                 <td style="text-align: center;">
-                                    <button onclick="toggleOutsource(${item.id})" class="btn" style="padding: 3px 8px; font-size: 0.75rem; background: ${isOut ? '#fef3c7' : '#f1f5f9'}; color: ${isOut ? '#92400e' : '#64748b'}; border: 1px solid ${isOut ? '#fde68a' : '#cbd5e1'}; font-weight: 600;">
+                                    <button onclick="toggleOutsource(${item.id})" class="btn btn-sm" style="padding: 3px 8px; font-size: 0.75rem; background: ${isOut ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.05)'}; color: ${isOut ? '#f59e0b' : '#94a3b8'}; border: 1px solid ${isOut ? '#f59e0b' : '#334155'};">
                                         ${isOut ? '🟡 Yes (Outsource)' : '⚪ No'}
                                     </button>
                                 </td>
                                 <td style="text-align: center; white-space: nowrap;">
-                                    <button onclick="deleteItem(${item.id})" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;">
+                                    <button onclick="deleteItem(${item.id})" class="btn btn-danger btn-sm" style="padding: 4px 10px; font-size: 0.75rem;">
                                         <i class="fa-solid fa-trash"></i> Delete
                                     </button>
                                 </td>
                             </tr>
                         `;
-                        });
-                    } else {
-                        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted);">No items available</td></tr>`;
-                    }
-
-                    // Update pagination controls
-                    currentPage = data.page;
-                    const totalPages = Math.ceil((data.total_items || 0) / limit);
-                    const pageInfo = document.getElementById('page-info');
-                    const prevBtn = document.getElementById('prev-btn');
-                    const nextBtn = document.getElementById('next-btn');
-
-                    if (totalPages > 0) {
-                        pageInfo.innerText = `Page ${currentPage} of ${totalPages} (${data.total_items} items)`;
-                        prevBtn.disabled = currentPage === 1;
-                        nextBtn.disabled = currentPage >= totalPages;
-                    } else {
-                        pageInfo.innerText = "No items";
-                        prevBtn.disabled = true;
-                        nextBtn.disabled = true;
-                    }
-                } catch (err) {
-                    console.error("Error loading items:", err);
-                } finally {
-                    setTableLoading('itemsTableBody', false);
-                }
-            }
-
-            const debouncedSearch = debounce(() => loadItems(1), 300);
-
-            async function toggleOwnProd(itemId) {
-                try {
-                    const res = await fetch(`/api/items/toggle-own/${itemId}`, { method: 'POST' });
-                    if (res.ok) {
-                        loadItems(currentPage);
-                        if (window.showToast) window.showToast('Own Production status updated', 'success');
-                    } else {
-                        if (window.showToast) window.showToast('❌ Status update error', 'error');
-                    }
-                } catch (err) {
-                    if (window.showToast) window.showToast('❌ Connection error', 'error');
-                }
-            }
-
-            async function toggleOutsource(itemId) {
-                try {
-                    const res = await fetch(`/api/items/toggle-outsourced/${itemId}`, { method: 'POST' });
-                    if (res.ok) {
-                        loadItems(currentPage);
-                        if (window.showToast) window.showToast('Outsource status updated', 'success');
-                    } else {
-                        if (window.showToast) window.showToast('❌ Outsource status update error', 'error');
-                    }
-                } catch (err) {
-                    if (window.showToast) window.showToast('❌ Connection error', 'error');
-                }
-            }
-
-            async function bulkSetGroupOwnProduction() {
-                const grp = document.getElementById("groupFilterSelect").value;
-                if (!grp) {
-                    alert("⚠️ Please select an Item Group filter first to set as Own Production [Yes]!");
-                    return;
-                }
-                if (!confirm(`Are you sure you want to set all items in Group '${grp}' as Own Production [Yes]?`)) {
-                    return;
-                }
-
-                const formData = new FormData();
-                formData.append("group_name", grp);
-                formData.append("is_own", "true");
-
-                try {
-                    const res = await fetch('/api/items/bulk-own-by-group', {
-                        method: 'POST',
-                        body: formData
                     });
-                    const data = await res.json();
-                    if (res.ok) {
-                        if (window.showToast) window.showToast(`✅ Group '${grp}' has ${data.affected_items} items set as Own Production [Yes] successfully!`, 'success');
-                        loadItems(currentPage);
-                    } else {
-                        if (window.showToast) window.showToast(data.detail || 'Operation failed', 'error');
-                    }
-                } catch (err) {
-                    if (window.showToast) window.showToast('❌ Connection error', 'error');
-                }
-            }
-
-            async function bulkSetGroupOutsourced() {
-                const grp = document.getElementById("groupFilterSelect").value;
-                if (!grp) {
-                    if (window.showToast) window.showToast("⚠️ Please select an Item Group filter first!", "warning");
-                    return;
-                }
-                if (!confirm(`Are you sure you want to set all items in Group '${grp}' as Outsourced [Yes]?`)) {
-                    return;
-                }
-
-                const formData = new FormData();
-                formData.append("group_name", grp);
-                formData.append("is_out", "true");
-
-                try {
-                    const res = await fetch('/api/items/bulk-outsourced-by-group', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await res.json();
-                    if (res.ok) {
-                        if (window.showToast) window.showToast(`✅ Group '${grp}' has ${data.affected_items} items set as Outsourced [Yes] successfully!`, 'success');
-                        loadItems(currentPage);
-                    } else {
-                        if (window.showToast) window.showToast(data.detail || 'Operation failed', 'error');
-                    }
-                } catch (err) {
-                    if (window.showToast) window.showToast('❌ Connection error', 'error');
-                }
-            }
-
-            document.getElementById('prev-btn').addEventListener('click', () => {
-                if (currentPage > 1) loadItems(currentPage - 1);
-            });
-
-            document.getElementById('next-btn').addEventListener('click', () => {
-                loadItems(currentPage + 1);
-            });
-
-            let itemsDatalistCache = null;
-            let machinesDatalistCache = null;
-
-            function debounce(fn, ms) {
-                let timer;
-                return (...args) => {
-                    clearTimeout(timer);
-                    timer = setTimeout(() => fn(...args), ms);
-                };
-            }
-
-            async function populateItemsDropdown(datalistId) {
-                if (itemsDatalistCache) {
-                    renderDatalist(datalistId, itemsDatalistCache);
-                    return;
-                }
-
-                try {
-                    const res = await fetch('/api/items/list?limit=5000');
-                    const data = await res.json();
-                    itemsDatalistCache = data.items || [];
-                    renderDatalist(datalistId, itemsDatalistCache);
-                } catch (err) { console.error("Error populating items dropdown:", err); }
-            }
-
-            function renderDatalist(datalistId, items) {
-                const datalist = document.getElementById(datalistId);
-                if (!datalist) return;
-                datalist.innerHTML = items.map(i => `<option value="${escapeHtml(i.item_name)}">`).join('');
-            }
-
-            async function populateMachinesDropdown(datalistId) {
-                if (machinesDatalistCache) {
-                    renderDatalist(datalistId, machinesDatalistCache);
-                    return;
-                }
-
-                try {
-                    const res = await fetch('/api/machines');
-                    const data = await res.json();
-                    machinesDatalistCache = data.machines || [];
-                    renderDatalist(datalistId, machinesDatalistCache);
-                } catch (err) { console.error("Error populating machines dropdown:", err); }
-            }
-
-            async function loadMachines() {
-                setTableLoading('machinesTableBody', true);
-                try {
-                    const res = await fetch('/api/machines');
-                    const data = await res.json();
-                    const tbody = document.getElementById("machinesTableBody");
-                    tbody.innerHTML = "";
-
-                    if (data.machines && data.machines.length > 0) {
-                        data.machines.forEach(m => {
-                            tbody.innerHTML += `
-                            <tr>
-                                <td>#${m.id}</td>
-                                <td style="font-weight: 500;">${escapeHtml(m.machine_name)}</td>
-                                <td style="text-align: center; white-space: nowrap;">
-                                    <button onclick='editMachine(${m.id}, "${m.machine_name.replace(/"/g, '&quot;')}")' class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: #dbeafe; color: #2563eb; margin-right: 5px;">
-                                        <i class="fa-solid fa-pencil"></i> Edit
-                                    </button>
-                                    <button onclick="deleteMachine(${m.id})" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;">
-                                        <i class="fa-solid fa-trash"></i> Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                        });
-                    } else {
-                        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No machines available</td></tr>`;
-                    }
-                } catch (err) {
-                    console.error("Error loading machines:", err);
-                } finally {
-                    setTableLoading('machinesTableBody', false);
-                }
-            }
-
-            async function addMachine(e) {
-                e.preventDefault();
-                const machineName = document.getElementById('new_machine_name').value.trim();
-                if (!machineName) return;
-
-                const formData = new FormData();
-                formData.append('machine_name', machineName);
-
-                const res = await fetch('/api/machines/add', { method: 'POST', body: formData });
-                const result = await res.json();
-                if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
-                if (res.ok) {
-                    document.getElementById('addMachineForm').reset();
-                    loadMachines();
-                }
-            }
-
-            async function editMachine(id, currentName) {
-                editingMachineId = id;
-                document.getElementById('editMachineInput').value = currentName;
-                new bootstrap.Modal(document.getElementById('editMachineModal')).show();
-            }
-
-            async function saveMachineEdit() {
-                const newName = document.getElementById('editMachineInput').value.trim();
-                if (!newName) return;
-
-                const formData = new FormData();
-                formData.append('machine_name', newName);
-
-                const res = await fetch(`/api/machines/update/${editingMachineId}`, { method: 'PUT', body: formData });
-                const result = await res.json();
-
-                if (res.ok) {
-                    if (window.showToast) window.showToast(result.message || 'Machine updated', 'success');
-                    bootstrap.Modal.getInstance(document.getElementById('editMachineModal')).hide();
-                    loadMachines();
                 } else {
-                    if (window.showToast) window.showToast(result.detail || 'Update failed', 'error');
+                    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">No items available</td></tr>`;
                 }
+
+                // Pagination setup
+                const totalPages = limit > 0 ? Math.ceil(totalItems / limit) : 1;
+                document.getElementById('page-info').innerText = `Page ${currentPage} of ${totalPages || 1} (${totalItems} items)`;
+                document.getElementById('prev-btn').disabled = currentPage <= 1;
+                document.getElementById('next-btn').disabled = currentPage >= totalPages;
+
+            } catch (err) {
+                console.error("Error loading items:", err);
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4"><i class="fa-solid fa-triangle-exclamation me-1"></i> Failed to load items. Please refresh or verify login.</td></tr>`;
             }
+        }
 
-            let editingMachineId = null;
+        function changePage(direction) {
+            loadItems(currentPage + direction);
+        }
 
-            // --- Transaction Edit Functions ---
+        function changePageSize() {
+            limit = parseInt(document.getElementById("pageSizeSelect").value, 10);
+            loadItems(1);
+        }
 
-            async function searchInwardBatch() {
-                const batchId = document.getElementById('search_batch_id').value;
-                if (!batchId) {
-                    if (window.showToast) window.showToast("Please enter an Inward Batch ID.", "warning");
-                    return;
-                }
+        function debounce(fn, ms) {
+            let timer;
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn(...args), ms);
+            };
+        }
+        const debouncedSearch = debounce(() => loadItems(1), 300);
 
-                await populateItemsDropdown('edit_items_datalist');
+        async function saveItem(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('item_code', document.getElementById('item_code').value);
+            formData.append('item_name', document.getElementById('item_name').value);
+            formData.append('item_group', document.getElementById('item_group').value);
+            formData.append('hsn_code', document.getElementById('hsn_code').value);
+            formData.append('unit', document.getElementById('unit').value);
+            formData.append('rate', document.getElementById('rate').value || 0);
+            formData.append('is_outsource', document.getElementById('is_outsource_check').checked ? 'true' : 'false');
 
-                const res = await fetch(`/api/inward/batch/${batchId}`);
-                const result = await res.json();
+            const fileInput = document.getElementById('image');
+            if (fileInput.files[0]) formData.append('image', fileInput.files[0]);
 
-                if (!res.ok) {
-                    if (window.showToast) window.showToast(result.detail, 'error');
-                    document.getElementById('editInwardForm').style.display = 'none';
-                } else {
-                    const batch = result.batch;
-                    document.getElementById('edit_batch_id').value = batch.id;
-                    document.getElementById('edit_inward_item_name').value = batch.item_name;
-                    document.getElementById('edit_inward_supplier').value = batch.supplier_or_party;
-                    document.getElementById('edit_inward_remark').value = batch.remark;
-                    document.getElementById('editInwardForm').style.display = 'block';
-                }
-            }
-
-            async function updateInwardBatch(e) {
-                e.preventDefault();
-                const batchId = document.getElementById('edit_batch_id').value;
-                const data = {
-                    item_name: document.getElementById('edit_inward_item_name').value,
-                    supplier_or_party: document.getElementById('edit_inward_supplier').value,
-                    remark: document.getElementById('edit_inward_remark').value,
-                };
-
-                const res = await fetch(`/api/inward/update/${batchId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
-                if (res.ok) {
-                    document.getElementById('editInwardForm').style.display = 'none';
-                    document.getElementById('search_batch_id').value = '';
-                }
-            }
-
-            async function searchProductionLog() {
-                const qrCode = document.getElementById('search_qr_code').value;
-                if (!qrCode) {
-                    if (window.showToast) window.showToast("Please enter a Coil QR Code.", "warning");
-                    return;
-                }
-
-                await populateMachinesDropdown('edit_machines_datalist');
-
-                const res = await fetch(`/api/production/log/${qrCode}`);
-                const result = await res.json();
-
-                if (!res.ok) {
-                    if (window.showToast) window.showToast(result.detail, 'error');
-                    document.getElementById('editProdForm').style.display = 'none';
-                } else {
-                    const log = result.log;
-                    document.getElementById('edit_prod_log_id').value = log.id;
-                    document.getElementById('edit_prod_machine_name').value = log.machine_name;
-                    document.getElementById('edit_prod_pipe_type').value = log.pipe_type;
-                    document.getElementById('edit_prod_pipe_size').value = log.pipe_size;
-                    document.getElementById('edit_prod_coil_length').value = log.coil_length_meters;
-                    document.getElementById('edit_prod_coil_weight').value = log.coil_weight_kg;
-                    document.getElementById('edit_prod_raw_material').value = log.raw_material_used_kg;
-                    document.getElementById('edit_prod_operator').value = log.shift_operator;
-                    document.getElementById('editProdForm').style.display = 'block';
-                }
-            }
-
-            async function updateProductionLog(e) {
-                e.preventDefault();
-                const logId = document.getElementById('edit_prod_log_id').value;
-                const data = {
-                    machine_name: document.getElementById('edit_prod_machine_name').value,
-                    pipe_type: document.getElementById('edit_prod_pipe_type').value,
-                    pipe_size: document.getElementById('edit_prod_pipe_size').value,
-                    coil_length_meters: parseFloat(document.getElementById('edit_prod_coil_length').value),
-                    coil_weight_kg: parseFloat(document.getElementById('edit_prod_coil_weight').value),
-                    raw_material_used_kg: parseFloat(document.getElementById('edit_prod_raw_material').value || 0),
-                    shift_operator: document.getElementById('edit_prod_operator').value,
-                };
-
-                const res = await fetch(`/api/production/update/${logId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
-                if (res.ok) {
-                    document.getElementById('editProdForm').style.display = 'none';
-                    document.getElementById('search_qr_code').value = '';
-                }
-            }
-
-            async function deleteInwardBatch() {
-                const batchId = document.getElementById('edit_batch_id').value;
-                if (!batchId) return;
-                if (!confirm(`Are you sure you want to permanently delete Inward Batch #${batchId} and remove all its inventory boxes?`)) return;
-
-                try {
-                    const res = await fetch(`/api/inward/delete/${batchId}`, { method: 'DELETE' });
-                    const result = await res.json();
-                    if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
-                    if (res.ok) {
-                        document.getElementById('editInwardForm').style.display = 'none';
-                        document.getElementById('search_batch_id').value = '';
-                    }
-                } catch (err) {
-                    if (window.showToast) window.showToast("❌ Error deleting Inward Batch", 'error');
-                }
-            }
-
-            async function deleteProductionLog() {
-                const logId = document.getElementById('edit_prod_log_id').value;
-                const qrCode = document.getElementById('search_qr_code').value.trim();
-                if (!logId) return;
-                if (!confirm(`Are you sure you want to permanently delete Production Entry (${qrCode || '#' + logId}) and remove its box from inventory?`)) return;
-
-                try {
-                    const res = await fetch(`/api/production/delete/${logId}`, { method: 'DELETE' });
-                    const result = await res.json();
-                    if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
-                    if (res.ok) {
-                        document.getElementById('editProdForm').style.display = 'none';
-                        document.getElementById('search_qr_code').value = '';
-                    }
-                } catch (err) {
-                    if (window.showToast) window.showToast("❌ Error deleting Production Entry", 'error');
-                }
-            }
-
-            async function saveItem(e) {
-                e.preventDefault();
-                const formData = new FormData();
-                formData.append('item_code', document.getElementById('item_code').value);
-                formData.append('item_name', document.getElementById('item_name').value);
-                formData.append('item_group', document.getElementById('item_group').value);
-                formData.append('hsn_code', document.getElementById('hsn_code').value);
-                formData.append('unit', document.getElementById('unit').value);
-                formData.append('rate', document.getElementById('rate').value || 0);
-                formData.append('is_outsource', document.getElementById('is_outsource_check').checked ? 'true' : 'false');
-
-                const fileInput = document.getElementById('image');
-                if (fileInput.files[0]) formData.append('image', fileInput.files[0]);
-
+            try {
                 const res = await fetch('/api/items/add', { method: 'POST', body: formData });
                 const result = await res.json();
                 if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
                 if (res.ok) {
                     document.getElementById('addItemForm').reset();
-                    document.getElementById('is_outsource_check').checked = false;
-                    const preview = document.getElementById('imagePreview');
-                    if (preview) preview.style.display = 'none';
-                    loadItems();
+                    document.getElementById('imagePreview').style.display = 'none';
+                    loadItems(currentPage);
                 }
+            } catch (err) {
+                if (window.showToast) window.showToast('Error saving item', 'error');
             }
+        }
 
-            // Image preview for item image upload
-            document.getElementById('image')?.addEventListener('change', function (e) {
-                const file = e.target.files[0];
-                const preview = document.getElementById('imagePreview');
-                if (file && preview) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        preview.src = ev.target.result;
-                        preview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-                } else if (preview) {
-                    preview.style.display = 'none';
+        async function toggleOwnProd(itemId) {
+            try {
+                const res = await fetch(`/api/items/toggle-own/${itemId}`, { method: 'POST' });
+                if (res.ok) {
+                    loadItems(currentPage);
+                    if (window.showToast) window.showToast('Own Production status updated', 'success');
                 }
-            });
+            } catch (err) { console.error(err); }
+        }
 
-            // Utility: escape HTML to prevent XSS
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
-
-            async function uploadExcel() {
-                const fileInput = document.getElementById('excelFile');
-                if (!fileInput.files[0]) {
-                    if (window.showToast) window.showToast("Please select an Excel file!", "warning");
-                    return;
+        async function toggleOutsource(itemId) {
+            try {
+                const res = await fetch(`/api/items/toggle-outsourced/${itemId}`, { method: 'POST' });
+                if (res.ok) {
+                    loadItems(currentPage);
+                    if (window.showToast) window.showToast('Outsource status updated', 'success');
                 }
+            } catch (err) { console.error(err); }
+        }
 
-                const formData = new FormData();
-                formData.append('file', fileInput.files[0]);
-
-                const res = await fetch('/api/items/upload-excel', { method: 'POST', body: formData });
-                const result = await res.json();
-                if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
-                if (res.ok) loadItems();
-            }
-
-            async function deleteItem(id) {
-                if (confirm("Are you sure you want to delete this item?")) {
+        async function deleteItem(id) {
+            if (confirm("Are you sure you want to delete this item?")) {
+                try {
                     const res = await fetch(`/api/items/delete/${id}`, { method: 'DELETE' });
                     const result = await res.json();
                     if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
-                    loadItems();
-                }
+                    loadItems(currentPage);
+                } catch (err) { console.error(err); }
+            }
+        }
+
+        async function uploadExcel() {
+            const fileInput = document.getElementById('excelFile');
+            if (!fileInput.files[0]) {
+                if (window.showToast) window.showToast("Please select an Excel file!", "warning");
+                return;
             }
 
-            async function deleteMachine(id) {
-                if (confirm("Are you sure you want to delete this machine?")) {
-                    const res = await fetch(`/api/machines/delete/${id}`, { method: 'DELETE' });
-                    const result = await res.json();
-                    if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const res = await fetch('/api/items/upload-excel', { method: 'POST', body: formData });
+                const result = await res.json();
+                if (window.showToast) window.showToast(result.message || result.detail, res.ok ? 'success' : 'error');
+                if (res.ok) loadItems(1);
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadMachines() {
+            const tbody = document.getElementById("machinesTableBody");
+            if (!tbody) return;
+
+            try {
+                const res = await fetch('/api/machines');
+                const data = await res.json();
+                tbody.innerHTML = "";
+
+                const machines = data.machines || [];
+                if (machines.length > 0) {
+                    machines.forEach(m => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>#${m.id}</td>
+                                <td style="font-weight: 500;">${escapeHtml(m.machine_name)}</td>
+                                <td style="text-align: center;">
+                                    <button onclick='editMachine(${m.id}, "${escapeHtml(m.machine_name)}")' class="btn btn-sm btn-primary" style="padding: 2px 8px; font-size: 0.75rem;">
+                                        <i class="fa-solid fa-pencil"></i>
+                                    </button>
+                                    <button onclick="deleteMachine(${m.id})" class="btn btn-sm btn-danger" style="padding: 2px 8px; font-size: 0.75rem;">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted py-2">No machines available</td></tr>`;
+                }
+            } catch (err) { console.error("Error loading machines:", err); }
+        }
+
+        async function addMachine(e) {
+            e.preventDefault();
+            const name = document.getElementById('new_machine_name').value.trim();
+            if (!name) return;
+
+            const formData = new FormData();
+            formData.append('machine_name', name);
+
+            try {
+                const res = await fetch('/api/machines/add', { method: 'POST', body: formData });
+                if (res.ok) {
+                    document.getElementById('addMachineForm').reset();
                     loadMachines();
                 }
+            } catch (err) { console.error(err); }
+        }
+
+        function editMachine(id, name) {
+            editingMachineId = id;
+            document.getElementById('editMachineInput').value = name;
+            new bootstrap.Modal(document.getElementById('editMachineModal')).show();
+        }
+
+        async function saveMachineEdit() {
+            const newName = document.getElementById('editMachineInput').value.trim();
+            if (!newName) return;
+
+            const formData = new FormData();
+            formData.append('machine_name', newName);
+
+            try {
+                const res = await fetch(`/api/machines/update/${editingMachineId}`, { method: 'PUT', body: formData });
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('editMachineModal')).hide();
+                    loadMachines();
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function deleteMachine(id) {
+            if (confirm("Delete this machine?")) {
+                try {
+                    await fetch(`/api/machines/delete/${id}`, { method: 'DELETE' });
+                    loadMachines();
+                } catch (err) { console.error(err); }
             }
+        }
 
-            async function eraseAllData() {
-                const confirmPass = prompt("Re-enter admin password to erase all data:");
-                if (!confirmPass) return;
+        async function eraseAllData() {
+            const pass = prompt("Enter admin password to erase all data:");
+            if (!pass) return;
 
+            try {
                 const res = await fetch('/api/admin/verify-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: confirmPass })
+                    body: JSON.stringify({ password: pass })
                 });
                 const data = await res.json();
 
-                if (!data.valid) {
-                    if (window.showToast) window.showToast("Incorrect password!", 'error');
-                    return;
+                if (data.valid && confirm("⚠️ WARNING: All stock data will be deleted! Continue?")) {
+                    const deleteRes = await fetch('/api/reset-all-data', { method: 'DELETE' });
+                    const result = await deleteRes.json();
+                    if (window.showToast) window.showToast(result.message, deleteRes.ok ? 'success' : 'error');
+                } else if (!data.valid) {
+                    alert("Incorrect Password!");
                 }
+            } catch (err) { console.error(err); }
+        }
 
-                if (confirm("⚠️ WARNING: All stock data and history will be permanently deleted. Do you want to proceed?")) {
-                    const res = await fetch('/api/reset-all-data', { method: 'DELETE' });
-                    const result = await res.json();
-                    if (window.showToast) window.showToast(result.message, res.ok ? 'success' : 'error');
-                }
+        function downloadTemplate() {
+            window.open('/api/items/download-template', '_blank');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function applyGlobalTheme() {
+            const theme = localStorage.getItem('theme_preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeBtn(theme);
+        }
+
+        function toggleGlobalTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme_preference', next);
+            updateThemeBtn(next);
+        }
+
+        function updateThemeBtn(theme) {
+            const btn = document.getElementById('globalThemeBtn');
+            const text = document.getElementById('themeText');
+            if (btn && text) {
+                text.innerText = theme === 'light' ? '☀️ Light Mode' : '🌙 Dark Mode';
             }
+        }
+    </script>
 
-            function downloadTemplate() {
-                window.open('/api/items/download-template', '_blank');
-            }
-
-            // 🌓 Global Dark / Light Theme Management
-            function applyGlobalTheme() {
-                const theme = localStorage.getItem('theme_preference') || 'dark';
-                document.documentElement.setAttribute('data-theme', theme);
-                updateThemeBtn(theme);
-            }
-            function toggleGlobalTheme() {
-                const current = document.documentElement.getAttribute('data-theme') || 'dark';
-                const next = current === 'dark' ? 'light' : 'dark';
-                document.documentElement.setAttribute('data-theme', next);
-                localStorage.setItem('theme_preference', next);
-                updateThemeBtn(next);
-            }
-            function updateThemeBtn(theme) {
-                const btn = document.getElementById('globalThemeBtn');
-                const text = document.getElementById('themeText');
-                if (!btn || !text) return;
-                if (theme === 'light') {
-                    text.innerText = '☀️ Light Mode';
-                    btn.style.background = '#e2e8f0';
-                    btn.style.color = '#0f172a';
-                } else {
-                    text.innerText = '🌙 Dark Mode';
-                    btn.style.background = '#f59e0b';
-                    btn.style.color = '#000';
-                }
-            }
-
-            applyGlobalTheme();
-        </script>
-
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="/static/js/page-loader.js"></script>
-        <script src="/static/js/toast.js"></script>
-        <script src="/static/js/security.js"></script>
-        <script src="/static/js/theme.js"></script>
-        <script src="/static/js/english-ui.js"></script>
-
-        <!-- Edit Machine Modal -->
-        <div class="modal fade" id="editMachineModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title"><i class="fa-solid fa-pen-to-square me-2"></i>Edit Machine</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="text" id="editMachineInput" class="form-control"
-                            placeholder="Enter new machine name">
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button class="btn btn-primary" onclick="saveMachineEdit()"><i
-                                class="fa-solid fa-save me-1"></i>Save</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/toast.js"></script>
+    <script src="/static/js/security.js"></script>
 </body>
 
 </html>

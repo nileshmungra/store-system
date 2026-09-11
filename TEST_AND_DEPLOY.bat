@@ -159,24 +159,32 @@ if %errorlevel% neq 0 (
     goto MENU
 )
 
-:: Step 1: Show current status
+:: Check Railway login status
 echo.
-echo [1/5] Current git status:
-git status --short
-
-:: Step 2: Stage all changes
-echo.
-echo [2/5] Staging all changes...
-git add . 2>&1
+echo [CHECK] Verifying Railway authentication...
+railway whoami >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [ERROR] Git add failed!
+    echo [ERROR] Not logged into Railway!
+    echo Please run: railway login
     pause
     goto MENU
 )
+echo [OK] Railway authentication verified.
+
+:: Step 1: Show current status
+echo.
+echo [1/6] Current git status:
+git status --short
+
+:: Step 2: Stage only safe files (exclude secrets and local data)
+echo.
+echo [2/6] Staging safe files only...
+git add main.py database.py requirements.txt requirements-dev.txt index.html items.html production.html dispatch.html challan.html scanner.html bom.html report.html logs.html main_dashboard.html static/ deploy.sh app_setup.sh nginx.conf store-app.service TEST_AND_DEPLOY.bat README.md DEPLOY.md railway.toml Procfile runtime.txt .env.example
+echo [OK] Safe files staged.
 
 :: Step 3: Commit
 echo.
-echo [3/5] Committing changes...
+echo [3/6] Committing changes...
 for %%a in ("") do set "commit_msg=Auto-deploy: %date% %time%"
 git commit -m "%commit_msg%" 2>&1
 if %errorlevel% neq 0 (
@@ -184,10 +192,10 @@ if %errorlevel% neq 0 (
     goto RAILWAY_DEPLOY
 )
 
-:: Step 4: Push
 :RAILWAY_DEPLOY
+:: Step 4: Push
 echo.
-echo [4/5] Pushing to remote...
+echo [4/6] Pushing to remote...
 git push origin main 2>&1
 if %errorlevel% neq 0 (
     echo [WARNING] Push failed. Trying force push...
@@ -196,12 +204,12 @@ if %errorlevel% neq 0 (
 
 :: Step 5: Deploy on Railway
 echo.
-echo [5/5] Deploying on Railway...
-railway up 2>&1
+echo [5/6] Deploying on Railway...
+railway up --wait 2>&1
 
-:: Verify
+:: Step 6: Verify
 echo.
-echo [SUCCESS] Railway deployment triggered!
+echo [6/6] Deployment complete!
 echo.
 echo   Check status: railway status
 echo   View logs: railway logs --tail

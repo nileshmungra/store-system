@@ -666,18 +666,23 @@
 
     <div class="container my-4 no-print">
         <!-- Header Title -->
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-            <div>
-                <h3 class="fw-extrabold text-slate-800 m-0"><i class="bi bi-cpu-fill text-indigo me-2"></i> Machine
-                    Production & TSC Sticker Printing</h3>
-                <p class="text-muted small m-0 mt-1">Record finished extruder pipe coils/rolls and generate 100x100 MM
-                    TSC label stickers.</p>
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                <div>
+                    <h3 class="fw-extrabold text-slate-800 m-0"><i class="bi bi-cpu-fill text-indigo me-2"></i> Machine
+                        Production & TSC Sticker Printing</h3>
+                    <p class="text-muted small m-0 mt-1">Record finished extruder pipe coils/rolls and generate 100x100 MM
+                        TSC label stickers.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-dark border px-3 py-2 rounded-pill" id="machineCountBadge">
+                        <i class="bi bi-cpu me-1 text-primary"></i> Machines: <strong id="machineCount">0</strong>
+                    </span>
+                    <button class="btn btn-outline-dark fw-bold rounded-3" data-bs-toggle="modal"
+                        data-bs-target="#addMachineModal">
+                        <i class="bi bi-plus-circle me-1"></i> Add Machine
+                    </button>
+                </div>
             </div>
-            <button class="btn btn-outline-dark fw-bold rounded-3" data-bs-toggle="modal"
-                data-bs-target="#addMachineModal">
-                <i class="bi bi-plus-circle me-1"></i> Add Machine
-            </button>
-        </div>
 
         <!-- Top Plan vs Actual KPI Summary Cards -->
         <div class="row g-3 mb-4">
@@ -758,12 +763,38 @@
                             </select>
                         </div>
                         <div class="col-md-4 d-none" id="bundle_fields_container">
-                            <label class="input-label-custom">Items per Bundle & No. of Bundles</label>
-                            <div class="input-group">
-                                <input type="number" id="items_per_bundle" class="form-control form-control-custom"
-                                    placeholder="Items/Bundle" value="1"><span class="input-group-text">x</span><input
-                                    type="number" id="num_bundles" class="form-control form-control-custom"
-                                    placeholder="# Bundles" value="1">
+                            <label class="input-label-custom fw-bold">Bundle Configuration</label>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-5">
+                                    <label class="input-label-custom small">Items per Bundle (MTR / PCS)</label>
+                                    <input type="number" id="items_per_bundle" class="form-control form-control-custom"
+                                        placeholder="e.g. 6" value="1" min="0.01" step="any">
+                                </div>
+                                <div class="col-2 text-center pb-2">
+                                    <span class="input-group-text bg-dark text-white fw-bold w-100">×</span>
+                                </div>
+                                <div class="col-5">
+                                    <label class="input-label-custom small">No. of Bundles</label>
+                                    <input type="number" id="num_bundles" class="form-control form-control-custom"
+                                        placeholder="Auto" value="1" min="0.01" step="any">
+                                </div>
+                            </div>
+                            <div class="row g-2 align-items-end mt-1">
+                                <div class="col-12">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-success text-white fw-bold">=</span>
+                                        <input type="number" id="bundle_production_total"
+                                            class="form-control form-control-custom bg-light"
+                                            placeholder="Enter total qty" value="">
+                                        <span class="input-group-text" id="bundle_total_unit_text">Total Pieces</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-text small text-muted mt-1">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Enter <strong>any 2 fields</strong> and the 3rd will auto-calculate.
+                                <br>
+                                <span class="text-muted">Emitting/Lateral: enter meters | PVC: enter pieces</span>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -831,10 +862,21 @@
                         </div>
 
                         <div class="col-12 mt-3">
-                            <button type="submit" id="saveBtn"
-                                class="btn btn-gradient-indigo w-100 py-2 fs-6 fw-bold shadow-sm">
-                                <i class="bi bi-hourglass-split me-2"></i> 💾 Submit to Pending Approval Queue
-                            </button>
+                            <div class="row g-2">
+                                <div class="col">
+                                    <button type="submit" id="saveBtn"
+                                        class="btn btn-gradient-indigo w-100 py-1 fs-6 fw-bold shadow-sm">
+                                        <i class="bi bi-hourglass-split me-2"></i> 💾 Submit to Pending Approval Queue
+                                    </button>
+                                </div>
+                                <div class="col">
+                                    <button type="button" id="generateStickersBtn"
+                                        class="btn btn-success w-100 py-1 fs-6 fw-bold shadow-sm">
+                                        <i class="bi bi-printer-fill me-2"></i> 🖨️ Generate Bundle Stickers Only
+                                        (Pre-Production)
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -951,6 +993,36 @@
         </div>
     </div>
 
+    <!-- Machine Master Management -->
+    <div class="container my-4 no-print">
+        <div class="card glass-card overflow-hidden">
+            <div class="card-header-primary d-flex align-items-center justify-content-between">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-cpu-fill me-2"></i> Machine Master Management</h5>
+                <span class="badge bg-light text-dark px-3 py-1 rounded-pill" id="machineCountBadge">
+                    <i class="bi bi-cpu me-1 text-primary"></i> Total Machines: <strong id="machineCount">0</strong>
+                </span>
+            </div>
+            <div class="card-body p-4">
+                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                    <table class="table table-hover align-middle m-0 text-center">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Machine Name</th>
+                                <th style="text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="machinesTableBody">
+                            <tr>
+                                <td colspan="3" class="text-muted py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading machines...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Printable Sticker Area (100x150 MM / 4x6 Inch TSC Printer Format) -->
     <div id="label-print-area" style="display:none; margin-top: 20px;">
         <div class="sticker-box">
@@ -1004,11 +1076,29 @@
         </div>
     </div>
 
+    <!-- Pre-Production Bundle Stickers Container -->
+    <div id="pre-production-stickers-container" class="mt-4"></div>
+
     <script>
+        console.log('Production page script loaded');
         const API_URL = window.location.origin;
+        console.log('API_URL:', API_URL);
+
+        async function safeApiCall(url) {
+            try {
+                console.log('Calling API:', url);
+                const res = await fetch(url, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+                console.log('API response status:', res.status);
+                const data = await res.json();
+                console.log('API response data:', data);
+                return data;
+            } catch (err) {
+                console.error('API call failed:', err);
+                return null;
+            }
+        }
 
         const PIPE_SPECS = {
-            "Emitting Pipe": [
                 "16x2x30 Cl-2 Round",
                 "16x2x40 Cl-2 Round",
                 "16x2x50 Cl-2 Round",
@@ -1126,9 +1216,71 @@
 
             if (packagingType === 'bundle') {
                 bundleFields.classList.remove('d-none');
+                calculateProductionBundleTotal('bundles');
             } else {
                 bundleFields.classList.add('d-none');
             }
+        }
+
+        function calculateProductionBundleTotal(source) {
+            const itemsPerBundleEl = document.getElementById('items_per_bundle');
+            const numBundlesEl = document.getElementById('num_bundles');
+            const totalEl = document.getElementById('bundle_production_total');
+            const unitTextEl = document.getElementById('bundle_total_unit_text');
+            const bundleUnit = document.getElementById('bundle_unit');
+
+            if (!itemsPerBundleEl || !numBundlesEl || !totalEl) return;
+
+            const unit = bundleUnit ? bundleUnit.value : 'PCS';
+            if (unitTextEl) unitTextEl.innerText = unit === 'MTR' ? 'Total Meters' : 'Total Pieces';
+
+            const itemsPerBundle = parseFloat(itemsPerBundleEl.value) || 0;
+            const numBundles = parseFloat(numBundlesEl.value) || 0;
+            const total = parseFloat(totalEl.value) || 0;
+
+            if (source === 'total') {
+                if (itemsPerBundle > 0) {
+                    const calculatedBundles = total / itemsPerBundle;
+                    numBundlesEl.value = Math.round(calculatedBundles * 100) / 100;
+                }
+            } else {
+                if (itemsPerBundle > 0 && numBundles > 0) {
+                    totalEl.value = Math.round(itemsPerBundle * numBundles * 100) / 100;
+                }
+            }
+
+            const plannedQtyInput = document.getElementById('planned_qty_input');
+            if (plannedQtyInput && totalEl.value > 0) {
+                plannedQtyInput.value = totalEl.value;
+            }
+        }
+
+        function calculateInwardBundleTotal(source) {
+            const itemsPerBundleEl = document.getElementById('items_per_bundle');
+            const numBundlesEl = document.getElementById('num_bundles');
+            const totalEl = document.getElementById('bundle_total_qty');
+
+            if (!itemsPerBundleEl || !numBundlesEl || !totalEl) return;
+
+            const itemsPerBundle = parseFloat(itemsPerBundleEl.value) || 0;
+            const numBundles = parseFloat(numBundlesEl.value) || 0;
+            const total = parseFloat(totalEl.value) || 0;
+
+            if (source === 'total') {
+                if (itemsPerBundle > 0) {
+                    const calculatedBundles = total / itemsPerBundle;
+                    numBundlesEl.value = Math.round(calculatedBundles * 100) / 100;
+                }
+            } else {
+                if (itemsPerBundle > 0 && numBundles > 0) {
+                    totalEl.value = Math.round(itemsPerBundle * numBundles * 100) / 100;
+                }
+            }
+
+            const qtyPerBoxEl = document.getElementById('qty_per_box');
+            const totalBoxesEl = document.getElementById('total_boxes');
+            if (qtyPerBoxEl && itemsPerBundle > 0) qtyPerBoxEl.value = itemsPerBundle;
+            if (totalBoxesEl && numBundles > 0) totalBoxesEl.value = numBundles;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1142,6 +1294,19 @@
                 actualInput.addEventListener('input', () => {
                     actualInput.dataset.touched = "true";
                 });
+            }
+
+            const itemsPerBundleEl = document.getElementById('items_per_bundle');
+            const numBundlesEl = document.getElementById('num_bundles');
+            const totalEl = document.getElementById('bundle_production_total');
+
+            if (itemsPerBundleEl) itemsPerBundleEl.addEventListener('input', () => calculateProductionBundleTotal('items'));
+            if (numBundlesEl) numBundlesEl.addEventListener('input', () => calculateProductionBundleTotal('bundles'));
+            if (totalEl) totalEl.addEventListener('input', () => calculateProductionBundleTotal('total'));
+
+            const generateBtn = document.getElementById('generateStickersBtn');
+            if (generateBtn) {
+                generateBtn.addEventListener('click', generatePreProductionStickers);
             }
         });
 
@@ -1202,21 +1367,76 @@
         }
 
         async function loadMachines() {
-            try {
-                const res = await fetch(`${API_URL}/api/machines/list`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
-                const data = await res.json();
-                const datalist = document.getElementById('machine_list');
-                if (datalist) {
-                    datalist.innerHTML = '';
-                    if (data.machines && data.machines.length > 0) {
-                        data.machines.forEach(m => {
-                            datalist.innerHTML += `<option value="${m.machine_name}">`;
-                        });
-                    }
+            console.log('loadMachines() called');
+            const data = await safeApiCall(`${API_URL}/api/machines/list`);
+            if (!data) {
+                console.error('loadMachines: API call returned null');
+                return;
+            }
+            console.log('loadMachines API response:', data);
+            
+            const machines = Array.isArray(data.machines) ? data.machines : [];
+            console.log('loadMachines: found', machines.length, 'machines');
+            
+            // Update datalist
+            const datalist = document.getElementById('machine_list');
+            if (datalist) {
+                datalist.innerHTML = '';
+                machines.forEach(m => {
+                    datalist.innerHTML += `<option value="${m.machine_name}">`;
+                });
+                console.log('Datalist updated with', machines.length, 'options');
+            }
+            
+            // Update count badge
+            updateMachineCount(machines);
+            
+            // Update table
+            const tbody = document.getElementById('machinesTableBody');
+            if (tbody) {
+                if (machines.length > 0) {
+                    tbody.innerHTML = machines.map(m => `
+                        <tr>
+                            <td class="font-monospace text-muted">#${m.id}</td>
+                            <td class="fw-bold text-start">${m.machine_name}</td>
+                            <td style="text-align: center;">
+                                <button onclick="deleteMachine(${m.id}, '${m.machine_name.replace(/'/g, "\\'")}')" 
+                                        class="btn btn-sm btn-outline-danger fw-bold">
+                                    <i class="bi bi-trash me-1"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    console.log('Table updated with', machines.length, 'machines');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="3" class="text-muted py-4">No machines found. Add a machine to get started.</td></tr>`;
+                    console.log('No machines to display');
                 }
-                updatePipeSizesAndPresets();
+            } else {
+                console.warn('machinesTableBody element not found!');
+            }
+            
+            updatePipeSizesAndPresets();
+            console.log('loadMachines() completed');
+        }
+
+        async function deleteMachine(machineId, machineName) {
+            if (!confirm(`Are you sure you want to delete machine "${machineName}"?`)) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/api/machines/delete/${machineId}`, {
+                    method: 'DELETE',
+                    headers: { 'Bypass-Tunnel-Reminder': 'true' }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert("✅ " + data.message);
+                    loadMachines();
+                } else {
+                    alert("❌ " + (data.detail || "Error deleting machine"));
+                }
             } catch (err) {
-                console.error("Error loading machines:", err);
+                alert("❌ Unable to connect to server.");
             }
         }
 
@@ -1261,7 +1481,8 @@
                 `✅ Entry confirm karo:\n\n` +
                 `🔧 Machine : ${machineName || '(not set)'}\n` +
                 `📦 Pipe    : ${pipeSize || '(not set)'}\n` +
-                `📊 Qty     : ${plannedVal} ${unit}\n\n` +
+                bundleInfo +
+                `📊 Qty     : ${plannedQty} ${unit}\n\n` +
                 `Save karvanu chhe? (Enter key thi nahi, OK thi j save thase)`;
             if (!window.confirm(confirmMsg)) return;
 
@@ -1273,12 +1494,14 @@
 
             const packagingType = document.getElementById('packaging_type').value;
             let plannedQty, actualQty;
+            let bundleInfo = '';
 
             if (packagingType === 'bundle') {
                 const itemsPerBundle = parseFloat(document.getElementById('items_per_bundle').value) || 1;
                 const numBundles = parseFloat(document.getElementById('num_bundles').value) || 1;
                 plannedQty = itemsPerBundle * numBundles;
-                actualQty = plannedQty; // For bundles, actual is same as planned
+                actualQty = plannedQty;
+                bundleInfo = `📦 Bundle : ${numBundles} bundles × ${itemsPerBundle} items/bundle = ${plannedQty} total\n`;
             } else {
                 plannedQty = parseFloat(document.getElementById('planned_qty_input').value);
                 if (!plannedQty || plannedQty <= 0) {
@@ -1307,7 +1530,9 @@
                 raw_material_used_kg: parseFloat(document.getElementById('raw_material_used_kg').value || 0),
                 shift_operator: document.getElementById('shift_operator').value || "Operator",
                 bundle_unit: bundleUnit,
-                status: "PENDING_APPROVAL"
+                status: "PENDING_APPROVAL",
+                items_per_bundle: packagingType === 'bundle' ? parseFloat(document.getElementById('items_per_bundle').value) || 1 : 1,
+                num_bundles: packagingType === 'bundle' ? parseInt(document.getElementById('num_bundles').value) || 1 : 1
             };
 
             try {
@@ -1344,6 +1569,13 @@
         }
 
         function triggerLabelPrint(data, qrCodeText) {
+            const plannedBundles = parseInt(data.planned_bundles || 1);
+            
+            if (plannedBundles > 1) {
+                printAllApprovalStickers(data, qrCodeText);
+                return;
+            }
+            
             document.getElementById('lbl_type').innerText = data.pipe_type || '';
             document.getElementById('lbl_machine').innerText = data.machine_name || '';
             document.getElementById('lbl_size').innerText = data.pipe_size || '';
@@ -1370,10 +1602,404 @@
             const printArea = document.getElementById('label-print-area');
             printArea.style.display = "block";
 
-            // Allow QRCode to paint before opening the print dialog.
             requestAnimationFrame(() => requestAnimationFrame(() => {
                 setTimeout(() => window.print(), 300);
             }));
+        }
+
+        function printAllApprovalStickers(data, mainQrCode) {
+            const plannedBundles = parseInt(data.planned_bundles || 1);
+            const itemsPerBundle = parseFloat(data.items_per_bundle || 1);
+            const pipeType = data.pipe_type || '';
+            const pipeSize = data.pipe_size || '';
+            const machineName = data.machine_name || '';
+            const bundleUnit = data.bundle_unit || 'MTR';
+            const shiftOperator = data.shift_operator || 'Operator';
+            const actualQty = data.actual_qty || data.coil_length_meters || data.planned_qty || 0;
+            
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+            
+            const printWindow = window.open('', '_blank', 'width=800,height=600');
+            if (!printWindow) {
+                alert("⚠️ Please allow popups for this site to print stickers!");
+                return;
+            }
+
+            let stickersHTML = '';
+            for (let i = 1; i <= plannedBundles; i++) {
+                const qrText = `${mainQrCode}-B${i}-OF-${plannedBundles}`;
+                stickersHTML += `
+                    <div class="sticker-box">
+                        <div class="sticker-header">
+                            <div class="company-title">BHUMI POLYMERS</div>
+                            <div class="company-sub">QUALITY EXTRUSION PIPING SYSTEM</div>
+                        </div>
+                        <div class="sticker-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Machine No:</span>
+                                <span class="detail-value">${machineName}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Pipe Type:</span>
+                                <span class="detail-value">${pipeType}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Pipe Size / Spec:</span>
+                                <span class="detail-value">${pipeSize}</span>
+                            </div>
+                            <div class="detail-grid-2">
+                                <div class="detail-box">
+                                    <span class="box-label">Bundle Size / Qty</span>
+                                    <span class="box-value">${itemsPerBundle} ${bundleUnit}</span>
+                                </div>
+                                <div class="detail-box">
+                                    <span class="box-label">Package Type</span>
+                                    <span class="box-value">Bundle ${i} of ${plannedBundles}</span>
+                                </div>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Operator:</span>
+                                <span class="detail-value">${shiftOperator}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Date & Time:</span>
+                                <span class="detail-value">${dateStr}</span>
+                            </div>
+                        </div>
+                        <div class="sticker-footer">
+                            <div class="qr-info">
+                                <span class="qr-label">BUNDLE ${i} OF ${plannedBundles} | QR:</span>
+                                <span class="qr-code-text">${qrText}</span>
+                            </div>
+                            <div class="qr-container" id="qr-approval-${i}"></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Approved Bundle Stickers</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { background: white; padding: 0; }
+                        .sticker-box { 
+                            background: white; 
+                            border: 3px solid #000; 
+                            padding: 3.5mm; 
+                            width: 4in; 
+                            height: auto; 
+                            margin: 0 auto; 
+                            box-sizing: border-box;
+                            page-break-after: always;
+                        }
+                        .sticker-box:last-child { page-break-after: avoid; }
+                        .company-title { font-size: 18pt; font-weight: bold; text-align: center; color: #000; }
+                        .company-sub { font-size: 10pt; text-align: center; color: #333; margin-bottom: 10px; }
+                        .detail-row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 11pt; }
+                        .detail-label { font-weight: bold; color: #333; }
+                        .detail-value { color: #000; }
+                        .detail-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+                        .detail-box { border: 1px solid #ccc; padding: 8px; text-align: center; background: #f9f9f9; }
+                        .box-label { display: block; font-size: 9pt; color: #666; }
+                        .box-value { display: block; font-size: 14pt; font-weight: bold; color: #000; }
+                        .qr-info { text-align: center; margin-top: 10px; font-size: 10pt; font-weight: bold; }
+                        .qr-container { text-align: center; margin-top: 5px; }
+                        @media print {
+                            body { padding: 0; background: white; }
+                            .sticker-box { border: 3px solid #000; margin: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${stickersHTML}
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"><\/script>
+                    <script src="https://cdn.jsdelivr.net/npm/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+                    <script>
+                        window.onload = function() {
+                            for (let i = 1; i <= ${plannedBundles}; i++) {
+                                const el = document.getElementById('qr-approval-' + i);
+                                if (el) {
+                                    new QRCode(el, {
+                                        text: '${mainQrCode}-B' + i + '-OF-${plannedBundles}',
+                                        width: 100,
+                                        height: 100,
+                                        correctLevel: QRCode.CorrectLevel.H
+                                    });
+                                }
+                            }
+                            setTimeout(function() { window.print(); }, 800);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        function generatePreProductionStickers() {
+            const packagingType = document.getElementById('packaging_type').value;
+            if (packagingType !== 'bundle') {
+                alert("⚠️ Please select 'Bundle / Pack of Items' packaging type first!");
+                return;
+            }
+
+            const itemsPerBundle = parseFloat(document.getElementById('items_per_bundle').value) || 1;
+            const numBundles = parseFloat(document.getElementById('num_bundles').value) || 1;
+            const pipeType = document.getElementById('pipe_type').value;
+            const pipeSize = document.getElementById('pipe_size_input').value.trim();
+            const machineName = document.getElementById('machine_name').value.trim();
+            const bundleUnit = document.getElementById('bundle_unit').value;
+
+            if (!pipeSize) {
+                alert("⚠️ Please enter Pipe Size / Spec first!");
+                return;
+            }
+
+            if (numBundles <= 0 || itemsPerBundle <= 0) {
+                alert("⚠️ Please enter valid bundle configuration!");
+                return;
+            }
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-IN') + ' ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+            const timestamp = now.getTime();
+
+            const container = document.getElementById('pre-production-stickers-container');
+            container.innerHTML = '';
+
+            const header = document.createElement('div');
+            header.className = 'card glass-card mb-3';
+            header.innerHTML = `
+                <div class="card-header bg-warning text-dark py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="m-0 fw-bold"><i class="bi bi-printer-fill me-2"></i> Pre-Production Bundle Stickers (${numBundles} Stickers)</h5>
+                    <div class="d-flex gap-2">
+                        <button onclick="printAllPreProductionStickers()" class="btn btn-dark fw-bold">
+                            <i class="bi bi-printer me-1"></i> Print All (${numBundles} Stickers)
+                        </button>
+                        <button onclick="document.getElementById('pre-production-stickers-container').innerHTML=''" class="btn btn-outline-danger fw-bold">
+                            <i class="bi bi-x-lg me-1"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(header);
+
+            const row = document.createElement('div');
+            row.className = 'row g-3';
+
+            for (let i = 1; i <= numBundles; i++) {
+                const qrText = `PLAN-${timestamp}-B${i}-OF-${numBundles}`;
+                const col = document.createElement('div');
+                col.className = 'col-md-4 col-sm-6';
+                col.innerHTML = `
+                    <div class="card glass-card p-3 border-warning sticker-preview" data-bundle="${i}">
+                        <div class="sticker-box">
+                            <div class="sticker-header">
+                                <div class="company-title">BHUMI POLYMERS</div>
+                                <div class="company-sub">QUALITY EXTRUSION PIPING SYSTEM</div>
+                            </div>
+                            <div class="sticker-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Machine No:</span>
+                                    <span class="detail-value">${machineName || '(not set)'}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Pipe Type:</span>
+                                    <span class="detail-value">${pipeType}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Pipe Size / Spec:</span>
+                                    <span class="detail-value">${pipeSize}</span>
+                                </div>
+                                <div class="detail-grid-2">
+                                    <div class="detail-box">
+                                        <span class="box-label">Bundle Size / Qty</span>
+                                        <span class="box-value">${itemsPerBundle} ${bundleUnit}</span>
+                                    </div>
+                                    <div class="detail-box">
+                                        <span class="box-label">Package Type</span>
+                                        <span class="box-value">Bundle ${i} of ${numBundles}</span>
+                                    </div>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Operator:</span>
+                                    <span class="detail-value">${document.getElementById('shift_operator').value || 'TBD'}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Date & Time:</span>
+                                    <span class="detail-value">${dateStr}</span>
+                                </div>
+                            </div>
+                            <div class="sticker-footer">
+                                <div class="qr-info">
+                                    <span class="qr-label">BUNDLE ${i} OF ${numBundles} | QR:</span>
+                                    <span class="qr-code-text">${qrText}</span>
+                                </div>
+                                <div class="qr-bundle-canvas" id="qr-bundle-${i}"></div>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-center">
+                            <button onclick="printSinglePreProductionSticker(${i})" class="btn btn-sm btn-outline-primary fw-bold">
+                                <i class="bi bi-printer-fill me-1"></i> Print Sticker ${i}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                row.appendChild(col);
+            }
+
+            container.appendChild(row);
+
+            setTimeout(() => {
+                for (let i = 1; i <= numBundles; i++) {
+                    const el = document.getElementById(`qr-bundle-${i}`);
+                    if (el) {
+                        el.innerHTML = '';
+                        new QRCode(el, {
+                            text: `PLAN-${timestamp}-B${i}-OF-${numBundles}`,
+                            width: 100,
+                            height: 100,
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+                    }
+                }
+            }, 100);
+
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function printSinglePreProductionSticker(bundleIndex) {
+            const sticker = document.querySelector(`.sticker-preview[data-bundle="${bundleIndex}"]`);
+            if (!sticker) return;
+
+            const printWindow = window.open('', '_blank', 'width=800,height=600');
+            if (!printWindow) {
+                alert("⚠️ Please allow popups for this site to print stickers!");
+                return;
+            }
+
+            const stickerContent = sticker.querySelector('.sticker-box').outerHTML;
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Bundle Sticker ${bundleIndex}</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { background: white; padding: 0; }
+                        .sticker-box { 
+                            background: white; 
+                            border: 3px solid #000; 
+                            padding: 3.5mm; 
+                            width: 4in; 
+                            height: auto; 
+                            margin: 0 auto; 
+                            box-sizing: border-box;
+                            page-break-after: always;
+                        }
+                        .sticker-box:last-child { page-break-after: avoid; }
+                        .company-title { font-size: 18pt; font-weight: bold; text-align: center; color: #000; }
+                        .company-sub { font-size: 10pt; text-align: center; color: #333; margin-bottom: 10px; }
+                        .detail-row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 11pt; }
+                        .detail-label { font-weight: bold; color: #333; }
+                        .detail-value { color: #000; }
+                        .detail-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+                        .detail-box { border: 1px solid #ccc; padding: 8px; text-align: center; background: #f9f9f9; }
+                        .box-label { display: block; font-size: 9pt; color: #666; }
+                        .box-value { display: block; font-size: 14pt; font-weight: bold; color: #000; }
+                        .qr-info { text-align: center; margin-top: 10px; font-size: 10pt; font-weight: bold; }
+                        .qr-container { text-align: center; margin-top: 5px; }
+                        @media print {
+                            body { padding: 0; background: white; }
+                            .sticker-box { border: 3px solid #000; margin: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${stickerContent}
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"><\/script>
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() { window.print(); }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        function printAllPreProductionStickers() {
+            const numBundles = parseFloat(document.getElementById('num_bundles').value) || 1;
+            const printWindow = window.open('', '_blank', 'width=800,height=600');
+            if (!printWindow) {
+                alert("⚠️ Please allow popups for this site to print stickers!");
+                return;
+            }
+
+            let stickersHTML = '';
+            for (let i = 1; i <= numBundles; i++) {
+                const sticker = document.querySelector(`.sticker-preview[data-bundle="${i}"]`);
+                if (sticker) {
+                    stickersHTML += sticker.querySelector('.sticker-box').outerHTML;
+                }
+            }
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>All Bundle Stickers</title>
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                    <style>
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { background: white; padding: 0; }
+                        .sticker-box { 
+                            background: white; 
+                            border: 3px solid #000; 
+                            padding: 3.5mm; 
+                            width: 4in; 
+                            height: auto; 
+                            margin: 0 auto; 
+                            box-sizing: border-box;
+                            page-break-after: always;
+                        }
+                        .sticker-box:last-child { page-break-after: avoid; }
+                        .company-title { font-size: 18pt; font-weight: bold; text-align: center; color: #000; }
+                        .company-sub { font-size: 10pt; text-align: center; color: #333; margin-bottom: 10px; }
+                        .detail-row { display: flex; justify-content: space-between; margin: 4px 0; font-size: 11pt; }
+                        .detail-label { font-weight: bold; color: #333; }
+                        .detail-value { color: #000; }
+                        .detail-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+                        .detail-box { border: 1px solid #ccc; padding: 8px; text-align: center; background: #f9f9f9; }
+                        .box-label { display: block; font-size: 9pt; color: #666; }
+                        .box-value { display: block; font-size: 14pt; font-weight: bold; color: #000; }
+                        .qr-info { text-align: center; margin-top: 10px; font-size: 10pt; font-weight: bold; }
+                        .qr-container { text-align: center; margin-top: 5px; }
+                        @media print {
+                            body { padding: 0; background: white; }
+                            .sticker-box { border: 3px solid #000; margin: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${stickersHTML}
+                    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"><\/script>
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() { window.print(); }, 800);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
 
         window.addEventListener('afterprint', () => {

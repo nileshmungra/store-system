@@ -16,6 +16,22 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+DB_TYPE = os.getenv("DB_TYPE", "mysql").lower()
+
+if DB_TYPE == "oracle":
+    from database_oracle import get_db as get_db_impl, get_db_ctx as get_db_ctx_impl, init_db as init_db_impl
+else:
+    from database import get_db as get_db_impl, get_db_ctx as get_db_ctx_impl, init_db as init_db_impl
+
+def get_db():
+    return get_db_impl()
+
+def get_db_ctx(commit=False, dictionary=True):
+    return get_db_ctx_impl(commit=commit, dictionary=dictionary)
+
+def init_db():
+    return init_db_impl()
+
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -50,8 +66,6 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-
-from database import get_db, get_db_ctx, init_db
 
 
 class CreatePlanFromLoadingEntryRequest(BaseModel):
@@ -283,6 +297,8 @@ class ProductionEntryRequest(BaseModel):
     shift_operator: str | None = "Operator"
     bundle_unit: str | None = "MTR"
     status: str | None = "PENDING_APPROVAL" # 'PENDING_APPROVAL' or 'APPROVED'
+    items_per_bundle: float | None = 1.0
+    num_bundles: int | None = 1
 
 class ProductionApprovalRequest(BaseModel):
     actual_qty: float | None = None
@@ -2126,6 +2142,82 @@ def update_machine(machine_id: int, machine_name: str = Form(...)):
     conn.close()
     return {"status": "Success", "message": "Machine updated successfully"}
 
+def _production_qr_prefix(pipe_type: str) -> str:
+    prefix = (pipe_type or "PRD")[:3].upper().replace(" ", "")
+    return prefix or "PRD"
+
+
+def _allocate_production_qr(cursor, pipe_type: str) -> str:
+    prefix = _production_qr_prefix(pipe_type)
+    cursor.execute("SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM production_logs")
+    row = cursor.fetchone() or {}
+    next_num = int(row.get("next_id") or 1)
+    try:
+        cursor.execute("SELECT COALESCE(MAX(id), 0) AS max_id FROM production_qr_labels")
+        label_row = cursor.fetchone() or {}
+        next_num = max(next_num, int(label_row.get("max_id") or 0) + 1)
+    except Exception:
+        pass
+    while True:
+        qr_code = f"COIL-{prefix}-{next_num:05d}"
+        cursor.execute("SELECT 1 FROM production_logs WHERE qr_code = %s", (qr_code,))
+        if cursor.fetchone():
+            next_num += 1
+            continue
+        try:
+            cursor.execute("SELECT 1 FROM production_qr_labels WHERE qr_code = %s", (qr_code,))
+            if cursor.fetchone():
+                next_num += 1
+                continue
+        except Exception:
+            pass
+        cursor.execute("SELECT 1 FROM boxes WHERE box_id = %s", (qr_code,))
+        if cursor.fetchone():
+            next_num += 1
+            continue
+        return qr_code
+
+
+def _resolve_bundle_plan(req) -> tuple:
+    items_per = float(req.items_per_bundle or 1)
+    if items_per <= 0:
+        items_per = 1.0
+    n = int(req.num_bundles or 0)
+    if n < 1:
+        n = 1
+    return n, items_per
+
+
+def _issue_qr_labels(cursor, job_id: int, pipe_type: str, count: int, qty_in_bundle: float) -> list:
+    labels = []
+    for i in range(1, count + 1):
+        qr_code = _allocate_production_qr(cursor, pipe_type)
+        cursor.execute(
+            """INSERT INTO production_qr_labels (job_id, qr_code, bundle_no, qty_in_bundle, status)
+               VALUES (%s, %s, %s, %s, 'ISSUED')""",
+            (job_id, qr_code, i, qty_in_bundle),
+        )
+        labels.append({
+            "qr_code": qr_code,
+            "bundle_no": i,
+            "status": "ISSUED",
+            "qty_in_bundle": qty_in_bundle,
+        })
+    return labels
+
+
+def _fetch_job_labels(cursor, job_id: int) -> list:
+    try:
+        cursor.execute(
+            """SELECT qr_code, bundle_no, qty_in_bundle, status
+               FROM production_qr_labels WHERE job_id = %s ORDER BY bundle_no ASC""",
+            (job_id,),
+        )
+        return cursor.fetchall() or []
+    except Exception:
+        return []
+
+
 def format_production_item_name(pipe_type: str, pipe_size: str) -> str:
     p_type = (pipe_type or "").strip()
     p_size = (pipe_size or "").strip()
@@ -2198,16 +2290,23 @@ async def delete_production_log(log_id: int):
             raise HTTPException(status_code=404, detail="Production Log not found or already deleted!")
 
         qr_code = log.get('qr_code') or ''
+        label_qrs = [row['qr_code'] for row in _fetch_job_labels(cursor, log_id) if row.get('qr_code')]
+        all_qrs = list(dict.fromkeys(([qr_code] if qr_code else []) + label_qrs))
 
-        if qr_code:
-            cursor.execute("SELECT batch_id FROM boxes WHERE box_id = %s", (qr_code,))
+        for code in all_qrs:
+            cursor.execute("SELECT batch_id FROM boxes WHERE box_id = %s", (code,))
             b_row = cursor.fetchone()
-            if b_row and b_row.get('batch_id'):
+            if b_row and b_row.get('batch_id') and not batch_id_to_del:
                 batch_id_to_del = b_row['batch_id']
-            cursor.execute("DELETE FROM boxes WHERE box_id = %s", (qr_code,))
+            cursor.execute("DELETE FROM boxes WHERE box_id = %s", (code,))
 
         if batch_id_to_del:
             cursor.execute("DELETE FROM inward_batches WHERE id = %s", (batch_id_to_del,))
+
+        try:
+            cursor.execute("DELETE FROM production_qr_labels WHERE job_id = %s", (log_id,))
+        except Exception:
+            pass
 
         cursor.execute("DELETE FROM production_logs WHERE id = %s", (log_id,))
 
@@ -2251,9 +2350,8 @@ async def add_production(req: ProductionEntryRequest):
             planned_val = float(req.planned_qty if (req.planned_qty and req.planned_qty > 0) else (req.coil_length_meters or 0))
             actual_val = float(req.actual_qty if (req.actual_qty and req.actual_qty > 0) else planned_val)
             bundle_unit = req.bundle_unit or "MTR"
-            prefix = req.pipe_type[:3].upper().replace(" ", "") if req.pipe_type else "PRD"
-            if not prefix:
-                prefix = "PRD"
+            sticker_count, qty_per_bundle = _resolve_bundle_plan(req)
+            prefix = _production_qr_prefix(req.pipe_type)
 
             # Strict Plan vs Actual: Default is ALWAYS PENDING_APPROVAL unless explicitly APPROVED
             if req.status != "APPROVED":
@@ -2270,64 +2368,68 @@ async def add_production(req: ProductionEntryRequest):
                 ''', (req.production_date, req.machine_name, req.pipe_type, req.pipe_size, planned_val, actual_val))
                 existing = cursor.fetchone()
                 if existing:
+                    labels = _fetch_job_labels(cursor, existing['id'])
+                    qr_codes = [row['qr_code'] for row in labels]
                     return {
                         "status": "Success",
                         "message": "Production entry already exists in Pending Approval Queue.",
                         "log_id": existing['id'],
-                        "is_approved": False
+                        "is_approved": False,
+                        "qr_codes": qr_codes,
+                        "planned_bundles": len(qr_codes) or sticker_count,
+                        "items_per_bundle": qty_per_bundle,
                     }
 
                 cursor.execute('''
                     INSERT INTO production_logs 
-                    (production_date, machine_name, pipe_type, pipe_size, planned_qty, actual_qty, bundle_unit, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code, status)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NULL, 'PENDING_APPROVAL')
+                    (production_date, machine_name, pipe_type, pipe_size, planned_qty, actual_qty, bundle_unit, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code, status, items_per_bundle, planned_bundles)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NULL, 'PENDING_APPROVAL', %s, %s)
                 ''', (
                     req.production_date,
                     req.machine_name, req.pipe_type, req.pipe_size,
                     planned_val, actual_val, bundle_unit,
                     actual_val, req.coil_weight_kg or 0.0, req.raw_material_used_kg or 0.0,
-                    req.shift_operator or "Operator"
+                    req.shift_operator or "Operator", qty_per_bundle, sticker_count
                 ))
                 log_id = cursor.lastrowid
-                add_log(conn, "PRODUCTION_PLAN", f"New production entry logged (Pending Approval): {req.pipe_type} {req.pipe_size} | Planned: {planned_val} {bundle_unit} | Machine: {req.machine_name}")
+                labels = _issue_qr_labels(cursor, log_id, req.pipe_type, sticker_count, qty_per_bundle)
+                qr_codes = [row['qr_code'] for row in labels]
+                add_log(conn, "PRODUCTION_PLAN", f"New production entry logged (Pending Approval): {req.pipe_type} {req.pipe_size} | Planned: {sticker_count} stickers / {planned_val} {bundle_unit} | Machine: {req.machine_name}")
                 return {
                     "status": "Success",
-                    "message": "Production entry logged successfully in Pending Approval Queue. It will not be in Store Stock until approved.",
+                    "message": f"Morning QR issued: {sticker_count} unique stickers printed. Stock will be added only after evening approval.",
                     "log_id": log_id,
-                    "is_approved": False
+                    "is_approved": False,
+                    "qr_codes": qr_codes,
+                    "planned_bundles": sticker_count,
+                    "items_per_bundle": qty_per_bundle,
+                    "print_now": True,
                 }
 
             # Direct Approved Mode
-            cursor.execute("SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM production_logs")
-            next_num = cursor.fetchone()['next_id']
-
-            while True:
-                qr_code = f"COIL-{prefix}-{next_num:05d}"
-                cursor.execute("SELECT 1 FROM production_logs WHERE qr_code = %s", (qr_code,))
-                if not cursor.fetchone():
-                    cursor.execute("SELECT 1 FROM boxes WHERE box_id = %s", (qr_code,))
-                    if not cursor.fetchone():
-                        break
-                next_num += 1
-
             cursor.execute('''
                 INSERT INTO production_logs 
-                (production_date, machine_name, pipe_type, pipe_size, planned_qty, actual_qty, bundle_unit, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code, status, approved_by, approved_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'APPROVED', %s, NOW())
+                (production_date, machine_name, pipe_type, pipe_size, planned_qty, actual_qty, bundle_unit, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code, status, approved_by, approved_at, items_per_bundle, planned_bundles)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NULL, 'APPROVED', %s, NOW(), %s, %s)
             ''', (
                 req.production_date,
                  req.machine_name, req.pipe_type, req.pipe_size,
                 planned_val, actual_val, bundle_unit,
                 actual_val, req.coil_weight_kg or 0.0, req.raw_material_used_kg or 0.0,
-                req.shift_operator or "Operator", qr_code, "System/Direct"
+                req.shift_operator or "Operator", "System/Direct", qty_per_bundle, sticker_count
             ))
             log_id = cursor.lastrowid
+            labels = _issue_qr_labels(cursor, log_id, req.pipe_type, sticker_count, qty_per_bundle)
+            qr_codes = [row['qr_code'] for row in labels]
+            qr_code = qr_codes[0] if qr_codes else None
+            if qr_code:
+                cursor.execute("UPDATE production_logs SET qr_code = %s WHERE id = %s", (qr_code, log_id))
 
             # Auto-ensure item exists in items master table
             item_full_name = format_production_item_name(req.pipe_type, req.pipe_size)
             party_name = f"Own Production ({req.machine_name})"
-            remark_text = f"Operator: {req.shift_operator} | Qty: {actual_val} {bundle_unit}"
-            coil_qty = int(actual_val)
+            remark_text = f"Operator: {req.shift_operator} | Qty: {actual_val} {bundle_unit} | Stickers: {sticker_count}"
+            coil_qty = int(qty_per_bundle)
             item_code_gen = f"ITM-{prefix}-{req.pipe_size.replace(' ', '')[:10]}"
 
             cursor.execute("SELECT id FROM items WHERE item_name = %s", (item_full_name,))
@@ -2343,15 +2445,19 @@ async def add_production(req: ProductionEntryRequest):
             # Insert into Inward Batches table
             cursor.execute('''
                 INSERT INTO inward_batches (item_name, total_boxes, total_qty, supplier_or_party, remark)
-                VALUES (%s, 1, %s, %s, %s)
-            ''', (item_full_name, coil_qty, party_name, remark_text))
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (item_full_name, sticker_count, int(qty_per_bundle * sticker_count), party_name, remark_text))
             batch_id = cursor.lastrowid
 
-            # Insert into boxes table
-            cursor.execute('''
-                INSERT INTO boxes (box_id, batch_id, item_name, qty_in_box, supplier_or_party, status)
-                VALUES (%s, %s, %s, %s, %s, 'IN_STORE')
-            ''', (qr_code, batch_id, item_full_name, coil_qty, party_name))
+            for label in labels:
+                cursor.execute('''
+                    INSERT INTO boxes (box_id, batch_id, item_name, qty_in_box, supplier_or_party, status)
+                    VALUES (%s, %s, %s, %s, %s, 'IN_STORE')
+                ''', (label['qr_code'], batch_id, item_full_name, coil_qty, party_name))
+                cursor.execute(
+                    "UPDATE production_qr_labels SET status = 'IN_STORE' WHERE qr_code = %s",
+                    (label['qr_code'],),
+                )
 
             # BOM Consumption
             cursor.execute("SELECT id FROM items WHERE item_name = %s", (item_full_name,))
@@ -2383,7 +2489,7 @@ async def add_production(req: ProductionEntryRequest):
                             cursor.execute("UPDATE boxes SET qty_in_box = %s, status = %s WHERE box_id = %s", (new_box_qty, new_status, box['box_id']))
                             qty_left_to_consume -= qty_to_take
 
-            add_log(conn, "PRODUCTION", f"New coil produced and entered in store (Batch #{batch_id}): {item_full_name} | Qty: {actual_val} {bundle_unit}")
+            add_log(conn, "PRODUCTION", f"New production entered in store (Batch #{batch_id}): {item_full_name} | {sticker_count} stickers | Qty: {actual_val} {bundle_unit}")
 
             # SQLite sync
             if os.path.exists("inventory.db"):
@@ -2395,10 +2501,11 @@ async def add_production(req: ProductionEntryRequest):
                         (production_date, machine_name, pipe_type, pipe_size, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ''', (req.machine_name, req.pipe_type, req.pipe_size, actual_val, req.coil_weight_kg or 0, req.raw_material_used_kg or 0, req.shift_operator, qr_code))
-                    sq_cursor.execute('''
-                        INSERT OR IGNORE INTO boxes (box_id, batch_id, item_name, qty_in_box, supplier_or_party, status)
-                        VALUES (?, ?, ?, ?, ?, 'IN_STORE')
-                    ''', (qr_code, batch_id, item_full_name, coil_qty, party_name))
+                    for label in labels:
+                        sq_cursor.execute('''
+                            INSERT OR IGNORE INTO boxes (box_id, batch_id, item_name, qty_in_box, supplier_or_party, status)
+                            VALUES (?, ?, ?, ?, ?, 'IN_STORE')
+                        ''', (label['qr_code'], batch_id, item_full_name, coil_qty, party_name))
                     sq_conn.commit()
                     sq_conn.close()
                 except Exception:
@@ -2410,9 +2517,11 @@ async def add_production(req: ProductionEntryRequest):
                 "status": "Success",
                 "message": "Production approved and stored in inventory.",
                 "qr_code": qr_code,
+                "qr_codes": qr_codes,
                 "batch_id": batch_id,
                 "log_id": log_id,
                 "is_approved": True,
+                "items_per_bundle": qty_per_bundle,
                 "details": req.dict()
             }
 

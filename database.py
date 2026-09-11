@@ -321,13 +321,30 @@ def init_db():
         ("bundle_unit", "VARCHAR(50) DEFAULT 'MTR'"),
         ("status", "VARCHAR(50) DEFAULT 'APPROVED'"),
         ("approved_by", "VARCHAR(255) DEFAULT NULL"),
-        ("approved_at", "DATETIME DEFAULT NULL")
+        ("approved_at", "DATETIME DEFAULT NULL"),
+        ("items_per_bundle", "DECIMAL(10, 2) DEFAULT 1"),
+        ("planned_bundles", "INT DEFAULT 1"),
     ]
     for col_name, col_def in prod_cols:
         try:
             cursor.execute(f"ALTER TABLE production_logs ADD COLUMN {col_name} {col_def};")
         except Exception:
             pass
+
+    # One unique QR sticker per planned bundle (issued in the morning, used/voided at evening close)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS production_qr_labels (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            job_id INT NOT NULL,
+            qr_code VARCHAR(255) NOT NULL UNIQUE,
+            bundle_no INT NOT NULL,
+            qty_in_bundle DECIMAL(10, 2) DEFAULT 1,
+            status VARCHAR(50) DEFAULT 'ISSUED',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_prod_qr_job (job_id),
+            INDEX idx_prod_qr_status (status)
+        );
+    ''')
 
     # Dispatch Plans Table
     cursor.execute('''
@@ -455,6 +472,8 @@ def init_db():
         "CREATE INDEX IF NOT EXISTS idx_production_created ON production_logs(created_at);",
         "CREATE INDEX IF NOT EXISTS idx_production_machine ON production_logs(machine_name);",
         "CREATE INDEX IF NOT EXISTS idx_production_pipe ON production_logs(pipe_type);",
+        "CREATE INDEX IF NOT EXISTS idx_prod_qr_job ON production_qr_labels(job_id);",
+        "CREATE INDEX IF NOT EXISTS idx_prod_qr_code ON production_qr_labels(qr_code);",
         "CREATE INDEX IF NOT EXISTS idx_inward_date ON inward_batches(inward_date);",
         "CREATE INDEX IF NOT EXISTS idx_inward_item ON inward_batches(item_name);",
         "CREATE INDEX IF NOT EXISTS idx_items_name ON items(item_name);",
