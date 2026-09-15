@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store System - Activity Log Book</title>
+    <!-- Google Fonts & Bootstrap -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Global App Stylesheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/page-loader.css">
+</head>
+
+<body>
+
+    <!-- 📦 Global Page Loader Elements -->
+    <div id="page-progress-bar"></div>
+    <div id="page-loader-overlay">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
+                <span class="fs-4 text-warning">📦</span>
+                <span>Bhumi Factory & Dispatch Manager</span>
+            </a>
+
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse"
+                data-bs-target="#topNavbarMenu">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="topNavbarMenu">
+                <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+
+                    <!-- 1. Inward & Factory Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="/dashboard" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-box-seam me-1 text-info"></i> Inward & Production
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/inward-page"><i
+                                        class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i
+                                        class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 2. Dispatch & Yard Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="/scanner" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-truck me-1 text-success"></i> Dispatch & Scanning
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i
+                                        class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i
+                                        class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i
+                                        class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 3. Master Controls Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="/bom-page" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-sliders me-1 text-warning"></i> Master Control
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i
+                                        class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i
+                                        class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 4. Reports & Logs Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle active" href="/logs-page" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bar-chart-line me-1 text-primary"></i> Reports & Logs
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i
+                                        class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a>
+                            </li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i
+                                        class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 🌓 Global Theme Toggle Button -->
+                    <button id="globalThemeBtn"
+                        class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
+                        <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+                        <span id="themeText">Dark Mode</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h3 class="fw-extrabold text-slate-800 m-0"><i class="bi bi-journal-check text-primary me-2"></i> System
+                    Activity Audit Logs</h3>
+                <p class="text-muted small m-0 mt-1">Complete chronological audit log of all operations and user
+                    activities.</p>
+            </div>
+            <button id="refreshLogsBtn" class="btn btn-outline-primary fw-bold rounded-3"><i
+                    class="bi bi-arrow-clockwise me-1"></i> Refresh Logs</button>
+        </div>
+
+        <div class="card glass-card p-3 mb-4">
+            <input type="text" id="logSearch" class="form-control"
+                placeholder="🔍 Search (User Name, Action or Details)...">
+        </div>
+
+        <div class="card glass-card overflow-hidden">
+            <div class="table-responsive" style="max-height: 600px;">
+                <table class="table table-hover align-middle m-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">ID</th>
+                            <th>Date & Time</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Activity Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/security.js"></script>
+    <script src="/static/js/toast.js"></script>
+    <script src="/static/js/theme.js"></script>
+    <script src="/static/js/logs.js"></script>
+    <script src="/static/js/english-ui.js"></script>
+<script src="/static/js/page-loader.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                window.PageLoader.hide();
+            }
+        });
+    </script>
+</body>
+
+</html>

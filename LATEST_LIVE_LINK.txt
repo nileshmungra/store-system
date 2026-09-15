@@ -1,0 +1,4 @@
+Dashboard: https://excellence-interior-trail-wayne.trycloudflare.com/dashboard
+Scanner:   https://excellence-interior-trail-wayne.trycloudflare.com/scanner
+Reports:   https://excellence-interior-trail-wayne.trycloudflare.com/report-page
+Log Book:  https://excellence-interior-trail-wayne.trycloudflare.com/logs-page

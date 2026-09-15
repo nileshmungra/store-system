@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.db
+*.pem
+id_ed25519*
+venv/
+.env
+.venv/
+static/uploads/*
+!static/uploads/.gitkeep
+node_modules/
+*.log
+.DS_Store
+Thumbs.db

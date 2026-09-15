@@ -1,0 +1,17 @@
+# TOKEN OPTIMIZATION & PERFORMANCE RULES
+
+1. STRICT CONTEXT EFFICIENCY:
+   - Do NOT read or scan unnecessary files.
+   - Read ONLY the specific file requested or directly related to the current task.
+   - Do NOT rewrite or re-send full files if only a small method/function change is needed. Apply diffs/edits only.
+
+2. COMPACT RESPONSE FORMAT:
+   - Keep tool call responses and explainers concise.
+   - Omit broad codebase scans. Rely on AGENTS.md for structural knowledge.
+
+3. ARCHITECTURE BOUNDARIES:
+   - Never alter `database.py` DB connections or core routes in `main.py` unless explicitly instructed.
+   - Always preserve standard Dark UI, font ('Plus Jakarta Sans'), and green branding (`brand-500`).
+
+4. ERROR PREVENTION:
+   - Before executing large changes, perform targeted single-file edits to avoid subagent timeouts.

@@ -1,0 +1,14 @@
+# Ignore heavy directories to save tokens
+node_modules/
+venv/
+.venv/
+__pycache__/
+.git/
+*.db
+*.sqlite3
+*.log
+static/images/
+*.png
+*.jpg
+*.jpeg
+*.svg

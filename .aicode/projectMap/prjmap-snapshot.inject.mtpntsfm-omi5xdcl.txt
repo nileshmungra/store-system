@@ -1,0 +1,37 @@
+# PROJECT MAP (HINT)
+descr: Non-authoritative workspace snapshot. It may be intentionally stale within a bounded tolerance. Never treat paths in this block as verified; verify with fs_* and/or index_* / symbol_* / file_load* before acting.
+
+FORMAT:
+format: D/| listing + append-only diff ops
+format_descr: One directory per line: `D <projectName>/<relative/dir/> → file1 | file2 | ...`
+format_descr: Separator between files is exactly ` | ` (space + pipe + space). After splitting, unescape filename tokens: `\|` → `|` and `\\` → `\`.
+format_descr: Multi-root workspace: `<projectName>` may differ across lines; treat each line as self-contained.
+
+DIFF SECTION (APPEND-ONLY):
+format_diff: Optional section appended after the file list.
+format_diff: Marker line: `## PROJECT MAP DIFF (APPEND-ONLY)`.
+format_diff: Then a `descr:` line, then append-only op lines: `+ <canPath>` or `- <canPath>`.
+format_diff: Apply op lines sequentially; if a path appears multiple times, the last occurrence wins.
+
+RECONSTRUCTING A PATH FROM ONE LINE:
+1) Read the directory prefix: `<projectName>/<dir>/`.
+2) Split the rest on ` | ` to get filenames.
+3) Full path = `<projectName>/<dir>/` + `<filename>`.
+
+GUIDANCE:
+- Use this list for orientation; verify before edits or claims.
+- If the snapshot and the workspace disagree, the workspace wins.
+
+## WORKSPACE ROOTS
+- The project is named "store_system" and has a single root directory at "store_system/".
+
+## PROJECT MAP FILE LIST
+D store_system/ → .env.example | .gitignore | .jarvisignore | AGENTS.md | bom.html | challan.html | cloudflared.exe | database.py | DEPLOY.md | deployment process.docx | dispatch.html | favicon.ico | index.html | items.html | LATEST_LIVE_LINK.txt | logs.html | main.py | main_dashboard.html | migrate_data.py | mkcert.exe | Procfile | production.html | PROJECT_MASTER_BLUEPRINT.txt | pyproject.toml | pyrefly.toml | railway.toml | README.docx | README.md | render.yaml | report.html | requirements-dev.txt | requirements.txt | ruff.toml | runtime.txt | scanner.html | start_app.bat | start_local.bat | start_tunnels.py | TEST_AND_DEPLOY.bat | test_app.py
+D store_system/.github/workflows/ → ci.yml
+D store_system/.kilo/ → kilo.jsonc
+D store_system/static/css/ → page-loader.css | style.css
+D store_system/static/js/ → dashboard.js | english-ui.js | logs.js | page-loader.js | report.js | security.js | theme.js | toast.js
+D store_system/static/uploads/ → .gitkeep
+
+## PROJECT MAP DIFF (APPEND-ONLY)
+descr: Append-only diff ops since last rebase; verify paths before acting.

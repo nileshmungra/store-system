@@ -1,0 +1,1727 @@
+/* =========================================================
+   🌓 Modern Theme & UI Design System - Inventory Management
+   ========================================================= */
+
+/* --- Theme Variables (Dark is default — applies before JS sets data-theme) ---
+   Single source of truth: change here and every page updates automatically.
+   ================================================================== */
+:root,
+[data-theme="dark"] {
+    /* Backgrounds */
+    --bg-main: #0f172a;
+    --bg-card: rgba(30, 41, 59, 0.9);
+    --nav-bg: rgba(15, 23, 42, 0.95);
+    /* Borders & Shadows */
+    --border-color: rgba(255, 255, 255, 0.12);
+    --shadow-glow: rgba(0, 0, 0, 0.35);
+    /* Text */
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    /* Brand / Accent */
+    --primary-color: #6366f1;
+    --brand-500: #22c55e;
+    --brand-600: #16a34a;
+    /* Inputs */
+    --input-bg: #0f172a;
+    --input-text: #f8fafc;
+    --input-border: #334155;
+    /* Navigation Pills */
+    --pill-bg: rgba(255, 255, 255, 0.06);
+    --pill-border: rgba(255, 255, 255, 0.1);
+    --pill-color: #cbd5e1;
+    --pill-hover-bg: rgba(255, 255, 255, 0.16);
+    --pill-hover-border: rgba(255, 255, 255, 0.25);
+    /* Tables */
+    --table-header-bg: #1e293b;
+    --table-header-color: #f8fafc;
+}
+
+/* --- Dark Mode Utility Overrides ---
+   Bootstrap .text-dark = near-black, invisible on dark bg → flip to light.
+   Only fire when [data-theme="dark"] is explicitly set (safe — no pre-JS flash). */
+[data-theme="dark"] .text-dark,
+[data-theme="dark"] .text-slate-800,
+[data-theme="dark"] .text-slate-900 {
+    color: #f1f2f4 !important;
+}
+
+[data-theme="dark"] .text-slate-300,
+[data-theme="dark"] .text-slate-400,
+[data-theme="dark"] .text-slate-500,
+[data-theme="dark"] .text-slate-600,
+[data-theme="dark"] .text-slate-700 {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .text-slate-200 {
+    color: var(--text-main) !important;
+}
+
+/* --- Light Mode Theme Overrides --- */
+[data-theme="light"] {
+    /* Backgrounds */
+    --bg-main: #f1f5f9;
+    --bg-card: #ffffff;
+    --nav-bg: #ffffff;
+    /* Borders & Shadows */
+    --border-color: #cbd5e1;
+    --shadow-glow: rgba(0, 0, 0, 0.08);
+    /* Text */
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    /* Brand / Accent (slightly deeper for light-bg contrast) */
+    --primary-color: #4f46e5;
+    --brand-500: #22c55e;
+    --brand-600: #16a34a;
+    /* Inputs */
+    --input-bg: #ffffff;
+    --input-text: #0f172a;
+    --input-border: #94a3b8;
+    /* Navigation Pills */
+    --pill-bg: #f1f5f9;
+    --pill-border: #cbd5e1;
+    --pill-color: #334155;
+    --pill-hover-bg: #e2e8f0;
+    --pill-hover-border: #94a3b8;
+    /* Tables */
+    --table-header-bg: #f8fafc;
+    --table-header-color: #0f172a;
+}
+
+/* --- Global Body & Typography --- */
+body {
+    background-color: var(--bg-main) !important;
+    color: var(--text-main) !important;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--text-main);
+    margin: 15px;
+}
+
+/* --- General Text Muted Override --- */
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+/* --- Brand Color Accents --- */
+.text-brand { color: var(--brand-500) !important; }
+.bg-brand { background-color: var(--brand-500) !important; }
+.btn-brand { background-color: var(--brand-500) !important; border-color: var(--brand-500) !important; color: #fff !important; }
+.btn-brand:hover { background-color: var(--brand-600) !important; border-color: var(--brand-600) !important; }
+.border-brand { border-color: var(--brand-500) !important; }
+.bg-brand-100 { background-color: rgba(34, 197, 94, 0.1) !important; }
+.text-brand-600 { color: var(--brand-600) !important; }
+
+/* --- Navigation & Header Bar --- */
+.navbar-custom,
+.header-nav {
+    background-color: var(--nav-bg) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color) !important;
+    transition: all 0.3s ease;
+}
+
+[data-theme="light"] .navbar-custom,
+[data-theme="light"] .header-nav {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+.navbar-brand {
+    color: var(--text-main) !important;
+    font-weight: 700;
+}
+
+/* --- Nav Pills Styling --- */
+.nav-pill-custom {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 16px !important;
+    border-radius: 12px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: var(--pill-color) !important;
+    text-decoration: none !important;
+    background: var(--pill-bg) !important;
+    border: 1px solid var(--pill-border) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+.nav-pill-custom:hover,
+.nav-pill-custom:focus {
+    color: #ffffff !important;
+    background: var(--pill-hover-bg) !important;
+    border-color: var(--pill-hover-border) !important;
+    transform: translateY(-1.5px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    text-decoration: none !important;
+}
+
+[data-theme="light"] .nav-pill-custom:hover {
+    color: #0f172a !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.nav-pill-custom.active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    border-color: #818cf8 !important;
+}
+
+[data-theme="light"] .nav-pill-custom.active {
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+    border-color: #4338ca !important;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
+}
+
+/* --- Dropdown Menus --- */
+.dropdown-menu-custom {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 30px var(--shadow-glow) !important;
+}
+
+.dropdown-item-custom {
+    color: var(--text-main) !important;
+    padding: 9px 14px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+}
+
+.glass-card,
+.card {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-main) !important;
+    box-shadow: 0 8px 24px var(--shadow-glow) !important;
+    border-radius: 16px;
+}
+
+.dropdown-item-custom:hover {
+    background-color: rgba(99, 102, 241, 0.15) !important;
+    color: #818cf8 !important;
+    transform: translateX(3px) !important;
+}
+
+[data-theme="light"] .dropdown-item-custom:hover {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+/* --- Glassmorphism & Cards --- */
+
+.card-header {
+    background-color: var(--bg-card) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+[data-theme="light"] .card-header {
+    background-color: #ffffff !important;
+}
+
+/* --- KPI Counter Cards --- */
+.kpi-card {
+    padding: 20px;
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+}
+
+.kpi-icon {
+    font-size: 2.2rem;
+    opacity: 0.9;
+}
+
+/* --- Touch Action Tiles --- */
+.touch-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+    color: var(--text-main) !important;
+    background-color: var(--bg-card);
+    border: 1.5px solid var(--border-color);
+    box-shadow: 0 8px 24px var(--shadow-glow);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.touch-tile h6 {
+    color: var(--text-main) !important;
+    font-weight: 700;
+    transition: color 0.2s ease;
+}
+
+.touch-tile span {
+    color: var(--text-muted) !important;
+    transition: color 0.2s ease;
+}
+
+.touch-tile:hover,
+.touch-tile:active {
+    transform: translateY(-4px) scale(1.02);
+    background-color: rgba(99, 102, 241, 0.12) !important;
+    border-color: #6366f1 !important;
+    box-shadow: 0 12px 30px rgba(99, 102, 241, 0.35);
+    text-decoration: none;
+}
+
+.touch-tile:hover h6 {
+    color: #6366f1 !important;
+}
+
+[data-theme="light"] .touch-tile:hover h6 {
+    color: #4f46e5 !important;
+}
+
+.touch-tile-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 12px;
+    transition: transform 0.25s ease;
+}
+
+.touch-tile:hover .touch-tile-icon {
+    transform: scale(1.1);
+}
+
+.tile-blue {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.25));
+    color: #3b82f6;
+}
+
+.tile-amber {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.25));
+    color: #f59e0b;
+}
+
+.tile-emerald {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.25));
+    color: #10b981;
+}
+
+.tile-purple {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(124, 58, 237, 0.25));
+    color: #8b5cf6;
+}
+
+.tile-rose {
+    background: linear-gradient(135deg, rgba(244, 63, 94, 0.15), rgba(225, 29, 72, 0.25));
+    color: #f43f5e;
+}
+
+.tile-cyan {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(8, 145, 178, 0.25));
+    color: #06b6d4;
+}
+
+/* --- Welcome Banner Gradient --- */
+.welcome-banner {
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    border-radius: 20px;
+    color: #ffffff !important;
+    padding: 24px 28px;
+    box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
+}
+
+.welcome-banner * {
+    color: #ffffff !important;
+}
+
+/* --- Forms & Inputs --- */
+.form-control,
+.form-select {
+    background-color: var(--input-bg) !important;
+    color: var(--input-text) !important;
+    border: 1px solid var(--input-border) !important;
+    border-radius: 8px;
+}
+
+.form-control:focus,
+.form-select:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+}
+
+select option {
+    background-color: var(--bg-card) !important;
+    color: var(--text-main) !important;
+}
+
+/* --- Table Theming --- */
+.table,
+.table td,
+.table th {
+    color: var(--text-main) !important;
+    border-color: var(--border-color) !important;
+}
+
+.table thead th {
+    background-color: var(--table-header-bg) !important;
+    color: var(--table-header-color) !important;
+}
+
+.table-responsive-custom {
+    border-radius: 12px;
+    overflow-x: auto;
+}
+
+/* --- Clickable Filter Item --- */
+.clickable-item {
+    cursor: pointer;
+    color: #818cf8;
+    font-weight: 600;
+    transition: color 0.15s ease, text-decoration 0.15s ease;
+}
+
+.clickable-item:hover {
+    color: #6366f1;
+    text-decoration: underline;
+}
+
+[data-theme="light"] .clickable-item {
+    color: #4f46e5;
+}
+
+[data-theme="light"] .clickable-item:hover {
+    color: #3730a3;
+}
+
+/* --- Light Mode Specific Color Overrides --- */
+/* In light mode: .text-white must become DARK (white bg → needs dark text) */
+[data-theme="light"] .text-white,
+[data-theme="light"] .text-slate-300 {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="light"] .text-slate-200 {
+    color: var(--text-main) !important;
+}
+
+[data-theme="light"] .text-slate-400 {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="light"] .text-slate-800 {
+    color: var(--text-main) !important;
+}
+
+/* bg-dark in light mode flips to light background — fix text inside it */
+[data-theme="light"] .bg-dark,
+[data-theme="light"] .bg-slate-800,
+[data-theme="light"] .bg-slate-900 {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* When bg-dark flips to white in light mode:
+   - the element itself already has color:#0f172a from the rule above
+   - only Bootstrap's .text-white (explicit class) needs overriding here
+   - avoid the * wildcard which would break badge/icon accent colours */
+[data-theme="light"] .bg-dark .text-white,
+[data-theme="light"] .card-header.bg-dark {
+    color: #0f172a !important;
+}
+
+/* Exceptions: colored badges/icons inside bg-dark keep their accent color */
+[data-theme="light"] .bg-dark .text-warning {
+    color: #b45309 !important;
+}
+
+[data-theme="light"] .bg-dark .text-success {
+    color: #15803d !important;
+}
+
+[data-theme="light"] .bg-dark .text-info {
+    color: #0369a1 !important;
+}
+
+[data-theme="light"] .bg-dark .text-primary {
+    color: #3730a3 !important;
+}
+
+[data-theme="light"] .bg-dark .text-danger {
+    color: #b91c1c !important;
+}
+
+/* --- Skeleton Shimmer Animation --- */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton-shimmer {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.05) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+[data-theme="light"] .skeleton-shimmer {
+    background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+}
+
+.skeleton-line {
+    height: 14px;
+    width: 80%;
+}
+
+.skeleton-line-sm {
+    height: 12px;
+    width: 50%;
+}
+
+.skeleton-badge {
+    height: 22px;
+    width: 60px;
+    border-radius: 20px;
+}
+
+/* --- Pagination Controls --- */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-card);
+    font-size: 13px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.btn-page {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 12.5px;
+    color: var(--text-main);
+    background: var(--pill-bg);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-page:hover:not(:disabled) {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: #6366f1;
+    color: #818cf8;
+}
+
+.btn-page:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-bordered {
+    border: 2px solid var(--border-color) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease;
+}
+
+.btn-bordered:hover {
+    border-color: #6366f1 !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25) !important;
+}
+
+.btn-gradient-indigo {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: #ffffff !important;
+    border: 2px solid #4f46e5 !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25) !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-gradient-indigo:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+    border-color: #3730a3 !important;
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35) !important;
+    transform: translateY(-1px);
+    color: #ffffff !important;
+}
+
+.btn-gradient-indigo:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* --- Toast Notification System --- */
+.toast-container-custom {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 380px;
+    width: calc(100% - 40px);
+    pointer-events: none;
+}
+
+.toast-card-custom {
+    pointer-events: auto;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(12px);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transform: translateX(100px) scale(0.95);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="light"] .toast-card-custom {
+    background: rgba(255, 255, 255, 0.98);
+    color: #0f172a;
+    border-color: #cbd5e1;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.toast-card-custom.show {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+}
+
+.toast-card-custom.hide {
+    opacity: 0;
+    transform: translateX(100px) scale(0.9);
+}
+
+.toast-icon-wrap {
+    font-size: 1.4rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.toast-body-wrap {
+    flex-grow: 1;
+    font-size: 13px;
+}
+
+.toast-title {
+    font-weight: 700;
+    font-size: 13.5px;
+    margin-bottom: 2px;
+}
+
+.toast-msg {
+    opacity: 0.9;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.toast-close-btn {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.6;
+    padding: 0;
+    margin-left: 4px;
+    transition: opacity 0.15s ease;
+}
+
+.toast-close-btn:hover {
+    opacity: 1;
+}
+
+.toast-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    animation: toastProgress linear forwards;
+}
+
+@keyframes toastProgress {
+    from {
+        width: 100%;
+    }
+
+    to {
+        width: 0%;
+    }
+}
+
+/* Toast Type Specific Accents */
+.toast-success .toast-icon-wrap {
+    color: #10b981;
+}
+
+.toast-success .toast-progress-bar {
+    background: #10b981;
+}
+
+.toast-success {
+    border-left: 4px solid #10b981 !important;
+}
+
+.toast-error .toast-icon-wrap {
+    color: #ef4444;
+}
+
+.toast-error .toast-progress-bar {
+    background: #ef4444;
+}
+
+.toast-error {
+    border-left: 4px solid #ef4444 !important;
+}
+
+.toast-warning .toast-icon-wrap {
+    color: #f59e0b;
+}
+
+.toast-warning .toast-progress-bar {
+    background: #f59e0b;
+}
+
+.toast-warning {
+    border-left: 4px solid #f59e0b !important;
+}
+
+.toast-info .toast-icon-wrap {
+    color: #6366f1;
+}
+
+.toast-info .toast-progress-bar {
+    background: #6366f1;
+}
+
+.toast-info {
+    border-left: 4px solid #6366f1 !important;
+}
+
+/* --- Print Utilities --- */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* --- QR Code Cards --- */
+.qr-card-custom {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    transition: all 0.25s ease;
+}
+
+.qr-card-custom:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    border-color: #6366f1;
+}
+
+.qr-code-wrapper {
+    display: inline-block;
+    padding: 10px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+}
+
+.qr-code-wrapper canvas,
+.qr-code-wrapper img {
+    display: block;
+    width: 140px !important;
+    height: 140px !important;
+}
+
+/* =========================================================
+   CHALLAN PAGE SPECIFIC STYLES
+   Scoped to #challan-page to avoid affecting other pages
+   ========================================================= */
+
+#challan-page {
+    --challan-accent: #0f172a;
+    --challan-radius-sm: 6px;
+    --challan-radius-md: 10px;
+    --bg-muted: rgba(248, 250, 252, 0.6);
+}
+
+[data-theme="dark"] #challan-page {
+    --challan-accent: #ffffff;
+    --bg-muted: rgba(30, 41, 59, 0.5);
+}
+
+#challan-page .challan-card {
+    background: var(--bg-card) !important;
+    color: var(--text-main) !important;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px var(--shadow-glow) !important;
+    max-width: 900px;
+    margin: auto;
+    padding: 30px;
+}
+
+#challan-page .company-header {
+    border-bottom: 3px double var(--challan-accent);
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+}
+
+#challan-page .company-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 24pt;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--challan-accent) !important;
+    text-transform: uppercase;
+    line-height: 1.1;
+    transition: color 0.3s ease;
+}
+
+[data-theme="dark"] #challan-page .company-header {
+    border-bottom-color: #ffffff;
+}
+
+[data-theme="dark"] #challan-page .company-title {
+    color: #ffffff !important;
+}
+
+#challan-page .company-subtitle {
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: color 0.3s ease;
+}
+
+[data-theme="dark"] #challan-page .company-subtitle {
+    color: #cbd5e1 !important;
+}
+
+#challan-page .challan-badge {
+    font-size: 13pt;
+    font-weight: 800;
+    background: var(--challan-accent);
+    color: #ffffff;
+    padding: 6px 16px;
+    border-radius: var(--challan-radius-sm);
+    display: inline-block;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] #challan-page .challan-badge {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+#challan-page .info-block {
+    background: var(--bg-muted) !important;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--challan-radius-md);
+    padding: 14px;
+    margin-bottom: 20px;
+    color: var(--text-main) !important;
+    transition: all 0.3s ease;
+}
+
+#challan-page .info-label {
+    font-size: 8.5pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
+}
+
+#challan-page .info-value {
+    font-size: 10.5pt;
+    font-weight: 800;
+    color: var(--challan-accent);
+    transition: color 0.3s ease;
+}
+
+[data-theme="dark"] #challan-page .info-value {
+    color: #ffffff !important;
+}
+
+#challan-page .table-custom {
+    border: 2px solid var(--challan-accent);
+    width: 100%;
+    table-layout: fixed;
+    margin-bottom: 20px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+[data-theme="dark"] #challan-page .table-custom {
+    border-color: #ffffff !important;
+}
+
+#challan-page .table-custom th {
+    background-color: var(--challan-accent) !important;
+    color: #ffffff !important;
+    font-size: 9.5pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    border: 1px solid var(--challan-accent);
+    letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] #challan-page .table-custom th {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #ffffff !important;
+}
+
+#challan-page .table-custom td {
+    font-size: 9.5pt;
+    padding: 9px 12px;
+    border: 1px solid var(--border-color);
+    vertical-align: middle;
+    transition: all 0.2s ease;
+}
+
+[data-theme="dark"] #challan-page .table-custom td {
+    border-color: #334155 !important;
+}
+
+#challan-page .table-custom tbody tr:hover {
+    background-color: rgba(99, 102, 241, 0.05);
+}
+
+[data-theme="dark"] #challan-page .table-custom tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+#challan-page .summary-box {
+    background: var(--bg-muted) !important;
+    border: 2px solid var(--challan-accent);
+    border-radius: var(--challan-radius-md);
+    padding: 14px;
+}
+
+[data-theme="dark"] #challan-page .summary-box {
+    border-color: #ffffff !important;
+}
+
+#challan-page .signature-section {
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--border-color);
+}
+
+#challan-page .sig-line {
+    border-top: 2px dashed var(--challan-accent);
+    width: 80%;
+    margin: auto;
+    margin-top: 40px;
+    transition: border-color 0.3s ease;
+}
+
+[data-theme="dark"] #challan-page .sig-line {
+    border-top-color: #ffffff !important;
+}
+
+/* ── New Challan Layout Styles ── */
+#challan-page .ch-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-bottom: 3px double var(--challan-accent);
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+}
+
+[data-theme="dark"] #challan-page .ch-header {
+    border-bottom-color: #ffffff;
+}
+
+#challan-page .ch-company-name {
+    font-family: 'Poppins', sans-serif;
+    font-size: 22pt;
+    font-weight: 900;
+    color: var(--challan-accent) !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    line-height: 1.1;
+}
+
+[data-theme="dark"] #challan-page .ch-company-name {
+    color: #ffffff !important;
+}
+
+#challan-page .ch-company-tagline {
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+[data-theme="dark"] #challan-page .ch-company-tagline {
+    color: #cbd5e1 !important;
+}
+
+#challan-page .ch-company-address {
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+[data-theme="dark"] #challan-page .ch-company-address {
+    color: #94a3b8 !important;
+}
+
+#challan-page .ch-header-right {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+#challan-page .ch-doc-badge {
+    font-size: 11pt;
+    font-weight: 800;
+    background: var(--challan-accent);
+    color: #ffffff;
+    padding: 5px 14px;
+    border-radius: 6px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+[data-theme="dark"] #challan-page .ch-doc-badge {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+#challan-page .ch-status-label {
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] #challan-page .ch-status-label {
+    color: #cbd5e1 !important;
+}
+
+#challan-page .ch-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+#challan-page .ch-meta-cell {
+    background: var(--bg-muted);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+#challan-page .ch-meta-label {
+    display: block;
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+#challan-page .ch-meta-value {
+    display: block;
+    font-size: 10pt;
+    font-weight: 800;
+    color: var(--challan-accent);
+}
+
+[data-theme="dark"] #challan-page .ch-meta-value {
+    color: #ffffff !important;
+}
+
+#challan-page .ch-details-card {
+    background: var(--bg-muted);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+#challan-page .ch-details-header {
+    background: var(--challan-accent);
+    color: #ffffff;
+    padding: 8px 14px;
+    font-weight: 700;
+    font-size: 10pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+[data-theme="dark"] #challan-page .ch-details-header {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+#challan-page .ch-details-body {
+    padding: 14px;
+}
+
+#challan-page .ch-details-border-top {
+    border-top: 1px solid var(--border-color);
+}
+
+#challan-page .ch-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+#challan-page .ch-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#challan-page .ch-field-label {
+    font-size: 8pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+[data-theme="dark"] #challan-page .ch-field-label {
+    color: #94a3b8 !important;
+}
+
+#challan-page .ch-field-input {
+    background: var(--input-bg) !important;
+    color: var(--input-text) !important;
+    border: 1px solid var(--input-border) !important;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 10pt;
+    font-weight: 600;
+    width: 100%;
+}
+
+#challan-page .ch-field-group {
+    display: flex;
+    gap: 6px;
+}
+
+#challan-page .ch-field-group .ch-field-input {
+    flex: 1;
+}
+
+#challan-page .ch-table-wrapper {
+    border: 2px solid var(--challan-accent);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+[data-theme="dark"] #challan-page .ch-table-wrapper {
+    border-color: #ffffff !important;
+}
+
+#challan-page .ch-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-bottom: 0;
+}
+
+#challan-page .ch-table thead th {
+    background: var(--challan-accent) !important;
+    color: #ffffff !important;
+    font-size: 9pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 10px 8px;
+    border: 1px solid var(--challan-accent);
+}
+
+[data-theme="dark"] #challan-page .ch-table thead th {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #ffffff !important;
+}
+
+#challan-page .ch-table tbody td {
+    font-size: 9.5pt;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+[data-theme="dark"] #challan-page .ch-table tbody td {
+    border-color: #334155 !important;
+}
+
+#challan-page .ch-table tbody tr:hover {
+    background-color: rgba(99, 102, 241, 0.04);
+}
+
+[data-theme="dark"] #challan-page .ch-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+#challan-page .ch-table tfoot td {
+    background: var(--bg-muted);
+    font-weight: 800;
+    font-size: 9.5pt;
+    padding: 10px 8px;
+    border: 1px solid var(--border-color);
+}
+
+#challan-page .ch-empty-msg {
+    color: var(--text-muted);
+    padding: 20px !important;
+    font-style: italic;
+}
+
+#challan-page .ch-loaded-qty {
+    color: #10b981;
+    font-weight: 800;
+}
+
+[data-theme="dark"] #challan-page .ch-loaded-qty {
+    color: #34d399 !important;
+}
+
+#challan-page .ch-bottom-row {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+    margin-bottom: 16px;
+}
+
+#challan-page .ch-terms {
+    flex: 1;
+    background: var(--bg-muted);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+#challan-page .ch-terms-title {
+    font-weight: 700;
+    font-size: 10pt;
+    margin-bottom: 8px;
+    color: var(--text-main);
+}
+
+#challan-page .ch-terms-list {
+    margin-bottom: 0;
+    padding-left: 18px;
+    font-size: 9pt;
+    color: var(--text-muted);
+}
+
+#challan-page .ch-terms-list li {
+    margin-bottom: 3px;
+}
+
+#challan-page .ch-summary {
+    width: 260px;
+    min-width: 220px;
+    background: var(--bg-muted);
+    border: 1.5px solid var(--challan-accent);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+[data-theme="dark"] #challan-page .ch-summary {
+    border-color: #ffffff !important;
+}
+
+#challan-page .ch-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+#challan-page .ch-summary-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 0;
+}
+
+#challan-page .ch-net-weight-row {
+    background: var(--challan-accent);
+    color: #ffffff !important;
+    margin: 0 -14px;
+    padding: 10px 14px !important;
+    border-radius: 0 0 8px 8px;
+    font-weight: 800;
+}
+
+[data-theme="dark"] #challan-page .ch-net-weight-row {
+    background: #ffffff !important;
+    color: #0f172a !important;
+}
+
+#challan-page .ch-net-value {
+    font-size: 12pt;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+}
+
+#challan-page .ch-signatures {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border-color);
+}
+
+#challan-page .ch-sig-col {
+    flex: 1;
+    text-align: center;
+}
+
+#challan-page .ch-sig-line {
+    border-top: 1.5px dashed var(--challan-accent);
+    margin: 0 20px 8px;
+    padding-top: 40px;
+}
+
+[data-theme="dark"] #challan-page .ch-sig-line {
+    border-top-color: #ffffff !important;
+}
+
+#challan-page .ch-sig-name {
+    font-weight: 700;
+    font-size: 9.5pt;
+    color: var(--text-main);
+}
+
+#challan-page .ch-sig-role {
+    font-size: 8pt;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Loading/Packing List Page Print Styles */
+@media print {
+
+    /* A4 Portrait with standard margins */
+    @page {
+        size: A4 portrait;
+        margin: 8mm;
+    }
+
+    /* Hide all non-print UI globally */
+    .navbar,
+    .navbar-custom,
+    .no-print,
+    #page-progress-bar,
+    #page-loader-overlay,
+    #planSelectorCard {
+        display: none !important;
+    }
+
+    /* Reset body for clean white print surface */
+    body,
+    #challan-page {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Challan card fills full print width */
+    #challan-page .challan-card {
+        box-shadow: none !important;
+        border: 1.5px solid #000000 !important;
+        margin: 0 !important;
+        padding: 6mm !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 0 !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    /* Table: fixed layout enforces percentage widths, prevents column clip */
+    #challan-page .ch-table {
+        border: 1.5px solid #000000 !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+        border-collapse: collapse !important;
+        border-spacing: 0 !important;
+        page-break-inside: auto;
+    }
+
+    /* Prevent individual rows from splitting across pages */
+    #challan-page .ch-table tbody tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    /* Force tfoot to render as a single row-group (no phantom repeats) */
+    #challan-page .ch-table tfoot {
+        display: table-row-group !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    #challan-page .ch-table th,
+    #challan-page .ch-table td {
+        border: 1px solid #000000 !important;
+        color: #000000 !important;
+        font-size: 8.5pt !important;
+        padding: 5px 7px !important;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    /* Header: dark background for clear column labels */
+    #challan-page .ch-table thead th {
+        background-color: #1e293b !important;
+        color: #ffffff !important;
+        font-weight: 900 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    /* Company header */
+    #challan-page .ch-header {
+        padding-bottom: 6px;
+        margin-bottom: 10px;
+        border-bottom: 2px solid #000000 !important;
+    }
+
+    #challan-page .ch-company-name {
+        font-family: 'Poppins', sans-serif;
+        font-size: 22pt;
+        font-weight: 900;
+        color: #000000 !important;
+        text-transform: uppercase;
+    }
+
+    #challan-page .ch-company-tagline {
+        color: #000000 !important;
+    }
+
+    #challan-page .ch-company-address {
+        color: #000000 !important;
+    }
+
+    #challan-page .ch-doc-badge {
+        font-size: 10pt !important;
+        padding: 3px 10px !important;
+        background: #000000 !important;
+        color: #ffffff !important;
+        border-radius: 3px !important;
+    }
+
+    #challan-page .ch-status-label {
+        color: #000000 !important;
+    }
+
+    /* Meta info cells */
+    #challan-page .ch-meta-cell {
+        padding: 3px 5px !important;
+        margin-bottom: 6px !important;
+        border: 1px solid #cccccc !important;
+        background: #ffffff !important;
+    }
+
+    #challan-page .ch-meta-grid {
+        display: block !important;
+    }
+
+    #challan-page .ch-meta-cell {
+        display: inline-block !important;
+        width: calc(50% - 8px) !important;
+        vertical-align: top !important;
+        margin-right: 6px !important;
+    }
+
+    #challan-page .ch-meta-label {
+        color: #444444 !important;
+        font-size: 7.5pt !important;
+    }
+
+    #challan-page .ch-meta-value {
+        color: #000000 !important;
+        font-size: 9pt !important;
+    }
+
+    /* Details card header */
+    #challan-page .ch-details-header {
+        background: #f0f0f0 !important;
+        color: #000000 !important;
+        border-bottom: 1.5px solid #000000 !important;
+    }
+
+    #challan-page .ch-details-body {
+        padding: 4px 6px !important;
+    }
+
+    /* Form inputs: strip box, show plain text — NO placeholder visible */
+    #challan-page .ch-field-input {
+        border: none !important;
+        border-bottom: 1px solid #888888 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        color: #000000 !important;
+        padding: 0 2px !important;
+        font-weight: 700 !important;
+        font-size: 8.5pt !important;
+    }
+
+    /* Hide placeholder text in print */
+    #challan-page .ch-field-input::placeholder {
+        color: transparent !important;
+        opacity: 0 !important;
+    }
+
+    /* Hide save buttons and input-group append buttons */
+    #challan-page .ch-field-group .btn {
+        display: none !important;
+    }
+
+    /* Summary box */
+    #challan-page .ch-summary {
+        border: 1.5px solid #000000 !important;
+        padding: 6px !important;
+        background: #ffffff !important;
+    }
+
+    #challan-page .ch-summary-row {
+        color: #000000 !important;
+        font-size: 9pt !important;
+    }
+
+    #challan-page .ch-net-weight-row {
+        background: #000000 !important;
+        color: #ffffff !important;
+        margin: 0 -6px !important;
+        padding: 8px 6px !important;
+        border-radius: 0 !important;
+    }
+
+    #challan-page .ch-net-value {
+        font-size: 11pt !important;
+        font-weight: 900 !important;
+    }
+
+    /* Terms & conditions box */
+    #challan-page .ch-terms {
+        background: #f8f8f8 !important;
+        border: 1px solid #cccccc !important;
+        border-radius: 0 !important;
+    }
+
+    #challan-page .ch-terms-title {
+        color: #000000 !important;
+        font-size: 9pt !important;
+    }
+
+    #challan-page .ch-terms-list {
+        color: #000000 !important;
+        font-size: 8.5pt !important;
+    }
+
+    #challan-page .ch-terms-list li {
+        color: #000000 !important;
+    }
+
+    /* Summary gross weight input */
+    #challan-page #input_gross_weight {
+        border: none !important;
+        border-bottom: 1px solid #888888 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+    }
+
+    /* Table overflow: never clip horizontally */
+    #challan-page .ch-table-wrapper {
+        overflow: visible !important;
+        overflow-x: visible !important;
+    }
+
+    #challan-page .ch-bottom-row {
+        display: block !important;
+    }
+
+    #challan-page .ch-terms {
+        display: block !important;
+        margin-bottom: 8px !important;
+    }
+
+    #challan-page .ch-summary {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    #challan-page .ch-fields-grid {
+        display: block !important;
+    }
+
+    #challan-page .ch-field {
+        display: inline-block !important;
+        width: calc(50% - 6px) !important;
+        vertical-align: top !important;
+        margin-right: 6px !important;
+        margin-bottom: 6px !important;
+    }
+
+    /* Signature section: keep together on same page */
+    #challan-page .ch-signatures {
+        margin-top: 12px !important;
+        padding-top: 8px !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    #challan-page .ch-sig-line {
+        border-top: 1.5px dashed #000000 !important;
+    }
+
+    #challan-page .ch-sig-name,
+    #challan-page .ch-sig-role {
+        color: #000000 !important;
+    }
+
+    /* Force all colored text to black */
+    #challan-page .text-muted,
+    #challan-page .text-primary,
+    #challan-page .text-warning,
+    #challan-page .text-success,
+    #challan-page .text-danger,
+    #challan-page .text-info {
+        color: #000000 !important;
+    }
+
+    #challan-page small,
+    #challan-page .small {
+        color: #333333 !important;
+    }
+
+    /* Terms & conditions box */
+    #challan-page .ch-terms {
+        background: #f8f8f8 !important;
+    }
+}
+
+/* Loading/Packing List Page Responsive */
+@media (max-width: 768px) {
+    #challan-page .challan-card {
+        padding: 20px;
+        margin: 10px;
+    }
+
+    #challan-page .ch-company-name {
+        font-size: 16pt !important;
+    }
+
+    #challan-page .ch-meta-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    #challan-page .ch-fields-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #challan-page .ch-bottom-row {
+        flex-direction: column;
+    }
+
+    #challan-page .ch-summary {
+        width: 100%;
+    }
+
+    #challan-page .ch-signatures {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    #challan-page .ch-table {
+        font-size: 8pt;
+    }
+
+    #challan-page .ch-signatures {
+        margin-top: 30px;
+    }
+}

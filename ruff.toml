@@ -1,0 +1,20 @@
+target-version = "py312"
+line-length = 88
+
+[lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # Pyflakes
+    "I",    # isort (import sorting)
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+]
+
+[lint.per-file-ignores]
+"test_app.py" = ["S101"]
+"start_tunnels.py" = ["S603"]
+
+[format]
+line-ending = "auto"

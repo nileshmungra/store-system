@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading/Packing List - Bhumi Factory &amp; Dispatch Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Global App Stylesheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/page-loader.css">
+    <script src="/static/js/page-loader.js"></script>
+</head>
+
+<body id="challan-page">
+    <div id="page-progress-bar"></div>
+    <div id="page-loader-overlay">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
+                <span class="fs-4 text-warning">📦</span>
+                <span>Bhumi Factory &amp; Dispatch Manager</span>
+            </a>
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse"
+                data-bs-target="#topNavbarMenu">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="topNavbarMenu">
+                <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-box-seam me-1 text-info"></i> Inward &amp; Production
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/inward-page"><i
+                                        class="bi bi-box-arrow-in-down text-info"></i> Inward &amp; QR Code</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i
+                                        class="bi bi-gear-wide-connected text-warning"></i> Production Inward</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-truck me-1 text-success"></i> Dispatch &amp; Scanning
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i
+                                        class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i
+                                        class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i
+                                        class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle active" href="#" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="bi bi-sliders me-1 text-warning"></i> Master Control
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i
+                                        class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i
+                                        class="bi bi-boxes text-info"></i> Item Master &amp; Admin</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-bar-chart-line me-1 text-primary"></i> Reports &amp; Logs
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i
+                                        class="bi bi-graph-up-arrow text-success"></i> Stock Reports &amp; Analytics</a>
+                            </li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i
+                                        class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
+                        </ul>
+                    </div>
+                    <button id="globalThemeBtn" onclick="toggleGlobalTheme()"
+                        class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
+                        <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+                        <span id="themeText">Dark Mode</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="max-width: 980px;">
+
+        <!-- ── Control Bar (hidden in print) ── -->
+        <div class="card glass-card p-3 mb-4 no-print" id="planSelectorCard">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-4">
+                    <select id="planSelector" class="form-select bg-dark text-white border-secondary">
+                        <option value="">-- Select DP Plan --</option>
+                    </select>
+                </div>
+                <div class="col-md-8 text-end d-flex gap-2 justify-content-end flex-wrap">
+                    <button class="btn btn-outline-secondary fw-semibold rounded-3 btn-sm px-3"
+                        onclick="window.print()">
+                        <i class="bi bi-file-pdf me-1"></i> Save PDF
+                    </button>
+                    <button class="btn btn-primary fw-bold rounded-3 px-4" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i> Print Challan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== CHALLAN PRINT AREA ==================== -->
+        <div class="challan-card" id="challanPrintArea">
+
+            <!-- ── COMPANY HEADER ── -->
+            <div class="ch-header">
+                <div>
+                    <div class="ch-company-name">BHUMI POLYMERS</div>
+                    <div class="ch-company-tagline">HIGH DENSITY QUALITY EXTRUSION PIPING SYSTEM</div>
+                    <div class="ch-company-address">
+                        <i class="bi bi-geo-alt-fill me-1"></i>Plot No. 12/A, Industrial Area, Rajkot — Gujarat
+                        &nbsp;|&nbsp;<i class="bi bi-telephone-fill me-1"></i>+91 98765 43210
+                    </div>
+                </div>
+                <div class="ch-header-right">
+                    <div class="ch-doc-badge" id="challanTypeBadge">LOADING / PACKING LIST</div>
+                    <div class="ch-status-label" id="lbl_status_badge">STATUS: —</div>
+                </div>
+            </div>
+
+            <!-- ── DP PLAN NUMBER (Large, prominent) ── -->
+            <div id="dpPlanNumberBanner">
+                <span id="dpPlanNumberDisplay">DP PLAN: —</span>
+            </div>
+
+            <!-- ── META INFO ROW ── -->
+            <div class="ch-meta-grid">
+                <div class="ch-meta-cell">
+                    <span class="ch-meta-label">Sales Order (SO No)</span>
+                    <span class="ch-meta-value" id="lbl_so_no">—</span>
+                </div>
+                <div class="ch-meta-cell">
+                    <span class="ch-meta-label">Challan Date &amp; Time</span>
+                    <span class="ch-meta-value" id="lbl_challan_date">—</span>
+                </div>
+                <div class="ch-meta-cell">
+                    <span class="ch-meta-label">Status</span>
+                    <span class="ch-meta-value" id="lbl_status_badge">STATUS: —</span>
+                </div>
+            </div>
+
+            <!-- ── LOADING DETAILS CARD ── -->
+            <div class="ch-details-card mb-3" id="detailsCard">
+                <div class="ch-details-header">
+                    <span id="detailsCardTitle">
+                        <i class="bi bi-truck me-2"></i>LOADING DETAILS
+                    </span>
+                    <small class="no-print" style="opacity: 0.8;">✏️ Fill details before printing</small>
+                </div>
+                <div class="ch-details-body" id="vehicleDetailsBlock">
+                    <div class="ch-fields-grid">
+                        <div class="ch-field">
+                            <label class="ch-field-label">Vehicle Number *</label>
+                            <input type="text" id="input_vehicle_no" class="ch-field-input text-uppercase fw-bold"
+                                placeholder="e.g., GJ-03-BW-9988">
+                        </div>
+                        <div class="ch-field">
+                            <label class="ch-field-label">Transporter Name</label>
+                            <input type="text" id="input_transporter_name" class="ch-field-input fw-bold"
+                                placeholder="e.g., Shree Ram Logistics">
+                        </div>
+                        <div class="ch-field">
+                            <label class="ch-field-label">Driver Name &amp; Mobile</label>
+                            <div class="ch-field-group">
+                                <input type="text" id="input_driver_info" class="ch-field-input fw-bold"
+                                    placeholder="Ramesh Bhai (9876543210)">
+                                <button class="btn btn-outline-primary no-print btn-sm px-3" type="button"
+                                    onclick="saveVehicleInfo()">
+                                    <i class="bi bi-save"></i> Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ch-details-body ch-details-border-top" id="loadingDetailsBlock">
+                    <div class="ch-fields-grid">
+                        <div class="ch-field">
+                            <label class="ch-field-label">Loading Date &amp; Time</label>
+                            <input type="text" id="input_loading_datetime" class="ch-field-input fw-bold" readonly>
+                        </div>
+                        <div class="ch-field">
+                            <label class="ch-field-label">Loading In-charge Name</label>
+                            <input type="text" id="input_loading_incharge" class="ch-field-input fw-bold"
+                                placeholder="e.g., Suresh Kumar">
+                        </div>
+                        <div class="ch-field">
+                            <label class="ch-field-label">Remarks / Notes</label>
+                            <input type="text" id="input_loading_remarks" class="ch-field-input fw-bold"
+                                placeholder="e.g., Handle with care">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── ITEMS TABLE ── -->
+            <div class="ch-table-wrapper">
+                <table class="ch-table" id="challanPrintTable">
+                    <thead id="itemsThead">
+                        <tr>
+                            <th style="width: 5%;" class="text-center">#</th>
+                            <th style="width: 37%;">Item Name / Specification</th>
+                            <th style="width: 10%;" class="text-center">Planned<br>Qty</th>
+                            <th style="width: 10%;" class="text-center">Loaded<br>Qty</th>
+                            <th style="width: 7%;" class="text-center">Unit</th>
+                            <th style="width: 11%;" class="text-end">Wt/Unit<br>(KG)</th>
+                            <th style="width: 11%;" class="text-end">Total Wt<br>(KG)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="challanItemsTbody">
+                        <tr>
+                            <td colspan="8" class="text-center py-4 ch-empty-msg">
+                                <i class="bi bi-inbox me-2"></i>Select a DP Plan to load the item list...
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot id="challanItemsTfoot">
+                        <tr>
+                            <td colspan="2" class="text-end fw-bold"
+                                style="letter-spacing: 0.5px; text-transform: uppercase;">Totals</td>
+                            <td class="text-center font-monospace fw-bold" id="tfoot_total_planned">0</td>
+                            <td class="text-center font-monospace fw-bold" id="tfoot_total_loaded">0</td>
+                            <td colspan="2"></td>
+                            <td class="text-end font-monospace fw-bold" id="tfoot_total_weight">0.00 KG</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- ── SUMMARY + TERMS ── -->
+            <div class="ch-bottom-row">
+                <div class="ch-terms">
+                    <div class="ch-terms-title">📢 Terms &amp; Conditions</div>
+                    <ol class="ch-terms-list">
+                        <li>Goods have been checked and loaded from the warehouse.</li>
+                        <li>The buyer will be responsible for any damage during transit.</li>
+                    </ol>
+                </div>
+                <div class="ch-summary">
+                    <div class="ch-summary-row">
+                        <span>Total Items:</span>
+                        <strong id="lbl_total_items_count">0 Items</strong>
+                    </div>
+                    <div class="ch-summary-divider"></div>
+                    <div class="ch-summary-row">
+                        <span>Gross Weight Input (KG):</span>
+                        <input type="number" step="0.01" id="input_gross_weight" class="ch-field-input text-end fw-bold"
+                            style="max-width: 110px;" placeholder="0.00">
+                    </div>
+                    <div class="ch-summary-divider"></div>
+                    <div class="ch-summary-row ch-net-weight-row">
+                        <span class="fw-bold">NET WEIGHT (KG):</span>
+                        <span class="ch-net-value" id="lbl_grand_total_weight">0.00 KG</span>
+                    </div>
+                </div>
+            </div>
+
+<!-- ── SIGNATURES ── -->
+            <div class="ch-signatures" id="signatureSection">
+                <div class="ch-sig-col">
+                    <div class="ch-sig-line"></div>
+                    <div class="ch-sig-name">Prepared by (Store)</div>
+                    <div class="ch-sig-role">Store Keeper Sign &amp; Stamp</div>
+                </div>
+                <div class="ch-sig-col">
+                    <div class="ch-sig-line"></div>
+                    <div class="ch-sig-name">Verified by (QC)</div>
+                    <div class="ch-sig-role">QC / Incharge Sign &amp; Stamp</div>
+                </div>
+                <div class="ch-sig-col">
+                    <div class="ch-sig-line"></div>
+                    <div class="ch-sig-name">Loaded by</div>
+                    <div class="ch-sig-role">Loading Staff Sign</div>
+                </div>
+            </div>
+        </div><!-- /challan-card -->
+    </div><!-- /container -->
+
+    <style>
+        @media print {
+            body { margin: 0; padding: 0; background: #fff; }
+            body * { visibility: hidden; }
+            #challanPrintArea, #challanPrintArea * { visibility: visible; }
+            #challanPrintArea { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+                padding: 12mm;
+            }
+            .no-print { display: none !important; }
+
+            @page { 
+                size: A4 portrait;
+                margin: 15mm 10mm 12mm 10mm;
+            }
+
+            .challan-card {
+                font-family: 'Courier New', Courier, monospace;
+                font-size: 9px;
+                line-height: 1.2;
+                max-height: none;
+                overflow: visible;
+            }
+
+            .ch-header { 
+                margin-bottom: 10px;
+                border-bottom: 2px solid #000;
+                padding-bottom: 8px;
+            }
+            .ch-company-name { 
+                font-size: 20px; 
+                font-weight: bold;
+                text-align: center;
+                text-transform: uppercase;
+            }
+            .ch-company-tagline { font-size: 10px; text-align: center; }
+            .ch-company-address { 
+                font-size: 9px; 
+                text-align: center;
+            }
+
+            .ch-header-right {
+                display: none;
+            }
+
+            /* DP Plan Number Banner - Prints prominently */
+            #dpPlanNumberBanner {
+                display: block !important;
+                text-align: center;
+                margin: 8px 0 4px 0;
+                padding: 8px 0;
+                border-bottom: 2px solid #000;
+                border-top: 2px solid #000;
+                background: #f8f8f8;
+            }
+
+            #dpPlanNumberDisplay {
+                display: block;
+                font-size: 22px;
+                font-weight: bold;
+                color: #000;
+                font-family: 'Courier New', Courier, monospace;
+                letter-spacing: 4px;
+            }
+
+            .ch-meta-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 3px 10px;
+                margin-bottom: 10px;
+            }
+            .ch-meta-cell { 
+                border: 1px solid #000; 
+                padding: 4px 6px;
+            }
+            .ch-meta-label { 
+                font-size: 7px; 
+                display: block; 
+                color: #000;
+                font-weight: bold;
+            }
+            .ch-meta-value { 
+                font-size: 9px; 
+                font-weight: bold; 
+                display: block; 
+                color: #000;
+            }
+
+            .ch-details-card { 
+                margin-bottom: 5px;
+            }
+            .ch-details-header { 
+                font-size: 10px; 
+                padding: 3px 6px;
+                border-bottom: 1px solid #000;
+                font-weight: bold;
+            }
+            .ch-fields-grid { 
+                display: grid; 
+                grid-template-columns: repeat(3, 1fr); 
+                gap: 3px 10px; 
+            }
+            .ch-field { 
+                margin-bottom: 2px; 
+            }
+            .ch-field-label { 
+                font-size: 7px; 
+                display: block; 
+                color: #000;
+                font-weight: 500;
+            }
+
+            .ch-details-border-top { 
+                border-top: 1px solid #000; 
+                padding-top: 4px; 
+                margin-top: 4px;
+            }
+            .ch-table { 
+                font-size: 8.5px;
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .ch-table th, .ch-table td { 
+                padding: 3px 4px; 
+                border: 1px solid #000; 
+                vertical-align: middle;
+            }
+            .ch-table th { 
+                background: #f0f0f0; 
+                font-size: 8px; 
+                font-weight: bold;
+            }
+
+            .ch-totals { 
+                margin-top: 5px;
+                border-top: 1px solid #000;
+                padding-top: 3px;
+            }
+            .ch-totals div { 
+                font-size: 9px; 
+                padding: 2px 0; 
+            }
+            .ch-totals td:first-child {
+                font-weight: bold;
+            }
+            .ch-net-value { 
+                font-weight: bold; 
+                font-size: 10px;
+            }
+
+            .ch-signatures { 
+                display: flex; 
+                justify-content: space-between; 
+                gap: 8px; 
+                margin-top: 12px;
+                border-top: 1px solid #000;
+                padding-top: 8px;
+            }
+            .ch-sig-col { 
+                flex: 1; 
+                text-align: center; 
+            }
+            .ch-sig-line { 
+                border-top: 1px solid #000; 
+                margin: 25px 4px 4px 4px;
+            }
+            .ch-sig-name { 
+                font-size: 9px; 
+                font-weight: bold; 
+            }
+            .ch-sig-role { 
+                font-size: 8px; 
+                color: #000;
+            }
+
+            .ch-summary {
+                margin-top: 8px;
+                border-top: 1px solid #000;
+                padding-top: 5px;
+            }
+            .ch-summary-row {
+                display: flex;
+                justify-content: space-between;
+                font-size: 9px;
+            }
+            .ch-summary-divider {
+                border-top: 1px dashed #000;
+                margin: 3px 0;
+            }
+
+            .ch-loaded-qty {
+                font-weight: bold;
+            }
+
+            #challanTypeBadge {
+                font-size: 11px;
+                padding: 4px 8px;
+                text-align: center;
+            }
+        }
+    </style>
+
+    <script>
+        let currentPlanId = null;
+        let globalGrandTotalWeight = 0;
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            const savedTheme = localStorage.getItem('theme_preference') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            currentPlanId = urlParams.get('plan_id') || urlParams.get('dp_number');
+
+            await loadPlanSelector();
+
+            if (currentPlanId) {
+                document.getElementById('planSelector').value = String(currentPlanId);
+                await loadChallanData(currentPlanId);
+            }
+
+            document.getElementById('planSelector').addEventListener('change', async (e) => {
+                const selectedPlanId = e.target.value;
+                if (selectedPlanId) {
+                    currentPlanId = selectedPlanId;
+                    await loadChallanData(currentPlanId);
+                } else {
+                    currentPlanId = null;
+                    resetChallanUI();
+                }
+            });
+
+            document.getElementById('input_gross_weight').addEventListener('input', (e) => {
+                const grossVal = parseFloat(e.target.value) || 0;
+                const finalNet = Math.max(0, globalGrandTotalWeight + grossVal);
+                document.getElementById('lbl_grand_total_weight').innerText = `${finalNet.toFixed(2)} KG`;
+            });
+
+            if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                window.PageLoader.hide();
+            }
+        });
+
+        function resetChallanUI() {
+            document.getElementById('planSelector').value = '';
+            document.getElementById('challanItemsTbody').innerHTML =
+                `<tr><td colspan="8" class="text-center py-4 ch-empty-msg"><i class="bi bi-inbox me-2"></i>Please select a DP Plan.</td></tr>`;
+            document.getElementById('lbl_so_no').innerText = '—';
+            document.getElementById('lbl_challan_date').innerText = '—';
+            document.getElementById('lbl_status_badge').innerText = 'STATUS: —';
+            
+            const dpPlanDisplay = document.getElementById('dpPlanNumberDisplay');
+            if (dpPlanDisplay) {
+                dpPlanDisplay.innerText = 'DP PLAN: —';
+            }
+        }
+
+        async function loadPlanSelector() {
+            const selectEl = document.getElementById('planSelector');
+            try {
+                const res = await fetch(`/api/dispatch-plans/list`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+                const data = await res.json();
+                if (res.ok && data.plans) {
+                    selectEl.innerHTML = '<option value="">-- Select DP Plan --</option>' +
+                        data.plans.map(plan => `<option value="${plan.id}">${plan.plan_no} (SO: ${plan.so_no || 'N/A'})</option>`).join('');
+                }
+            } catch (e) {
+                // silently fail
+            }
+        }
+
+        async function loadChallanData(planId) {
+            const tbody = document.getElementById('challanItemsTbody');
+            try {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4">
+                    <div class="spinner-border text-primary me-2" style="width:1.2rem;height:1.2rem;border-width:2px;"></div>Loading...
+                </td></tr>`;
+
+                const res = await fetch(`/api/delivery-challan/${encodeURIComponent(planId)}`, { headers: { 'Bypass-Tunnel-Reminder': 'true' } });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    if (window.showToast) window.showToast("❌ Error: " + (data.detail || "Failed to load data"), "error");
+                    return;
+                }
+
+                document.getElementById('lbl_so_no').innerText = data.so_no || 'N/A';
+                document.getElementById('lbl_status_badge').innerText = `STATUS: ${data.plan_status || 'UNKNOWN'}`;
+
+                // Update DP Plan Number banner for printing
+                const dpPlanDisplay = document.getElementById('dpPlanNumberDisplay');
+                if (dpPlanDisplay && data.plan_no) {
+                    dpPlanDisplay.innerText = `DP PLAN: ${data.plan_no}`;
+                }
+
+                const now = new Date(data.created_at || Date.now());
+                document.getElementById('lbl_challan_date').innerText =
+                    now.toLocaleDateString('en-IN') + ' ' +
+                    now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+                if (data.vehicle_no) document.getElementById('input_vehicle_no').value = data.vehicle_no;
+                if (data.transporter_name) document.getElementById('input_transporter_name').value = data.transporter_name;
+                if (data.driver_info) document.getElementById('input_driver_info').value = data.driver_info;
+                document.getElementById('input_loading_datetime').value = new Date().toLocaleString('en-IN');
+
+                const items = data.items || [];
+                let totalPlannedQty = 0, grandTotalWeight = 0;
+
+                tbody.innerHTML = items.map((itm, idx) => {
+                    const plannedQty = parseFloat(itm.planned_qty) || 0;
+                    const wtPerUnit = parseFloat(itm.weight_per_pc) || 0;
+                    const itemTotalWt = parseFloat(itm.total_weight_kg) || (plannedQty * wtPerUnit);
+
+                    totalPlannedQty += plannedQty;
+                    grandTotalWeight += itemTotalWt;
+
+                    return `
+                        <tr>
+                            <td class="text-center fw-bold">${idx + 1}</td>
+                            <td class="fw-semibold">${escapeHtml(itm.item_name)}</td>
+                            <td class="text-center font-monospace">${plannedQty}</td>
+                            <td class="text-center fw-bold font-monospace ch-loaded-qty">${plannedQty}</td>
+                            <td class="text-center">${escapeHtml(itm.unit || 'Nos')}</td>
+                            <td class="text-end font-monospace">${wtPerUnit > 0 ? wtPerUnit.toFixed(3) : '—'}</td>
+                            <td class="text-end fw-bold font-monospace">${itemTotalWt.toFixed(2)} KG</td>
+                        </tr>`;
+                }).join('');
+
+                globalGrandTotalWeight = grandTotalWeight;
+                document.getElementById('tfoot_total_planned').innerText = totalPlannedQty;
+                document.getElementById('tfoot_total_loaded').innerText = totalPlannedQty;
+                document.getElementById('tfoot_total_weight').innerText = `${grandTotalWeight.toFixed(2)} KG`;
+                document.getElementById('lbl_total_items_count').innerText = `${items.length} Items`;
+                document.getElementById('lbl_grand_total_weight').innerText = `${grandTotalWeight.toFixed(2)} KG`;
+
+            } catch (err) {
+                if (window.showToast) window.showToast("❌ Failed to load loading list data.", "error");
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function saveVehicleInfo() {
+            if (!currentPlanId) return;
+            try {
+                const res = await fetch(`/api/delivery-challan/update-vehicle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true' },
+                    body: JSON.stringify({
+                        plan_id: currentPlanId,
+                        vehicle_no: document.getElementById('input_vehicle_no').value.trim(),
+                        transporter_name: document.getElementById('input_transporter_name').value.trim(),
+                        driver_info: document.getElementById('input_driver_info').value.trim()
+                    })
+                });
+                if (res.ok) { if (window.showToast) window.showToast("✅ Vehicle details saved successfully!", "success"); }
+                else { if (window.showToast) window.showToast("❌ Error saving details.", "error"); }
+            } catch (err) {
+                if (window.showToast) window.showToast("❌ Connection Error.", "error");
+            }
+        }
+    </script>
+
+    <script src="/static/js/toast.js"></script>
+    <script src="/static/js/security.js"></script>
+    <script src="/static/js/theme.js"></script>
+    <script src="/static/js/english-ui.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                window.PageLoader.hide();
+            }
+        });
+    </script>
+</body>
+
+</html>

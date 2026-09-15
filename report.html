@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Stock In/Out Report</title>
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Global App Stylesheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/page-loader.css">
+    <script src="/static/js/page-loader.js"></script>
+</head>
+
+<body>
+
+    <!-- 📦 Global Page Loader Elements -->
+    <div id="page-progress-bar"></div>
+    <div id="page-loader-overlay">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
+
+    <!-- Header Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
+                <span class="fs-4 text-warning">📦</span>
+                <span>Bhumi Factory & Dispatch Manager</span>
+            </a>
+
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse"
+                data-bs-target="#topNavbarMenu">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="topNavbarMenu">
+                <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+
+                    <!-- 1. Inward & Factory Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="/dashboard" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-box-seam me-1 text-info"></i> Inward & Production
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/inward-page"><i
+                                        class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i
+                                        class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 2. Dispatch & Yard Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="/scanner" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-truck me-1 text-success"></i> Dispatch & Scanning
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i
+                                        class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i
+                                        class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i
+                                        class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- 3. Master Controls Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="/bom-page" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-sliders me-1 text-warning"></i> Master Control
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i
+                                        class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i
+                                        class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 4. Reports & Logs Dropdown -->
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle active" href="/report-page" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bar-chart-line me-1 text-primary"></i> Reports & Logs
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i
+                                        class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a>
+                            </li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i
+                                        class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 🌓 Global Theme Toggle Button -->
+                    <button id="globalThemeBtn"
+                        class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
+                        <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+                        <span id="themeText">Dark Mode</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 mb-5">
+
+        <!-- Title & Navigation Action Buttons -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h3 class="fw-extrabold text-slate-800 m-0"><i class="bi bi-graph-up-arrow text-indigo me-2"></i> Stock
+                    In/Out & Ledger Reports</h3>
+                <p class="text-muted small m-0 mt-1">Review daily opening, closing stock movements and transaction audit
+                    ledgers.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button id="exportExcelBtn" class="btn btn-success fw-bold rounded-3 px-3 shadow-sm">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+                </button>
+                <button id="printPdfBtn" class="btn btn-outline-primary fw-bold rounded-3 px-3 shadow-sm">
+                    <i class="bi bi-printer me-1"></i> Print / PDF
+                </button>
+                <a href="/dashboard" class="btn btn-outline-dark fw-bold rounded-3 px-3"><i
+                        class="bi bi-house-door me-1"></i> Dashboard</a>
+                <a href="/scanner" class="btn btn-warning fw-bold rounded-3 px-3"><i
+                        class="bi bi-qr-code-scan me-1"></i> Mobile Scanner</a>
+            </div>
+        </div>
+
+        <!-- Active Filter Alert Badge -->
+        <div id="filterAlert"
+            class="alert alert-indigo bg-indigo-50 border-indigo-200 d-flex justify-content-between align-items-center d-none mb-3 shadow-sm rounded-3"
+            role="alert">
+            <div>
+                <i class="bi bi-funnel-fill text-indigo me-2"></i> <strong>Filter Applied:</strong> Item <span
+                    id="selectedItemBadge" class="badge bg-dark fs-6 font-monospace"></span> data is being displayed.
+            </div>
+            <button id="clearItemFilterBtn" class="btn btn-dark btn-sm fw-bold rounded-pill px-3">❌ Clear Filter
+                (Show All)</button>
+        </div>
+
+        <!-- 🧪 END-TO-END TESTING & SYSTEM SUMMARY SECTION -->
+        <div class="card glass-card mb-4 border-start border-4 border-warning overflow-hidden">
+            <div
+                class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom">
+                <h5 class="m-0 fw-bold text-warning-emphasis"><i class="bi bi-shield-check me-2 text-warning"></i>
+                    End-to-End System Summary & Fulfillment Analytics</h5>
+                <button id="refreshSummaryBtn" class="btn btn-outline-warning btn-sm fw-bold rounded-pill px-3">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh Summary
+                </button>
+            </div>
+            <div class="card-body p-4">
+
+                <!-- 1. Stock Variance KPI & Fulfillment Rate Bars -->
+                <div class="row g-4 mb-4">
+                    <!-- Stock Variance Box -->
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-4 bg-primary bg-opacity-10 border border-primary text-center">
+                            <small class="text-muted fw-bold d-block mb-1">📦 Inward Stock vs Scanned Outward
+                                Variance</small>
+                            <h3 class="fw-extrabold text-primary m-0" id="e2e-variance-qty">0.00</h3>
+                            <div class="d-flex justify-content-between mt-2 extra-small text-muted px-2">
+                                <span>Inward: <strong id="e2e-inward-qty">0</strong></span>
+                                <span>Outward: <strong id="e2e-dp-out-qty">0</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Direct Pipe Fulfillment Meter -->
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-4 bg-success bg-opacity-10 border border-success">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted fw-bold">🏭 Direct Pipe Fulfillment Rate</small>
+                                <span class="badge bg-success fw-bold" id="e2e-direct-pct">0%</span>
+                            </div>
+                            <div class="progress my-2" style="height: 10px;">
+                                <div id="e2e-direct-bar"
+                                    class="progress-bar bg-success progress-bar-striped progress-bar-animated"
+                                    role="progressbar" style="width: 0%;"></div>
+                            </div>
+                            <small class="text-muted d-block text-end extra-small" id="e2e-direct-text">0 / 0 Meters
+                                Dispatched</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Non-DP Outward (Testing, Sample, Damage) Graph & History -->
+                <div class="row g-4 align-items-center">
+                    <div class="col-lg-5">
+                        <div class="p-3 rounded-4 border border-secondary">
+                            <h6 class="fw-bold mb-3 text-info"><i class="bi bi-pie-chart-fill me-1"></i> Non-DP Outward
+                                Breakdown (Outward Reasons)</h6>
+                            <div style="height: 220px; position: relative;">
+                                <canvas id="nondpChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-7">
+                        <h6 class="fw-bold mb-2 text-warning"><i class="bi bi-journal-text me-1"></i> Non-DP Outward
+                            History Log (Testing, Sample, Damage)</h6>
+                        <div class="table-responsive-custom" style="max-height: 220px; overflow-y: auto;">
+                            <table class="table table-sm table-hover align-middle m-0 extra-small">
+                                <thead class="sticky-top bg-secondary text-white">
+                                    <tr>
+                                        <th>Box ID</th>
+                                        <th>Item</th>
+                                        <th>Qty</th>
+                                        <th>Outward Reason</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="nondpTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No records available</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 1. Daily Stock Ledger Table Card -->
+        <div class="card glass-card mb-4 border-start border-4 border-indigo overflow-hidden">
+            <div
+                class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom">
+                <h5 class="m-0 fw-bold text-dark"><i class="bi bi-calendar-event me-2 text-indigo"></i> Daily Stock
+                    Movement Ledger</h5>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="date" id="ledgerDate" class="form-control form-control-sm rounded-2">
+                    <button id="dateSearchBtn" class="btn btn-indigo btn-primary btn-sm fw-bold px-3">Search</button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive-custom">
+                    <table class="table table-hover align-middle text-center m-0">
+                        <thead>
+                            <tr>
+                                <th class="text-start ps-4">Item Name (Click to Filter)</th>
+                                <th class="bg-secondary-subtle">Opening Stock</th>
+                                <th class="bg-success-subtle text-success-emphasis">Inward (+) IN</th>
+                                <th class="bg-danger-subtle text-danger-emphasis">Outward (-) OUT</th>
+                                <th class="bg-primary-subtle text-primary-emphasis">Closing Stock (=)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledgerTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Filter Bar -->
+        <div class="card glass-card p-3.5 mb-4 bg-white">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-2 mb-md-0">
+                    <label class="form-label fw-bold text-slate-600 small mb-1"><i class="bi bi-search me-1"></i> Quick
+                        Search (Box ID, Item Name, or Recipient):</label>
+                    <input type="text" id="searchInput" class="form-control rounded-3"
+                        placeholder="Type to filter transaction history...">
+                </div>
+                <div class="col-md-6 text-md-end text-muted small">
+                    💡 <strong>Tip:</strong> Click on any item name in the table to instantly filter its full history.
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- 2. Outward History Table -->
+            <div class="col-lg-6 mb-4">
+                <div class="card glass-card border-start border-4 border-danger h-100 overflow-hidden">
+                    <div
+                        class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                        <h5 class="m-0 fw-bold text-danger"><i class="bi bi-box-arrow-up-right me-2"></i> Material
+                            Outward History</h5>
+                        <span id="outwardCount" class="badge bg-danger px-3 py-1.5 fs-6 rounded-pill">0 Records</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive-custom">
+                            <table class="table table-hover align-middle m-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-3">Box ID</th>
+                                        <th>Item Name</th>
+                                        <th>Qty</th>
+                                        <th>Issued To</th>
+                                        <th>Scanner / Operator</th>
+                                        <th>Date & Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="outwardTable"></tbody>
+                            </table>
+                        </div>
+                        <!-- Outward Pagination Controls -->
+                        <div class="pagination-container" id="outwardPaginationContainer">
+                            <span class="text-muted" id="outwardPageInfo">Page 1 of 1</span>
+                            <div class="d-flex gap-2">
+                                <button id="outwardPrevBtn" class="btn-page" disabled>
+                                    <i class="bi bi-chevron-left"></i> Prev
+                                </button>
+                                <button id="outwardNextBtn" class="btn-page" disabled>
+                                    Next <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Inward History Table -->
+            <div class="col-lg-6 mb-4">
+                <div class="card glass-card border-start border-4 border-success h-100 overflow-hidden">
+                    <div
+                        class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                        <h5 class="m-0 fw-bold text-success"><i class="bi bi-box-arrow-in-down-left me-2"></i> Material
+                            Inward History</h5>
+                        <span id="inwardCount" class="badge bg-success px-3 py-1.5 fs-6 rounded-pill">0 Records</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive-custom">
+                            <table class="table table-hover align-middle m-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-3">Box ID</th>
+                                        <th>Item Name</th>
+                                        <th class="text-success-emphasis bg-success-subtle">Original Inward Qty</th>
+                                        <th class="text-primary-emphasis bg-primary-subtle">Current Balance Qty</th>
+                                        <th>Supplier / Party</th>
+                                        <th>Remark</th>
+                                        <th>Status</th>
+                                        <th>Inward Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inwardTable"></tbody>
+                            </table>
+                        </div>
+                        <!-- Inward Pagination Controls -->
+                        <div class="pagination-container" id="inwardPaginationContainer">
+                            <span class="text-muted" id="inwardPageInfo">Page 1 of 1</span>
+                            <div class="d-flex gap-2">
+                                <button id="inwardPrevBtn" class="btn-page" disabled>
+                                    <i class="bi bi-chevron-left"></i> Prev
+                                </button>
+                                <button id="inwardNextBtn" class="btn-page" disabled>
+                                    Next <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="/static/js/toast.js"></script>
+    <script src="/static/js/security.js"></script>
+    <script src="/static/js/theme.js"></script>
+    <script src="/static/js/report.js"></script>
+    <script src="/static/js/english-ui.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
+                window.PageLoader.hide();
+            }
+        });
+    </script>
+</body>
+
+</html>
