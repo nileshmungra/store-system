@@ -19,9 +19,13 @@ load_dotenv()
 DB_TYPE = os.getenv("DB_TYPE", "mysql").lower()
 
 if DB_TYPE == "oracle":
-    from database_oracle import get_db as get_db_impl, get_db_ctx as get_db_ctx_impl, init_db as init_db_impl
+    from database_oracle import get_db as get_db_impl
+    from database_oracle import get_db_ctx as get_db_ctx_impl
+    from database_oracle import init_db as init_db_impl
 else:
-    from database import get_db as get_db_impl, get_db_ctx as get_db_ctx_impl, init_db as init_db_impl
+    from database import get_db as get_db_impl
+    from database import get_db_ctx as get_db_ctx_impl
+    from database import init_db as init_db_impl
 
 def get_db():
     return get_db_impl()
@@ -44,6 +48,8 @@ try:
 except Exception:
     mysql = None  # type: ignore
 
+
+import contextlib
 
 import pandas as pd
 from fastapi import (
@@ -375,16 +381,16 @@ def get_dashboard_stats():
         try:
             # 1. Inward stats today
             cursor.execute("""
-                SELECT COUNT(*) as count, COALESCE(SUM(total_qty), 0) as total_qty 
-                FROM inward_batches 
+                SELECT COUNT(*) as count, COALESCE(SUM(total_qty), 0) as total_qty
+                FROM inward_batches
                 WHERE DATE(inward_date) = CURDATE()
             """)
             inward_res = cursor.fetchone() or {'count': 0, 'total_qty': 0}
 
             # 2. Production stats today
             cursor.execute("""
-                SELECT COUNT(*) as count, COALESCE(SUM(coil_weight_kg), 0) as total_weight 
-                FROM production_logs 
+                SELECT COUNT(*) as count, COALESCE(SUM(coil_weight_kg), 0) as total_weight
+                FROM production_logs
                 WHERE DATE(created_at) = CURDATE()
             """)
             prod_res = cursor.fetchone() or {'count': 0, 'total_weight': 0}
@@ -399,7 +405,7 @@ def get_dashboard_stats():
 
             # 5. Last 7 Days trend for Chart.js
             cursor.execute("""
-                SELECT 
+                SELECT
                     DATE_FORMAT(d.day, '%Y-%m-%d') as date_label,
                     DATE_FORMAT(d.day, '%d %b') as short_label,
                     COALESCE(i.inward_qty, 0) as inward_qty,
@@ -410,15 +416,15 @@ def get_dashboard_stats():
                     CROSS JOIN (SELECT 0 AS a) AS b
                 ) d
                 LEFT JOIN (
-                    SELECT DATE(inward_date) as cdate, SUM(total_qty) as inward_qty 
-                    FROM inward_batches 
-                    WHERE inward_date >= CURDATE() - INTERVAL 7 DAY 
+                    SELECT DATE(inward_date) as cdate, SUM(total_qty) as inward_qty
+                    FROM inward_batches
+                    WHERE inward_date >= CURDATE() - INTERVAL 7 DAY
                     GROUP BY DATE(inward_date)
                 ) i ON d.day = i.cdate
                 LEFT JOIN (
-                    SELECT DATE(created_at) as cdate, SUM(coil_weight_kg) as prod_qty 
-                    FROM production_logs 
-                    WHERE created_at >= CURDATE() - INTERVAL 7 DAY 
+                    SELECT DATE(created_at) as cdate, SUM(coil_weight_kg) as prod_qty
+                    FROM production_logs
+                    WHERE created_at >= CURDATE() - INTERVAL 7 DAY
                     GROUP BY DATE(created_at)
                 ) p ON d.day = p.cdate
                 ORDER BY d.day ASC
@@ -485,7 +491,7 @@ def get_end_to_end_summary():
             # 2. Direct DP Items vs Store Fitting Kit Bag Fulfillment Rate (%)
             # Direct DP Items (Pipes / Bundles)
             cursor.execute("""
-                SELECT 
+                SELECT
                     COALESCE(SUM(planned_qty), 0) as total_planned,
                     COALESCE(SUM(dispatched_qty), 0) as total_dispatched
                 FROM dispatch_plan_items
@@ -499,15 +505,15 @@ def get_end_to_end_summary():
 
             # 3. Non-DP Outward History & Grouped Breakdown
             cursor.execute("""
-                SELECT 
+                SELECT
                     COALESCE(NULLIF(REPLACE(issued_to, 'Non-DP: ', ''), ''), 'Internal Factory Use') as reason,
                     COUNT(*) as scan_count,
                     COALESCE(SUM(qty_issued), 0) as total_qty
                 FROM outward_logs
-                WHERE issued_to LIKE 'Non-DP:%' 
-                   OR issued_to LIKE '%Testing%' 
-                   OR issued_to LIKE '%Sample%' 
-                   OR issued_to LIKE '%Scrap%' 
+                WHERE issued_to LIKE 'Non-DP:%'
+                   OR issued_to LIKE '%Testing%'
+                   OR issued_to LIKE '%Sample%'
+                   OR issued_to LIKE '%Scrap%'
                    OR issued_to LIKE '%Damage%'
                 GROUP BY reason
                 ORDER BY total_qty DESC
@@ -519,14 +525,14 @@ def get_end_to_end_summary():
 
             # Detailed Non-DP Outward Recent History
             cursor.execute("""
-                SELECT 
-                    id, box_id, item_name, qty_issued, issued_to, scanned_by, 
+                SELECT
+                    id, box_id, item_name, qty_issued, issued_to, scanned_by,
                     DATE_FORMAT(outward_date, '%d %b %Y %h:%i %p') as formatted_date
                 FROM outward_logs
-                WHERE issued_to LIKE 'Non-DP:%' 
-                   OR issued_to LIKE '%Testing%' 
-                   OR issued_to LIKE '%Sample%' 
-                   OR issued_to LIKE '%Scrap%' 
+                WHERE issued_to LIKE 'Non-DP:%'
+                   OR issued_to LIKE '%Testing%'
+                   OR issued_to LIKE '%Sample%'
+                   OR issued_to LIKE '%Scrap%'
                    OR issued_to LIKE '%Damage%'
                 ORDER BY outward_date DESC
                 LIMIT 50
@@ -843,7 +849,7 @@ def update_item(
     is_out_val = 1 if is_outsource else 0
     with get_db_ctx(commit=True) as (conn, cursor):
         cursor.execute('''
-            UPDATE items 
+            UPDATE items
             SET item_name=%s, item_group=%s, hsn_code=%s, unit=%s, rate=%s,
                 is_own_production=%s, is_outsource=%s,
                 min_stock=%s, max_stock=%s, reorder_point=%s, weight_per_pc=%s,
@@ -973,7 +979,7 @@ def approve_qc_request(qc_id: int, req: QcApprovalAction):
             raise HTTPException(status_code=400, detail=f"This QC request is already {qc['status']}!")
 
         cursor.execute('''
-            UPDATE qc_approvals 
+            UPDATE qc_approvals
             SET status = 'APPROVED', approved_by = %s, approved_at = NOW()
             WHERE id = %s
         ''', (req.approved_by, qc_id))
@@ -1020,7 +1026,7 @@ def reject_qc_request(qc_id: int, req: QcApprovalAction):
             raise HTTPException(status_code=400, detail=f"This QC request is already {qc['status']}!")
 
         cursor.execute('''
-            UPDATE qc_approvals 
+            UPDATE qc_approvals
             SET status = 'REJECTED', approved_by = %s, approved_at = NOW()
             WHERE id = %s
         ''', (req.approved_by, qc_id))
@@ -1145,7 +1151,7 @@ async def material_inward(data: InwardRequest):
 
         # Count existing boxes for this item today to determine sequence
         cursor.execute("""
-            SELECT COUNT(*) as cnt FROM boxes 
+            SELECT COUNT(*) as cnt FROM boxes
             WHERE item_name = %s AND DATE(created_at) = CURDATE()
         """, (data.item_name,))
         existing_count = cursor.fetchone()['cnt'] or 0
@@ -1351,8 +1357,8 @@ async def _process_outward_impl(req: OutwardRequest):
 
         # Condition 3: Update Box status to DISPATCHED and associate dp_number
         cursor.execute("""
-            UPDATE boxes 
-            SET qty_in_box = %s, status = %s, dp_number = %s 
+            UPDATE boxes
+            SET qty_in_box = %s, status = %s, dp_number = %s
             WHERE box_id = %s
         """, (new_qty, new_status, dp_target, req.box_id))
 
@@ -1402,7 +1408,7 @@ async def _process_outward_impl(req: OutwardRequest):
             target_so = (dp_item.get('so_no') if dp_item and 'so_no' in dp_item else "") or target_dp
 
             cursor.execute("""
-                UPDATE dispatch_verification 
+                UPDATE dispatch_verification
                 SET scanned_qty = LEAST(required_qty, scanned_qty + %s),
                     status = IF(scanned_qty + %s >= required_qty, 'COMPLETED', 'PENDING')
                 WHERE (dp_number = %s OR so_number = %s OR dp_number IN (SELECT plan_no FROM dispatch_plans WHERE id = %s) OR so_number IN (SELECT so_no FROM dispatch_plans WHERE id = %s))
@@ -1479,8 +1485,8 @@ async def process_non_dp_outward(req: NonDpOutwardRequest):
         new_status = 'OUT_NON_DP' if new_qty == 0 else 'IN_STORE'
 
         cursor.execute("""
-            UPDATE boxes 
-            SET qty_in_box = %s, status = %s 
+            UPDATE boxes
+            SET qty_in_box = %s, status = %s
             WHERE box_id = %s
         """, (new_qty, new_status, req.box_id))
 
@@ -1539,8 +1545,8 @@ async def _process_fifo_outward_impl(req: FifoOutwardRequest):
     with get_db_ctx(commit=True) as (conn, cursor):
         # Find all available boxes for this item, ordered by oldest first (FIFO)
         cursor.execute("""
-            SELECT * FROM boxes 
-            WHERE item_name = %s AND status = 'IN_STORE' AND qty_in_box > 0 
+            SELECT * FROM boxes
+            WHERE item_name = %s AND status = 'IN_STORE' AND qty_in_box > 0
             ORDER BY created_at ASC, box_id ASC
         """, (req.item_name,))
         available_boxes = cursor.fetchall()
@@ -1574,8 +1580,8 @@ async def _process_fifo_outward_impl(req: FifoOutwardRequest):
             new_status = 'DISPATCHED' if new_qty == 0 else 'IN_STORE'
 
             cursor.execute("""
-                UPDATE boxes 
-                SET qty_in_box = %s, status = %s, dp_number = %s 
+                UPDATE boxes
+                SET qty_in_box = %s, status = %s, dp_number = %s
                 WHERE box_id = %s
             """, (new_qty, new_status, dp_target, box['box_id']))
 
@@ -1645,13 +1651,13 @@ async def _process_fifo_outward_impl(req: FifoOutwardRequest):
 def get_stock_summary():
     with get_db_ctx() as (conn, cursor):
         cursor.execute("""
-            SELECT b.item_name, 
-                   COUNT(b.box_id) as total_boxes, 
+            SELECT b.item_name,
+                   COUNT(b.box_id) as total_boxes,
                    SUM(b.qty_in_box) as total_qty,
                    COALESCE(NULLIF(itm.unit, ''), IF(b.item_name LIKE '%%Pipe%%' OR b.item_name LIKE '%%Coil%%', 'MTR', 'Pcs')) as unit
             FROM boxes b
             LEFT JOIN items itm ON b.item_name = itm.item_name
-            WHERE b.status = 'IN_STORE' 
+            WHERE b.status = 'IN_STORE'
             GROUP BY b.item_name, itm.unit
         """)
         stock = cursor.fetchall()
@@ -1699,15 +1705,15 @@ def get_reports(
                    COALESCE(NULLIF(pl.bundle_unit, ''), NULLIF(itm.unit, ''), 'PCS') as unit
             FROM boxes b
             LEFT JOIN (
-                SELECT box_id, SUM(qty_issued) as total_issued 
-                FROM outward_logs 
+                SELECT box_id, SUM(qty_issued) as total_issued
+                FROM outward_logs
                 GROUP BY box_id
             ) os ON b.box_id = os.box_id
             LEFT JOIN inward_batches ib ON b.batch_id = ib.id
             LEFT JOIN production_logs pl ON b.box_id = pl.qr_code
             LEFT JOIN items itm ON b.item_name = itm.item_name
             {inward_where_clause}
-            ORDER BY b.created_at DESC 
+            ORDER BY b.created_at DESC
             LIMIT %s OFFSET %s
         """
         cursor.execute(query_inward, tuple(inward_params + [limit, offset]))
@@ -1741,7 +1747,7 @@ def get_reports(
             LEFT JOIN production_logs pl ON ol.box_id = pl.qr_code
             LEFT JOIN items itm ON ol.item_name = itm.item_name
             {outward_where_clause}
-            ORDER BY ol.outward_date DESC 
+            ORDER BY ol.outward_date DESC
             LIMIT %s OFFSET %s
         """
         cursor.execute(query_outward, tuple(outward_params + [limit, offset]))
@@ -2034,9 +2040,9 @@ def get_date_wise_stock(report_date: str):
         LEFT JOIN items itm ON i.item_name = itm.item_name
         LEFT JOIN item_in b ON i.item_name = b.item_name
         LEFT JOIN item_out o ON i.item_name = o.item_name
-        WHERE (COALESCE(b.prev_in, 0) - COALESCE(o.prev_out, 0)) > 0 
-           OR COALESCE(b.today_in, 0) > 0 
-           OR COALESCE(o.today_out, 0) > 0 
+        WHERE (COALESCE(b.prev_in, 0) - COALESCE(o.prev_out, 0)) > 0
+           OR COALESCE(b.today_in, 0) > 0
+           OR COALESCE(o.today_out, 0) > 0
            OR ((COALESCE(b.prev_in, 0) - COALESCE(o.prev_out, 0)) + COALESCE(b.today_in, 0) - COALESCE(o.today_out, 0)) > 0
     """
     with get_db_ctx() as (conn, cursor):
@@ -2055,10 +2061,8 @@ def reset_all_data():
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
-    try:
+    with contextlib.suppress(Exception):
         cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
-    except Exception:
-        pass
 
     tables_to_clear = [
         "boxes",
@@ -2081,10 +2085,8 @@ def reset_all_data():
             except Exception as e:
                 logging.debug(f"Reset error for {tbl}: {e}")
 
-    try:
+    with contextlib.suppress(Exception):
         cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
-    except Exception:
-        pass
 
     add_log(conn, "RESET", "System factory reset executed: All operational stock, production, DP plans, challans and history cleared. Master Items preserved.")
 
@@ -2101,10 +2103,8 @@ def reset_all_data():
             sq_conn = sqlite3.connect("inventory.db")
             sq_cur = sq_conn.cursor()
             for tbl in tables_to_clear:
-                try:
+                with contextlib.suppress(Exception):
                     sq_cur.execute(f"DELETE FROM {tbl};")
-                except Exception:
-                    pass
             sq_conn.commit()
             sq_conn.close()
         except Exception as e:
@@ -2378,10 +2378,8 @@ async def delete_production_log(log_id: int):
         if batch_id_to_del:
             cursor.execute("DELETE FROM inward_batches WHERE id = %s", (batch_id_to_del,))
 
-        try:
+        with contextlib.suppress(Exception):
             cursor.execute("DELETE FROM production_qr_labels WHERE job_id = %s", (log_id,))
-        except Exception:
-            pass
 
         cursor.execute("DELETE FROM production_logs WHERE id = %s", (log_id,))
 
@@ -2401,10 +2399,8 @@ async def delete_production_log(log_id: int):
             except Exception:
                 pass
 
-    try:
+    with contextlib.suppress(Exception):
         await manager.broadcast("STOCK_UPDATED")
-    except Exception:
-        pass
 
     return {"status": "Success", "message": f"Production Entry #{log_id} deleted successfully."}
 
@@ -2431,7 +2427,7 @@ async def add_production(req: ProductionEntryRequest):
             # Strict Plan vs Actual: Default is ALWAYS PENDING_APPROVAL unless explicitly APPROVED
             if req.status != "APPROVED":
                 cursor.execute('''
-                    SELECT id FROM production_logs 
+                    SELECT id FROM production_logs
                     WHERE status = 'PENDING_APPROVAL'
                     AND production_date = %s
                     AND machine_name = %s
@@ -2456,7 +2452,7 @@ async def add_production(req: ProductionEntryRequest):
                     }
 
                 cursor.execute('''
-                    INSERT INTO production_logs 
+                    INSERT INTO production_logs
                     (production_date, machine_name, pipe_type, pipe_size, planned_qty, actual_qty, bundle_unit, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code, status, items_per_bundle, planned_bundles)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NULL, 'PENDING_APPROVAL', %s, %s)
                 ''', (
@@ -2483,7 +2479,7 @@ async def add_production(req: ProductionEntryRequest):
 
             # Direct Approved Mode
             cursor.execute('''
-                INSERT INTO production_logs 
+                INSERT INTO production_logs
                 (production_date, machine_name, pipe_type, pipe_size, planned_qty, actual_qty, bundle_unit, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code, status, approved_by, approved_at, items_per_bundle, planned_bundles)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NULL, 'APPROVED', %s, NOW(), %s, %s)
             ''', (
@@ -2509,13 +2505,11 @@ async def add_production(req: ProductionEntryRequest):
 
             cursor.execute("SELECT id FROM items WHERE item_name = %s", (item_full_name,))
             if not cursor.fetchone():
-                try:
+                with contextlib.suppress(mysql.connector.Error):
                     cursor.execute('''
                         INSERT INTO items (item_code, item_name, item_group, hsn_code, unit, rate, image_url)
                         VALUES (%s, %s, 'Own Production', '', %s, 0, '')
                     ''', (item_code_gen, item_full_name, bundle_unit))
-                except mysql.connector.Error:
-                    pass
 
             # Insert into Inward Batches table
             cursor.execute('''
@@ -2572,7 +2566,7 @@ async def add_production(req: ProductionEntryRequest):
                     sq_conn = sqlite3.connect("inventory.db")
                     sq_cursor = sq_conn.cursor()
                     sq_cursor.execute('''
-                        INSERT OR IGNORE INTO production_logs 
+                        INSERT OR IGNORE INTO production_logs
                         (production_date, machine_name, pipe_type, pipe_size, coil_length_meters, coil_weight_kg, raw_material_used_kg, shift_operator, qr_code)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ''', (req.machine_name, req.pipe_type, req.pipe_size, actual_val, req.coil_weight_kg or 0, req.raw_material_used_kg or 0, req.shift_operator, qr_code))
@@ -2609,8 +2603,8 @@ def get_pending_production():
     """Retrieves all pending production entries waiting for approval."""
     with get_db_ctx(commit=False) as (conn, cursor):
         cursor.execute("""
-            SELECT * FROM production_logs 
-            WHERE status = 'PENDING_APPROVAL' 
+            SELECT * FROM production_logs
+            WHERE status = 'PENDING_APPROVAL'
             ORDER BY id DESC
         """)
         pending = cursor.fetchall()
@@ -2693,13 +2687,11 @@ async def _approve_production_entry_impl(log_id: int, req: ProductionApprovalReq
         cursor.execute("SELECT id, unit FROM items WHERE item_name = %s", (item_full_name,))
         existing_item = cursor.fetchone()
         if not existing_item:
-            try:
+            with contextlib.suppress(mysql.connector.Error):
                 cursor.execute('''
                     INSERT INTO items (item_code, item_name, item_group, hsn_code, unit, rate, image_url, is_own_production)
                     VALUES (%s, %s, 'Own Production', '', %s, 0, '', 1)
                 ''', (item_code_gen, item_full_name, bundle_unit))
-            except mysql.connector.Error:
-                pass
         else:
             if bundle_unit:
                 cursor.execute("UPDATE items SET unit = %s, is_own_production = 1 WHERE id = %s", (bundle_unit, existing_item['id']))
@@ -2784,7 +2776,7 @@ def get_plan_vs_actual_summary():
     """Returns aggregated KPIs for Plan vs Actual production."""
     with get_db_ctx(commit=False) as (conn, cursor):
         cursor.execute("""
-            SELECT 
+            SELECT
                 COUNT(*) as total_entries,
                 COALESCE(SUM(CASE WHEN status = 'PENDING_APPROVAL' THEN 1 ELSE 0 END), 0) as pending_count,
                 COALESCE(SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END), 0) as approved_count,
@@ -2941,7 +2933,7 @@ def parse_dispatch_plan_bytes(file_bytes: bytes, filename: str):
             df = pd.read_csv(io.BytesIO(file_bytes))
 
         df.columns = [str(c).strip() for c in df.columns]
-        cols_lower = [str(c).strip().lower() for c in df.columns]
+        [str(c).strip().lower() for c in df.columns]
 
         so_col = next((c for c in df.columns if 'so' in c.lower() or 'order' in c.lower()), None)
         desc_col = next((c for c in df.columns if 'item' in c.lower() or 'desc' in c.lower() or 'product' in c.lower() or 'name' in c.lower()), None)
@@ -3132,14 +3124,14 @@ async def upload_dp_plan_pdf(file: UploadFile = File(...)):
 
         if existing:
             cursor.execute("""
-                UPDATE dp_plans 
-                SET so_numbers = %s, total_items = %s, status = 'ACTIVE' 
+                UPDATE dp_plans
+                SET so_numbers = %s, total_items = %s, status = 'ACTIVE'
                 WHERE dp_number = %s
             """, (so_numbers, total_items, dp_number))
             cursor.execute("DELETE FROM dp_plan_items WHERE dp_number = %s", (dp_number,))
         else:
             cursor.execute("""
-                INSERT INTO dp_plans (dp_number, so_numbers, total_items, status) 
+                INSERT INTO dp_plans (dp_number, so_numbers, total_items, status)
                 VALUES (%s, %s, %s, 'ACTIVE')
             """, (dp_number, so_numbers, total_items))
 
@@ -3161,14 +3153,14 @@ async def upload_dp_plan_pdf(file: UploadFile = File(...)):
 
             if sq_existing:
                 sq_cursor.execute("""
-                    UPDATE dp_plans 
-                    SET so_numbers = ?, total_items = ?, status = 'ACTIVE' 
+                    UPDATE dp_plans
+                    SET so_numbers = ?, total_items = ?, status = 'ACTIVE'
                     WHERE dp_number = ?
                 """, (so_numbers, total_items, dp_number))
                 sq_cursor.execute("DELETE FROM dp_plan_items WHERE dp_number = ?", (dp_number,))
             else:
                 sq_cursor.execute("""
-                    INSERT INTO dp_plans (dp_number, so_numbers, total_items, status) 
+                    INSERT INTO dp_plans (dp_number, so_numbers, total_items, status)
                     VALUES (?, ?, ?, 'ACTIVE')
                 """, (dp_number, so_numbers, total_items))
 
@@ -3259,7 +3251,7 @@ async def auto_connect_so_dp(
             unit_col = next((c for c in df.columns if 'unit' in c.lower() or 'uom' in c.lower()), None)
 
             if item_col and qty_col:
-                for idx, row in df.iterrows():
+                for _idx, row in df.iterrows():
                     row_so = str(row[so_col]).strip() if so_col and pd.notna(row[so_col]) else ""
                     row_item = str(row[item_col]).strip() if pd.notna(row[item_col]) else ""
 
@@ -3308,7 +3300,7 @@ async def auto_connect_so_dp(
 
         for item in all_mapped_items:
             cursor.execute("""
-                INSERT INTO dispatch_verification 
+                INSERT INTO dispatch_verification
                 (dp_number, so_number, item_type, item_name, required_qty, scanned_qty, unit, status)
                 VALUES (%s, %s, %s, %s, %s, 0.0, %s, 'PENDING')
             """, (
@@ -3346,7 +3338,7 @@ async def auto_connect_so_dp(
             sq_cursor.execute("DELETE FROM dispatch_verification WHERE dp_number = ?", (extracted_dp_number,))
             for item in all_mapped_items:
                 sq_cursor.execute("""
-                    INSERT INTO dispatch_verification 
+                    INSERT INTO dispatch_verification
                     (dp_number, so_number, item_type, item_name, required_qty, scanned_qty, unit, status)
                     VALUES (?, ?, ?, ?, ?, 0.0, ?, 'PENDING')
                 """, (extracted_dp_number, extracted_so_number, item["item_type"], item["item_name"], item["required_qty"], item["unit"]))
@@ -3421,7 +3413,7 @@ def process_excel_in_background(file_bytes: bytes, filename: str):
 
             items = []
             for _, row in group.iterrows():
-                item_code = str(row[col_map['item_code']]).strip().upper()
+                str(row[col_map['item_code']]).strip().upper()
                 item_name = str(row[col_map['item_name']]).strip()
                 planned_qty = pd.to_numeric(row[col_map['planned_qty']], errors='coerce')
                 unit = str(row[col_map['unit']]).strip()
@@ -3538,7 +3530,7 @@ def normalize_pivot_loading_entry(df: pd.DataFrame) -> pd.DataFrame:
     """
     df = df.copy()
     df.columns = [str(c).strip() for c in df.columns]
-    cols_lower = [str(c).strip().lower() for c in df.columns]
+    [str(c).strip().lower() for c in df.columns]
 
     row_label_col = next((c for c in df.columns if str(c).strip().lower() == 'row labels'), None)
     qty_col = next((c for c in df.columns if str(c).strip().lower().startswith('sum of') or 'pend. qty' in str(c).strip().lower() or 'pending qty' in str(c).strip().lower()), None)
@@ -3984,8 +3976,8 @@ def list_dispatch_plans():
 
         for plan in plans:
             cursor.execute("""
-                SELECT id, item_name, planned_qty, dispatched_qty, unit, weight_per_pc 
-                FROM dispatch_plan_items 
+                SELECT id, item_name, planned_qty, dispatched_qty, unit, weight_per_pc
+                FROM dispatch_plan_items
                 WHERE dispatch_plan_id = %s
             """, (plan["id"],))
             items = cursor.fetchall()
@@ -4000,8 +3992,8 @@ def list_dispatch_plans():
 
             # Query dispatch_verification for Direct vs Store Kit breakdown
             cursor.execute("""
-                SELECT item_type, required_qty, scanned_qty, status 
-                FROM dispatch_verification 
+                SELECT item_type, required_qty, scanned_qty, status
+                FROM dispatch_verification
                 WHERE dp_number = %s OR so_number = %s
             """, (plan.get("plan_no"), plan.get("so_no")))
             ver_items = cursor.fetchall()
@@ -4244,9 +4236,9 @@ def get_delivery_challan(plan_id: str):
             # Auto fallback weight calculation if 0
             if wt_per_pc == 0.0:
                 cursor.execute("""
-                    SELECT coil_weight_kg, coil_length_meters 
-                    FROM production_logs 
-                    WHERE pipe_size = %s OR pipe_type = %s 
+                    SELECT coil_weight_kg, coil_length_meters
+                    FROM production_logs
+                    WHERE pipe_size = %s OR pipe_type = %s
                     ORDER BY id DESC LIMIT 1
                 """, (item['item_name'], item['item_name']))
                 pl = cursor.fetchone()
@@ -4269,8 +4261,8 @@ def get_delivery_challan(plan_id: str):
 
             # Verification Breakdown Check
             cursor.execute("""
-                SELECT item_type, required_qty, scanned_qty, status 
-                FROM dispatch_verification 
+                SELECT item_type, required_qty, scanned_qty, status
+                FROM dispatch_verification
                 WHERE dp_number = %s OR so_number = %s
             """, (plan_no, so_no))
             ver_items = cursor.fetchall()
@@ -4313,8 +4305,8 @@ def update_vehicle_info(req: VehicleInfoUpdateRequest):
     with get_db_ctx(commit=True) as (conn, cursor):
         if plan_target.isdigit():
             cursor.execute("""
-                UPDATE dispatch_plans 
-                SET vehicle_no = %s, transporter_name = %s, driver_info = %s 
+                UPDATE dispatch_plans
+                SET vehicle_no = %s, transporter_name = %s, driver_info = %s
                 WHERE id = %s
             """, (req.vehicle_no, req.transporter_name, req.driver_info, int(plan_target)))
             if cursor.rowcount > 0:
@@ -4322,8 +4314,8 @@ def update_vehicle_info(req: VehicleInfoUpdateRequest):
 
         if not updated:
             cursor.execute("""
-                UPDATE dispatch_plans 
-                SET vehicle_no = %s, transporter_name = %s, driver_info = %s 
+                UPDATE dispatch_plans
+                SET vehicle_no = %s, transporter_name = %s, driver_info = %s
                 WHERE plan_no = %s
             """, (req.vehicle_no, req.transporter_name, req.driver_info, plan_target))
             if cursor.rowcount > 0:
@@ -4331,8 +4323,8 @@ def update_vehicle_info(req: VehicleInfoUpdateRequest):
 
         if not updated:
             cursor.execute("""
-                UPDATE dp_plans 
-                SET vehicle_no = %s, transporter_name = %s, driver_info = %s 
+                UPDATE dp_plans
+                SET vehicle_no = %s, transporter_name = %s, driver_info = %s
                 WHERE dp_number = %s
             """, (req.vehicle_no, req.transporter_name, req.driver_info, plan_target))
             if cursor.rowcount > 0:

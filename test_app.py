@@ -1,6 +1,6 @@
 import os
 import sys
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, patch
 
 # Ensure project root is importable
 sys.path.insert(0, os.path.dirname(__file__))
