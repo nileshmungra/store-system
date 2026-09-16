@@ -194,8 +194,7 @@ def init_db():
         cursor.execute("ALTER TABLE items ADD COLUMN is_outsource TINYINT DEFAULT 0")
     except Exception:
         pass
-
-extra_item_cols = [
+    extra_item_cols = [
         "min_stock DECIMAL(10, 2) DEFAULT 0",
         "max_stock DECIMAL(10, 2) DEFAULT 0",
         "reorder_point DECIMAL(10, 2) DEFAULT 0",
