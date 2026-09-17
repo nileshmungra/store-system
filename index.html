@@ -31,6 +31,7 @@
         <div class="loader-text">Loading...</div>
     </div>
 
+    <!-- Header Navigation Bar -->
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
         <div class="container-fluid px-4">
@@ -53,7 +54,7 @@
                             data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-box-seam me-1 text-info"></i> Inward & Production
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <ul class="dropdown-menu dropdown-menu-custom">
                             <li><a class="dropdown-item dropdown-item-custom" href="/inward-page"><i
                                         class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
                             <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i
@@ -67,7 +68,7 @@
                             aria-expanded="false">
                             <i class="bi bi-truck me-1 text-success"></i> Dispatch & Scanning
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <ul class="dropdown-menu dropdown-menu-custom">
                             <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i
                                         class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
                             <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i
@@ -84,14 +85,18 @@
                             aria-expanded="false">
                             <i class="bi bi-sliders me-1 text-warning"></i> Master Control
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <ul class="dropdown-menu dropdown-menu-custom">
                             <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i
                                         class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
                             <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i
                                         class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
-                            <li><hr class="dropdown-divider border-secondary border-opacity-25 my-1"></li>
-                            <li><a class="dropdown-item dropdown-item-custom btn-open-backup-modal" href="#" onclick="openDatabaseBackupModal(); return false;"><i
-                                        class="bi bi-database-check text-success"></i> Database Backup & Restore</a></li>
+                            <li>
+                                <hr class="dropdown-divider border-secondary border-opacity-25 my-1">
+                            </li>
+                            <li><a class="dropdown-item dropdown-item-custom btn-open-backup-modal" href="#"
+                                    onclick="openDatabaseBackupModal(); return false;"><i
+                                        class="bi bi-database-check text-success"></i> Database Backup & Restore</a>
+                            </li>
                         </ul>
                     </div>
 
@@ -101,7 +106,7 @@
                             aria-expanded="false">
                             <i class="bi bi-bar-chart-line me-1 text-primary"></i> Reports & Logs
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-custom">
+                        <ul class="dropdown-menu dropdown-menu-custom">
                             <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i
                                         class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a>
                             </li>
@@ -109,6 +114,13 @@
                                         class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
                         </ul>
                     </div>
+
+                    <!-- 🌓 Global Theme Toggle Button -->
+                    <button id="globalThemeBtn" onclick="toggleGlobalTheme()"
+                        class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2">
+                        <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+                        <span id="themeText">Dark Mode</span>
+                    </button>
                 </div>
             </div>
         </div>
