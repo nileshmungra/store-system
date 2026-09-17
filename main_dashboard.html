@@ -88,6 +88,9 @@
                                         class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
                             <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i
                                         class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
+                            <li><hr class="dropdown-divider border-secondary border-opacity-25 my-1"></li>
+                            <li><a class="dropdown-item dropdown-item-custom btn-open-backup-modal" href="#" onclick="openDatabaseBackupModal(); return false;"><i
+                                        class="bi bi-database-check text-success"></i> Database Backup & Restore</a></li>
                         </ul>
                     </div>
 
@@ -125,9 +128,14 @@
                 <h3 class="fw-bold m-0"><i class="bi bi-shop me-2"></i> Inventory Management System</h3>
                 <p class="m-0 mt-1 opacity-90 fs-6">Live Inventory analytics, tracking, and operations.</p>
             </div>
-            <a href="/scanner" class="btn btn-warning fw-bold rounded-pill px-4 shadow">
-                <i class="bi bi-qr-code-scan me-1"></i> 1-Touch QR Scanner
-            </a>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <button onclick="openDatabaseBackupModal()" class="btn btn-outline-info fw-bold rounded-pill px-3 shadow-sm">
+                    <i class="bi bi-database-check me-1"></i> Database Backup
+                </button>
+                <a href="/scanner" class="btn btn-warning fw-bold rounded-pill px-4 shadow">
+                    <i class="bi bi-qr-code-scan me-1"></i> 1-Touch QR Scanner
+                </a>
+            </div>
         </div>
 
         <!-- 📊 4 LIVE KPI COUNTER CARDS -->
@@ -316,6 +324,7 @@
     <script src="/static/js/theme.js"></script>
     <script src="/static/js/dashboard.js"></script>
     <script src="/static/js/english-ui.js"></script>
+    <script src="/static/js/backup-modal.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (window.PageLoader && typeof window.PageLoader.hide === 'function') {

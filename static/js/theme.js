@@ -12,39 +12,18 @@ const ThemeManager = (function () {
     const STORAGE_KEY_2 = 'theme_preference';
 
     function getSavedTheme() {
-        return localStorage.getItem(STORAGE_KEY_1) || 
-               localStorage.getItem(STORAGE_KEY_2) || 
-               'dark';
+        return 'light';
     }
 
     function updateThemeBtnUI(theme) {
         const btn = document.getElementById('globalThemeBtn');
-        const icon = document.getElementById('themeIcon');
-        const text = document.getElementById('themeText');
-
         if (btn) {
-            if (theme === 'light') {
-                btn.className = 'btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-            } else {
-                btn.className = 'btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2';
-            }
-        }
-
-        if (icon) {
-            if (theme === 'light') {
-                icon.className = 'bi bi-sun-fill text-warning';
-            } else {
-                icon.className = 'bi bi-moon-stars-fill text-warning';
-            }
-        }
-
-        if (text) {
-            text.innerText = theme === 'light' ? 'Light Mode' : 'Dark Mode';
+            btn.style.display = 'none';
         }
     }
 
     function applyTheme(theme) {
-        const targetTheme = theme || getSavedTheme();
+        const targetTheme = 'light';
         document.documentElement.setAttribute('data-theme', targetTheme);
         localStorage.setItem(STORAGE_KEY_1, targetTheme);
         localStorage.setItem(STORAGE_KEY_2, targetTheme);
@@ -52,24 +31,15 @@ const ThemeManager = (function () {
     }
 
     function toggleTheme() {
-        const currentTheme = document.documentElement.getAttribute('data-theme') || getSavedTheme();
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        applyTheme(newTheme);
+        // Enforce light theme only
+        applyTheme('light');
     }
 
     function bindEvents() {
-        // NOTE: The theme toggle button uses inline onclick="toggleGlobalTheme()"
-        // in the HTML, so we do NOT add a separate addEventListener here —
-        // doing so would cause a double-toggle (the listener AND the onclick
-        // would both fire, toggling the theme twice and appearing to do nothing).
-
-        // Also bind to any other elements with data-action="toggle-theme"
-        document.querySelectorAll('[data-action="toggle-theme"]').forEach(el => {
-            el.removeEventListener('click', toggleTheme);
-            el.addEventListener('click', toggleTheme);
+        applyTheme('light');
+        document.querySelectorAll('#globalThemeBtn, [data-action="toggle-theme"], #themeIcon, #themeText').forEach(el => {
+            el.style.display = 'none';
         });
-
-        updateThemeBtnUI(getSavedTheme());
     }
 
     // Apply immediately to prevent FOUC (Flash of Unstyled Content)

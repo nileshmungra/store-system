@@ -126,18 +126,6 @@
                 <p class="text-muted small m-0 mt-1">Review daily opening, closing stock movements and transaction audit
                     ledgers.</p>
             </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <button id="exportExcelBtn" class="btn btn-success fw-bold rounded-3 px-3 shadow-sm">
-                    <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
-                </button>
-                <button id="printPdfBtn" class="btn btn-outline-primary fw-bold rounded-3 px-3 shadow-sm">
-                    <i class="bi bi-printer me-1"></i> Print / PDF
-                </button>
-                <a href="/dashboard" class="btn btn-outline-dark fw-bold rounded-3 px-3"><i
-                        class="bi bi-house-door me-1"></i> Dashboard</a>
-                <a href="/scanner" class="btn btn-warning fw-bold rounded-3 px-3"><i
-                        class="bi bi-qr-code-scan me-1"></i> Mobile Scanner</a>
-            </div>
         </div>
 
         <!-- Active Filter Alert Badge -->
@@ -150,89 +138,6 @@
             </div>
             <button id="clearItemFilterBtn" class="btn btn-dark btn-sm fw-bold rounded-pill px-3">❌ Clear Filter
                 (Show All)</button>
-        </div>
-
-        <!-- 🧪 END-TO-END TESTING & SYSTEM SUMMARY SECTION -->
-        <div class="card glass-card mb-4 border-start border-4 border-warning overflow-hidden">
-            <div
-                class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2 border-bottom">
-                <h5 class="m-0 fw-bold text-warning-emphasis"><i class="bi bi-shield-check me-2 text-warning"></i>
-                    End-to-End System Summary & Fulfillment Analytics</h5>
-                <button id="refreshSummaryBtn" class="btn btn-outline-warning btn-sm fw-bold rounded-pill px-3">
-                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh Summary
-                </button>
-            </div>
-            <div class="card-body p-4">
-
-                <!-- 1. Stock Variance KPI & Fulfillment Rate Bars -->
-                <div class="row g-4 mb-4">
-                    <!-- Stock Variance Box -->
-                    <div class="col-md-4">
-                        <div class="p-3 rounded-4 bg-primary bg-opacity-10 border border-primary text-center">
-                            <small class="text-muted fw-bold d-block mb-1">📦 Inward Stock vs Scanned Outward
-                                Variance</small>
-                            <h3 class="fw-extrabold text-primary m-0" id="e2e-variance-qty">0.00</h3>
-                            <div class="d-flex justify-content-between mt-2 extra-small text-muted px-2">
-                                <span>Inward: <strong id="e2e-inward-qty">0</strong></span>
-                                <span>Outward: <strong id="e2e-dp-out-qty">0</strong></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Direct Pipe Fulfillment Meter -->
-                    <div class="col-md-4">
-                        <div class="p-3 rounded-4 bg-success bg-opacity-10 border border-success">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <small class="text-muted fw-bold">🏭 Direct Pipe Fulfillment Rate</small>
-                                <span class="badge bg-success fw-bold" id="e2e-direct-pct">0%</span>
-                            </div>
-                            <div class="progress my-2" style="height: 10px;">
-                                <div id="e2e-direct-bar"
-                                    class="progress-bar bg-success progress-bar-striped progress-bar-animated"
-                                    role="progressbar" style="width: 0%;"></div>
-                            </div>
-                            <small class="text-muted d-block text-end extra-small" id="e2e-direct-text">0 / 0 Meters
-                                Dispatched</small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. Non-DP Outward (Testing, Sample, Damage) Graph & History -->
-                <div class="row g-4 align-items-center">
-                    <div class="col-lg-5">
-                        <div class="p-3 rounded-4 border border-secondary">
-                            <h6 class="fw-bold mb-3 text-info"><i class="bi bi-pie-chart-fill me-1"></i> Non-DP Outward
-                                Breakdown (Outward Reasons)</h6>
-                            <div style="height: 220px; position: relative;">
-                                <canvas id="nondpChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-7">
-                        <h6 class="fw-bold mb-2 text-warning"><i class="bi bi-journal-text me-1"></i> Non-DP Outward
-                            History Log (Testing, Sample, Damage)</h6>
-                        <div class="table-responsive-custom" style="max-height: 220px; overflow-y: auto;">
-                            <table class="table table-sm table-hover align-middle m-0 extra-small">
-                                <thead class="sticky-top bg-secondary text-white">
-                                    <tr>
-                                        <th>Box ID</th>
-                                        <th>Item</th>
-                                        <th>Qty</th>
-                                        <th>Outward Reason</th>
-                                        <th>Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="nondpTableBody">
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted">No records available</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
         </div>
 
         <!-- 1. Daily Stock Ledger Table Card -->
@@ -375,7 +280,7 @@
     <script src="/static/js/report.js"></script>
     <script src="/static/js/english-ui.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             if (window.PageLoader && typeof window.PageLoader.hide === 'function') {
                 window.PageLoader.hide();
             }

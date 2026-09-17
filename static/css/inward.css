@@ -1,0 +1,1065 @@
+﻿/* ============================================================
+   inward.css - Styles for index.html (Inward / QR Code Page)
+   ============================================================ */
+
+/* 🖨️ Improved 100x100 MM TSC Label Print CSS */
+        .sticker-box {
+            width: 100%;
+            height: 100%;
+            border: 3px solid #000;
+            padding: 3.5mm;
+            margin: 0;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            color: #000;
+        }
+
+        .sticker-header {
+            text-align: center;
+            border-bottom: 3px solid #000;
+            padding-bottom: 2.5mm;
+        }
+
+        .company-title {
+            font-size: 18pt;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .info-grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .company-sub {
+            font-size: 7pt;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .sticker-details {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5mm;
+            margin: 2.5mm 0;
+            flex-grow: 1;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10pt;
+            border-bottom: 1.5px dashed #999999;
+            padding-bottom: 1.5mm;
+        }
+
+        .detail-label {
+            font-weight: 700;
+            color: #222222;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            margin-right: 10px;
+        }
+
+        .detail-value {
+            font-weight: 800;
+            color: #000000;
+            text-align: right;
+        }
+
+        .detail-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5mm;
+            margin: 2.5mm 0;
+        }
+
+        .detail-box {
+            border: 2px solid #000000;
+            border-radius: 6px;
+            padding: 1.5mm;
+            text-align: center;
+        }
+
+        .box-label {
+            display: block;
+            font-size: 8pt;
+            font-weight: 800;
+            color: #333333;
+            text-transform: uppercase;
+        }
+
+        .box-value {
+            display: block;
+            font-size: 16pt;
+            font-weight: 900;
+            color: #000000;
+        }
+
+        .sticker-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 3px solid #000000;
+            padding-top: 2.5mm;
+        }
+
+        .qr-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .qr-label {
+            font-size: 7.5pt;
+            font-weight: 800;
+            color: #444444;
+        }
+
+        .qr-code-text {
+            font-size: 12pt;
+            font-weight: 900;
+            color: #000000;
+            letter-spacing: 0.5px;
+            font-family: monospace;
+        }
+
+        .qr-container {
+            width: 22mm;
+            height: 22mm;
+            box-sizing: border-box;
+            flex: 0 0 22mm;
+        }
+
+        .qr-container canvas,
+        .qr-container img {
+            display: block;
+            width: 20mm !important;
+            height: 20mm !important;
+        }
+
+        .single-qr-label-box {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin: 15px auto;
+            max-width: 100mm;
+            background: #fff;
+            color: #000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+/* Consolidated Print Styles */
+        @media print {
+
+            html,
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .print-sticker *,
+            .print-sticker-75 *,
+            .print-single *,
+            .print-bulk *,
+            .print-bulk-qr *,
+            .text-muted,
+            .text-muted *,
+            .text-secondary,
+            .text-secondary *,
+            .text-slate-800,
+            .text-slate-800 *,
+            .text-dark,
+            .text-dark *,
+            h1, h2, h3, h4, h5, h6,
+            h1 *, h2 *, h3 *, h4 *, h5 *, h6 * {
+                color: #000000 !important;
+                opacity: 1 !important;
+            }
+
+            body.print-sticker,
+            body.print-sticker-75,
+            body.print-single {
+                width: 100mm !important;
+                height: 100mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+
+            @page {
+                size: auto;
+                margin: 0;
+            }
+
+            body.print-sticker-75 {
+                width: 75mm !important;
+                height: 50mm !important;
+            }
+
+            body * {
+                visibility: hidden !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .print-bulk #search-results-area,
+            .print-bulk #search-results-area * {
+                visibility: visible !important;
+            }
+
+            .print-bulk #search-results-area {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                padding: 10mm !important;
+                background: #fff !important;
+            }
+
+            .print-bulk #search-results-area .row {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                justify-content: flex-start !important;
+                gap: 10mm 5mm !important;
+                margin: 0 !important;
+            }
+
+            .print-bulk #search-results-area .qr-card-printable {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                flex: 0 0 48% !important;
+                max-width: 48% !important;
+                width: 48% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .print-bulk #search-results-area .glass-card {
+                border: 1px solid #000 !important;
+                padding: 8px !important;
+                color: #000 !important;
+                background: #fff !important;
+                box-shadow: none !important;
+                height: 100% !important;
+            }
+
+            .print-bulk #search-results-area .text-indigo,
+            .print-bulk #search-results-area .text-muted,
+            .print-bulk #search-results-area .text-slate-800,
+            .print-bulk #search-results-area .fw-bold {
+                color: #000 !important;
+            }
+
+            .print-bulk #search-results-area .badge {
+                background-color: #ccc !important;
+                color: #000 !important;
+                border: 1px solid #999 !important;
+            }
+
+            .print-bulk #search-results-area .btn {
+                display: none !important;
+            }
+
+            .print-single #single-qr-print-area,
+            .print-single #single-qr-print-area * {
+                visibility: visible !important;
+            }
+
+            .print-single #single-qr-print-area {
+                position: fixed !important;
+                left: 3mm !important;
+                top: 3mm !important;
+                width: 100mm !important;
+                height: 100mm !important;
+                max-width: 100% !important;
+                max-height: 100% !important;
+                display: block !important;
+                margin: 0 !important;
+                padding: 10px !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            .print-sticker #label-print-area,
+            .print-sticker #label-print-area * {
+                visibility: visible !important;
+            }
+
+            .print-sticker #label-print-area {
+                position: fixed !important;
+                left: 3mm !important;
+                top: 3mm !important;
+                width: 100mm !important;
+                height: 100mm !important;
+                max-width: 100% !important;
+                max-height: 100% !important;
+                display: block !important;
+                margin: 0 !important;
+                padding: 10px !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            .print-sticker-75 #label-print-area,
+            .print-sticker-75 #label-print-area * {
+                visibility: visible !important;
+            }
+
+            .print-sticker-75 #label-print-area {
+                position: fixed !important;
+                left: 0mm !important;
+                top: 0mm !important;
+                width: 75mm !important;
+                height: 50mm !important;
+                max-width: 100% !important;
+                max-height: 100% !important;
+                display: block !important;
+                margin: 0 !important;
+                padding: 10px !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            .print-sticker-75 #label-print-area .sticker-box {
+                width: calc(100% - 20px) !important;
+                height: calc(100% - 20px) !important;
+                max-height: calc(100% - 20px) !important;
+                padding: 2mm !important;
+                box-sizing: border-box !important;
+                page-break-after: always !important;
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: stretch !important;
+            }
+
+            .print-sticker-75 #label-print-area .sticker-box * {
+                color: #000000 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            .print-sticker-75 #label-print-area .sticker-header,
+            .print-sticker-75 #label-print-area .sticker-details {
+                flex: 0 0 62% !important;
+                max-width: 62% !important;
+                width: 62% !important;
+            }
+
+            .print-sticker-75 #label-print-area .sticker-header {
+                text-align: center !important;
+                padding-bottom: 1.5mm !important;
+                border-bottom: 2px solid #000 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: center !important;
+            }
+
+            .print-sticker-75 #label-print-area .company-title {
+                font-size: 10pt !important;
+                font-weight: 900 !important;
+                margin: 0 !important;
+            }
+
+            .print-sticker-75 #label-print-area .company-sub {
+                font-size: 6pt !important;
+                font-weight: 700 !important;
+            }
+
+            .print-sticker-75 #label-print-area .sticker-details {
+                flex-direction: column !important;
+                gap: 0.8mm !important;
+                margin: 2mm 0 !important;
+                padding-right: 1.5mm !important;
+            }
+
+            .print-sticker-75 #label-print-area .detail-row {
+                font-size: 7pt !important;
+                border-bottom: 1px dashed #000 !important;
+                padding-bottom: 0.8mm !important;
+            }
+
+            .print-sticker-75 #label-print-area .detail-label {
+                font-weight: 700 !important;
+                color: #000 !important;
+                text-transform: uppercase !important;
+            }
+
+            .print-sticker-75 #label-print-area .detail-value {
+                font-weight: 800 !important;
+                color: #000 !important;
+                text-align: right !important;
+            }
+
+            .print-sticker-75 #label-print-area .detail-grid-2 {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 1mm !important;
+                margin: 1.5mm 0 !important;
+            }
+
+            .print-sticker-75 #label-print-area .detail-box {
+                border: 1.5px solid #000 !important;
+                border-radius: 3px !important;
+                padding: 0.8mm !important;
+                text-align: center !important;
+            }
+
+            .print-sticker-75 #label-print-area .box-label {
+                font-size: 6pt !important;
+                font-weight: 800 !important;
+                color: #000 !important;
+            }
+
+            .print-sticker-75 #label-print-area .box-value {
+                font-size: 9pt !important;
+                font-weight: 900 !important;
+                color: #000 !important;
+            }
+
+            .print-sticker-75 #label-print-area .sticker-footer {
+                flex: 0 0 35% !important;
+                max-width: 35% !important;
+                width: 35% !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-left: 2px solid #000 !important;
+                padding-left: 2mm !important;
+                margin: 0 !important;
+            }
+
+            .print-sticker-75 #label-print-area .qrcode-sticker {
+                width: 22mm !important;
+                height: 22mm !important;
+            }
+
+            .print-sticker-75 #label-print-area .qrcode-sticker canvas,
+            .print-sticker-75 #label-print-area .qrcode-sticker img {
+                width: 22mm !important;
+                height: 22mm !important;
+            }
+
+            .print-sticker-75 #label-print-area .qr-info {
+                text-align: center !important;
+                margin-top: 1.5mm !important;
+            }
+
+            .print-sticker-75 #label-print-area .qr-label {
+                font-size: 6pt !important;
+                font-weight: 800 !important;
+                color: #000 !important;
+            }
+
+            .print-sticker-75 #label-print-area .qr-code-text {
+                font-size: 9pt !important;
+                font-weight: 900 !important;
+                color: #000 !important;
+                font-family: monospace !important;
+                text-align: center !important;
+            }
+
+            body.print-sticker-75>*:not(#label-print-area):not(#label-print-area *) {
+                display: none !important;
+            }
+
+            .print-bulk-qr #qr-bulk-print-area,
+            .print-bulk-qr #qr-bulk-print-area * {
+                visibility: visible !important;
+            }
+
+            .print-bulk-qr #qr-bulk-print-area {
+                display: block !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 15mm !important;
+                background: #fff !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            .print-bulk-qr .qr-bulk-grid {
+                display: grid !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 15px !important;
+            }
+
+            .print-bulk-qr .qr-bulk-grid .qr-card-printable {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+
+            .print-bulk-qr .qr-bulk-grid .glass-card {
+                border: 1px solid #ccc !important;
+                padding: 10px !important;
+                text-align: center !important;
+                background: #fff !important;
+                box-shadow: none !important;
+                color: #000 !important;
+            }
+
+            .print-bulk-qr .qr-bulk-grid .badge {
+                background-color: #ddd !important;
+                color: #000 !important;
+                border: 1px solid #999 !important;
+            }
+
+            .print-bulk-qr .qr-bulk-grid .fw-bold,
+            .print-bulk-qr .qr-bulk-grid .text-indigo,
+            .print-bulk-qr .qr-bulk-grid .text-muted,
+            .print-bulk-qr .qr-bulk-grid .text-slate-800 {
+                color: #000 !important;
+            }
+
+            .print-bulk-qr .qr-bulk-grid .btn {
+                display: none !important;
+            }
+
+            .print-sticker #label-print-area .qr-code-text,
+            .print-single #single-qr-print-area .qr-code-text,
+            .print-sticker-75 #label-print-area .qr-code-text {
+                word-break: break-all !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+            }
+
+            .print-sticker #label-print-area .qr-container,
+            .print-single #single-qr-print-area .qr-container,
+            .print-sticker-75 #label-print-area .qrcode-sticker {
+                width: 110px !important;
+                height: 110px !important;
+                flex: 0 0 110px !important;
+                max-width: 110px !important;
+                max-height: 110px !important;
+            }
+
+            .print-sticker #label-print-area .qr-container canvas,
+            .print-sticker #label-print-area .qr-container img,
+            .print-single #single-qr-print-area .qr-container canvas,
+            .print-single #single-qr-print-area .qr-container img,
+            .print-sticker-75 #label-print-area .qrcode-sticker canvas,
+            .print-sticker-75 #label-print-area .qrcode-sticker img {
+                width: 110px !important;
+                height: 110px !important;
+                max-width: 110px !important;
+                max-height: 110px !important;
+            }
+
+            .print-bulk #search-results-area .qr-card-printable .fw-bold,
+            .print-bulk #search-results-area .qr-card-printable .text-truncate {
+                word-break: break-all !important;
+                overflow-wrap: break-word !important;
+            }
+
+            .print-bulk-qr .qr-bulk-grid .qr-card-printable .fw-bold {
+                word-break: break-all !important;
+                overflow-wrap: break-word !important;
+            }
+        }
+
+/* 🌓 Global Dark / Light Theme System */
+        :root {
+    --bg-main: #f1f5f9;
+    --bg-card: #ffffff;
+    --border-color: #cbd5e1;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --input-bg: #ffffff;
+    --input-text: #0f172a;
+    --input-border: #94a3b8;
+    --shadow-glow: rgba(0, 0, 0, 0.08);
+}
+
+        [data-theme="light"] {
+            --bg-main: #f1f5f9;
+            --bg-card: #ffffff;
+            --border-color: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --input-bg: #ffffff;
+            --input-text: #0f172a;
+            --input-border: #94a3b8;
+            --shadow-glow: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            background-color: var(--bg-main) !important;
+            color: var(--text-main) !important;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .glass-card,
+        .card-custom,
+        .card {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-main) !important;
+            box-shadow: 0 8px 24px var(--shadow-glow) !important;
+        }
+
+        .table,
+        .table td,
+        .table th {
+            color: var(--text-main) !important;
+        }
+
+        [data-theme="light"] .text-white,
+        [data-theme="light"] .text-slate-300,
+        [data-theme="light"] .text-slate-400,
+        [data-theme="light"] .text-slate-800 {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .bg-dark,
+        [data-theme="light"] .bg-slate-800,
+        [data-theme="light"] .bg-slate-900 {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        .form-control,
+        .form-select,
+        .form-control-custom {
+            background-color: var(--input-bg) !important;
+            color: var(--input-text) !important;
+            border-color: var(--input-border) !important;
+        }
+
+        .navbar-custom {
+            background-color: #ffffff !important;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+            z-index: 1020 !important;
+            overflow: visible !important;
+        }
+
+        /* Ensure dropdown menus are properly layered */
+        .navbar-custom .dropdown-menu {
+            z-index: 1050 !important;
+        }
+
+        .nav-pill-custom {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            padding: 8px 16px !important;
+            border-radius: 12px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            color: #334155 !important; text-decoration: none !important; background: #f1f5f9 !important; border: 1px solid #cbd5e1 !important;
+            transition: all 0.2s ease-in-out !important;
+            white-space: nowrap !important;
+        }
+
+        .nav-pill-custom:hover,
+        .nav-pill-custom:focus {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            transform: translateY(-1.5px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+            text-decoration: none !important;
+        }
+
+        .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+            border-color: #818cf8 !important;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.45) !important;
+            font-weight: 700 !important;
+            text-decoration: none !important;
+        }
+
+        .dropdown-menu-custom {
+            background-color: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 30px var(--shadow-glow) !important;
+            padding: 8px !important;
+            margin-top: 8px !important;
+        }
+
+        .dropdown-item-custom {
+            color: var(--text-main) !important;
+            border-radius: 8px !important;
+            padding: 9px 14px !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .dropdown-item-custom:hover {
+            background-color: rgba(99, 102, 241, 0.15) !important;
+            color: #818cf8 !important;
+            transform: translateX(3px) !important;
+        }
+
+        [data-theme="light"] .navbar-custom {
+            background-color: #ffffff !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom {
+            color: #334155 !important;
+            background: #f1f5f9 !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom:hover {
+            color: #0f172a !important;
+            background: #e2e8f0 !important;
+            border-color: #94a3b8 !important;
+        }
+
+        [data-theme="light"] .nav-pill-custom.active {
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+            border-color: #4338ca !important;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35) !important;
+        }
+
+        [data-theme="light"] .dropdown-menu-custom {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .dropdown-item-custom:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        /* Light Mode: override Bootstrap's dropdown-menu-dark so dropdowns
+           show with a white background and dark text instead of staying dark. */
+        [data-theme="light"] .dropdown-menu-dark,
+        [data-theme="light"] .dropdown-menu {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        [data-theme="light"] .dropdown-menu-dark .dropdown-item,
+        [data-theme="light"] .dropdown-menu .dropdown-item {
+            color: #0f172a !important;
+        }
+
+        [data-theme="light"] .dropdown-menu-dark .dropdown-item:hover,
+        [data-theme="light"] .dropdown-menu .dropdown-item:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+.single-qr-print-box {
+            width: 94mm;
+            height: 94mm;
+            border: 2px solid #000;
+            padding: 5mm;
+            margin: auto;
+            background: #fff;
+            color: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .print-header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 5px;
+        }
+
+        .print-company-name {
+            font-size: 14pt;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        .print-tagline {
+            font-size: 8pt;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .print-item-details {
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .print-item-name {
+            font-size: 12pt;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+
+        .print-qty,
+        .print-box-id,
+        .print-date {
+            font-size: 10pt;
+            font-weight: 600;
+            margin: 2px 0;
+        }
+
+.thermal-label-box {
+            width: 50mm;
+            height: 50mm;
+            border: 2px solid #000;
+            padding: 2mm;
+            margin: 0;
+            background: #fff;
+            color: #000;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', 'Poppins', sans-serif;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .thermal-header {
+            text-align: center;
+            font-size: 8pt;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1.5px solid #000;
+            padding-bottom: 1mm;
+            margin-bottom: 1mm;
+            line-height: 1.1;
+        }
+
+        .thermal-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8mm;
+            overflow: hidden;
+        }
+
+        .thermal-field {
+            display: flex;
+            align-items: baseline;
+            gap: 1mm;
+            font-size: 7pt;
+            line-height: 1.2;
+        }
+
+        .thermal-label {
+            font-weight: 700;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            min-width: 12mm;
+            color: #000;
+        }
+
+        .thermal-value {
+            font-weight: 600;
+            color: #000;
+            word-break: break-all;
+        }
+
+        .thermal-item-name {
+            font-size: 8pt;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .thermal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            border-top: 1.5px solid #000;
+            padding-top: 1mm;
+            margin-top: 1mm;
+        }
+
+        .thermal-qr-container {
+            width: 14mm !important;
+            height: 14mm !important;
+            flex: 0 0 14mm !important;
+        }
+
+        .thermal-qr-container canvas,
+        .thermal-qr-container img {
+            width: 14mm !important;
+            height: 14mm !important;
+            display: block !important;
+        }
+
+        .thermal-label-box.landscape {
+            width: 100mm;
+            height: 50mm;
+            flex-direction: row;
+            align-items: stretch;
+        }
+
+        .thermal-label-box.landscape .thermal-body {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: repeat(4, auto);
+            gap: 0.5mm 2mm;
+            align-content: center;
+        }
+
+        .thermal-label-box.landscape .thermal-header {
+            display: none;
+        }
+
+        .thermal-label-box.landscape .thermal-footer {
+            flex-direction: column;
+            justify-content: center;
+            border-top: none;
+            border-left: 1.5px solid #000;
+            padding-top: 0;
+            padding-left: 2mm;
+            margin-top: 0;
+            margin-left: 2mm;
+            min-width: 22mm;
+        }
+
+        .thermal-label-box.landscape .thermal-qr-container {
+            width: 18mm !important;
+            height: 18mm !important;
+            flex: 0 0 18mm !important;
+        }
+
+        .thermal-label-box.landscape .thermal-qr-container canvas,
+        .thermal-label-box.landscape .thermal-qr-container img {
+            width: 18mm !important;
+            height: 18mm !important;
+        }
+
+        .thermal-label-box.landscape-75 {
+            width: 75mm;
+            height: 50mm;
+            flex-direction: row;
+            align-items: stretch;
+            padding: 2mm;
+        }
+
+        .thermal-label-box.landscape-75 .thermal-header {
+            text-align: center;
+            font-size: 8pt;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1.5px solid #000;
+            padding-bottom: 1mm;
+            margin-bottom: 1mm;
+            line-height: 1.1;
+        }
+
+        .thermal-label-box.landscape-75 .thermal-body {
+            flex: 0 0 65%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.8mm;
+            overflow: hidden;
+            padding-right: 1mm;
+        }
+
+        .thermal-label-box.landscape-75 .thermal-footer {
+            flex: 0 0 32%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-left: 1.5px solid #000;
+            margin: 0;
+            padding-left: 2mm;
+        }
+
+        .thermal-label-box.landscape-75 .thermal-qr-container {
+            width: 20mm !important;
+            height: 20mm !important;
+            flex: 0 0 20mm !important;
+        }
+
+        .thermal-label-box.landscape-75 .thermal-qr-container canvas,
+        .thermal-label-box.landscape-75 .thermal-qr-container img {
+            width: 20mm !important;
+            height: 20mm !important;
+            display: block !important;
+        }
+
+        @media print {
+            @page {
+                size: auto;
+                margin: 0mm;
+            }
+
+            body.print-thermal-label * {
+                visibility: hidden !important;
+            }
+
+            body.print-thermal-label #thermal-label-print-area,
+            body.print-thermal-label #thermal-label-print-area * {
+                visibility: visible !important;
+            }
+
+            body.print-thermal-label #thermal-label-print-area {
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 50mm !important;
+                height: 50mm !important;
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+            }
+
+            body.print-thermal-label.landscape-label {
+                @page {
+                    size: 100mm 50mm;
+                    margin: 0;
+                }
+
+                #thermal-label-print-area {
+                    width: 100mm !important;
+                    height: 50mm !important;
+                }
+            }
+
+            body.print-thermal-label.landscape-75-label {
+                @page {
+                    size: 75mm 50mm;
+                    margin: 0;
+                }
+
+                #thermal-label-print-area {
+                    width: 75mm !important;
+                    height: 50mm !important;
+                }
+            }
+        }
+
+

@@ -11,6 +11,7 @@ import sqlite3
 import sys
 import time
 from datetime import datetime
+from typing import Optional
 
 from dotenv import load_dotenv
 
@@ -35,6 +36,15 @@ def get_db_ctx(commit=False, dictionary=True):
 
 def init_db():
     return init_db_impl()
+
+from backup_manager import (
+    export_database_to_json,
+    export_database_to_sql,
+    export_database_to_zip,
+    get_database_info,
+    restore_database_from_json,
+    restore_database_from_sql,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -195,6 +205,113 @@ def generate_auth_token(req: TokenRequest = None):
 def verify_auth_token():
     """Verify if the token is valid"""
     return {"status": "valid", "authenticated": True}
+
+# -----------------------------------------------
+# Database Backup & Migration API Endpoints
+# -----------------------------------------------
+@app.get("/api/backup/info")
+def get_backup_info():
+    """Returns metadata about the current database: tables, record counts, and status."""
+    db_name = os.getenv("MYSQL_DATABASE") or os.getenv("MYSQLDATABASE", "inventory_db")
+    try:
+        with get_db_ctx(commit=False, dictionary=True) as (conn, cursor):
+            info = get_database_info(cursor, db_name)
+            info["db_type"] = DB_TYPE
+            return info
+    except Exception as e:
+        logger.error(f"Error fetching backup info: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch database info: {str(e)}")
+
+@app.get("/api/backup/download")
+def download_backup(format: str = "sql"):
+    """
+    Downloads database backup in requested format:
+    - format=sql (Standard MySQL dump)
+    - format=json (Universal portable JSON)
+    - format=zip (Compressed bundle containing both SQL and JSON + metadata)
+    """
+    format_type = format.lower().strip()
+    db_name = os.getenv("MYSQL_DATABASE") or os.getenv("MYSQLDATABASE", "inventory_db")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    try:
+        with get_db_ctx(commit=False, dictionary=True) as (conn, cursor):
+            if format_type == "json":
+                data = export_database_to_json(cursor, db_name)
+                content = json.dumps(data, indent=2, ensure_ascii=False)
+                filename = f"backup_{db_name}_{timestamp}.json"
+                media_type = "application/json"
+                headers = {
+                    "Content-Disposition": f'attachment; filename="{filename}"',
+                    "Content-Type": "application/json; charset=utf-8"
+                }
+                add_log(conn, "BACKUP_DOWNLOAD", f"Downloaded Universal JSON backup ({filename})")
+                return Response(content=content, media_type=media_type, headers=headers)
+
+            elif format_type == "zip":
+                zip_bytes = export_database_to_zip(cursor, db_name)
+                filename = f"backup_{db_name}_{timestamp}.zip"
+                media_type = "application/zip"
+                headers = {
+                    "Content-Disposition": f'attachment; filename="{filename}"',
+                    "Content-Type": "application/zip"
+                }
+                add_log(conn, "BACKUP_DOWNLOAD", f"Downloaded Full ZIP backup bundle ({filename})")
+                return Response(content=zip_bytes, media_type=media_type, headers=headers)
+
+            else:  # default "sql"
+                sql_content = export_database_to_sql(cursor, db_name)
+                filename = f"backup_{db_name}_{timestamp}.sql"
+                media_type = "application/sql"
+                headers = {
+                    "Content-Disposition": f'attachment; filename="{filename}"',
+                    "Content-Type": "application/sql; charset=utf-8"
+                }
+                add_log(conn, "BACKUP_DOWNLOAD", f"Downloaded SQL dump backup ({filename})")
+                return Response(content=sql_content, media_type=media_type, headers=headers)
+
+    except Exception as e:
+        logger.error(f"Error generating backup: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate backup: {str(e)}")
+
+@app.post("/api/backup/restore")
+async def restore_backup(
+    file: UploadFile = File(...),
+    password: str = Form(...)
+):
+    """
+    Restores database from an uploaded .json or .sql backup file.
+    Protected by Admin Password.
+    """
+    if not password:
+        raise HTTPException(status_code=400, detail="Admin password is required to restore database")
+    entered_hash = hashlib.sha256((ADMIN_PASSWORD_SALT + password).encode()).hexdigest()
+    if entered_hash != ADMIN_PASSWORD_HASH:
+        raise HTTPException(status_code=401, detail="Invalid admin password. Action unauthorized.")
+
+    filename = file.filename or "unknown"
+    if not (filename.endswith(".json") or filename.endswith(".sql")):
+        raise HTTPException(status_code=400, detail="Invalid file format. Only .json or .sql backup files are allowed.")
+
+    try:
+        contents = await file.read()
+        if filename.endswith(".json"):
+            json_obj = json.loads(contents.decode("utf-8"))
+            with get_db_ctx(commit=True, dictionary=True) as (conn, cursor):
+                result = restore_database_from_json(conn, cursor, json_obj)
+                add_log(conn, "BACKUP_RESTORE", f"Restored database from JSON: {filename}")
+                await manager.broadcast("STOCK_UPDATED")
+                return result
+        else:
+            sql_script = contents.decode("utf-8", errors="replace")
+            with get_db_ctx(commit=True, dictionary=False) as (conn, cursor):
+                result = restore_database_from_sql(conn, cursor, sql_script)
+                add_log(conn, "BACKUP_RESTORE", f"Restored database from SQL: {filename}")
+                await manager.broadcast("STOCK_UPDATED")
+                return result
+    except Exception as e:
+        logger.error(f"Error restoring backup: {e}")
+        raise HTTPException(status_code=500, detail=f"Restoration failed: {str(e)}")
 
 # Page Routes
 @app.get("/")
@@ -761,6 +878,15 @@ async def upload_excel(file: UploadFile = File(...)):
         add_log(conn, "EXCEL_IMPORT", f"Imported total {imported_count} items from Excel.")
 
     return {"status": "Success", "message": f"{imported_count} items imported successfully!"}
+
+# A2. Lightweight distinct item names for instant datalist autocomplete
+@app.get("/api/items/names")
+def get_item_names():
+    """Retrieves lightweight list of distinct item names for fast datalists."""
+    with get_db_ctx() as (conn, cursor):
+        cursor.execute("SELECT DISTINCT item_name FROM items WHERE item_name IS NOT NULL AND item_name != '' ORDER BY item_name")
+        names = [r['item_name'] for r in cursor.fetchall()]
+    return {"status": "Success", "names": names}
 
 # A3. List All Items with search & own_production filter
 @app.get("/api/items/list")
@@ -3580,9 +3706,9 @@ def normalize_pivot_loading_entry(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(records)
 
 
-def process_loading_entry_excel(file_bytes: bytes, filename: str):
+def process_loading_entry_excel(file_bytes: bytes, filename: str, custom_dp_no: Optional[str] = None):
     """
-    Background task to process 'Pending Loading Entry' Excel file.
+    Background task to process 'Pending Loading Entry' or 'Pending SO' Excel file.
     It inserts or updates records in the `pending_loading_entries` table.
     """
     try:
@@ -3618,26 +3744,69 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
                 "fatal_error": error_msg
             }
 
-    # Map columns based on expected names
+    cols = df.columns.tolist()
+
+    # 1. Dispatch Plan No
+    dp_col = next((c for c in cols if 'disp. plan no' in c or 'disp. plan' in c or 'dispatch plan no' in c or 'dispatch plan' in c or 'dp no' in c or 'dp_no' in c or 'plan no' in c), None)
+    if not dp_col:
+        # If no DP column in Excel, derive it from custom_dp_no or filename without extension
+        fallback_dp = (custom_dp_no or '').strip()
+        if not fallback_dp:
+            base_name = os.path.splitext(filename)[0].strip()
+            fallback_dp = base_name if base_name else 'DP-PLAN'
+        df['__disp_plan_no__'] = fallback_dp
+        dp_col = '__disp_plan_no__'
+
+    # 2. Sales Order No
+    so_col = next((c for c in cols if 'so no' in c or 'so_no' in c or 'sales order' in c or 'order no' in c or c == 'so' or (c.startswith('so') and 'no' in c)), None)
+
+    # 3. Item Name
+    item_name_col = next((c for c in cols if c == 'item' or 'item name' in c or 'product name' in c or ('item' in c and 'name' in c) or ('product' in c and 'name' in c) or 'description' in c), None)
+
+    # 4. Item Code
+    item_code_col = next((c for c in cols if c == 'code' or 'item code' in c or 'product code' in c or ('item' in c and 'code' in c) or ('product' in c and 'code' in c)), None)
+    if not item_code_col and item_name_col:
+        item_code_col = item_name_col
+
+    # 5. Pending Quantity (handles 'pend. so qty.', 'pend. qty.', 'pending qty', 'so qty', etc.)
+    pending_qty_col = next((c for c in cols if ('pend' in c and 'qty' in c) or ('pending' in c and 'qty' in c) or ('pend' in c and 'quantity' in c) or ('pending' in c and 'quantity' in c) or 'so qty' in c or ('bal' in c and 'qty' in c) or c in ['qty', 'quantity', 'pend_qty', 'pending_qty']), None)
+
+    # 6. Unit
+    unit_col = next((c for c in cols if c == 'unit' or c == 'uom' or 'unit' in c), None)
+    if not unit_col:
+        df['__unit__'] = 'Nos'
+        unit_col = '__unit__'
+
+    # 7. Dates (general 'date' column maps to both so_date and disp_plan_date if specific ones aren't found)
+    date_col = next((c for c in cols if c == 'date' or 'date' in c), None)
+    so_date_col = next((c for c in cols if 'so date' in c or 'sales order date' in c or 'order date' in c), date_col)
+    dp_date_col = next((c for c in cols if ('disp' in c and 'date' in c) or 'dp date' in c or 'plan date' in c), date_col)
+
+    # 8. Customer Location, Dealer, Village, District
+    cust_loc_col = next((c for c in cols if ('cust' in c and 'location' in c) or ('customer' in c and 'location' in c) or 'location' in c or 'party' in c), None)
+    dealer_col = next((c for c in cols if 'dealer' in c), None)
+    village_col = next((c for c in cols if 'village' in c), None)
+    dist_col = next((c for c in cols if c in ['dist.', 'dist', 'district'] or 'dist' in c), None)
+
     col_map = {
-        'disp_plan_no': next((c for c in df.columns if 'disp. plan no' in c or 'dispatch plan no' in c or 'dp no' in c), None),
-        'disp_plan_date': next((c for c in df.columns if 'disp. plan date' in c or 'dispatch plan date' in c or 'dp date' in c), None),
-        'so_no': next((c for c in df.columns if 'so no' in c or 'sales order no' in c), None),
-        'so_date': next((c for c in df.columns if 'so date' in c or 'sales order date' in c), None),
-        'customer_location': next((c for c in df.columns if 'cust./location' in c or 'customer' in c and 'location' in c), None),
-        'dealer': next((c for c in df.columns if 'dealer' in c), None),
-        'village': next((c for c in df.columns if 'village' in c), None),
-        'district': next((c for c in df.columns if 'district' in c), None),
-        'item_name': next((c for c in df.columns if c == 'item' or 'item' in c and 'name' in c or 'product' in c and 'name' in c), None),
-        'item_code': next((c for c in df.columns if c == 'code' or 'item' in c and 'code' in c or 'product' in c and 'code' in c or 'item code' in c or 'product code' in c), None),
-        'pending_qty': next((c for c in df.columns if 'pend. qty' in c or 'pending qty' in c or 'pending' in c and 'qty' in c), None),
-        'unit': next((c for c in df.columns if c == 'unit' or c == 'uom' or 'unit' in c), None),
+        'disp_plan_no': dp_col,
+        'disp_plan_date': dp_date_col,
+        'so_no': so_col,
+        'so_date': so_date_col,
+        'customer_location': cust_loc_col,
+        'dealer': dealer_col,
+        'village': village_col,
+        'district': dist_col,
+        'item_name': item_name_col,
+        'item_code': item_code_col,
+        'pending_qty': pending_qty_col,
+        'unit': unit_col,
     }
 
     required_cols = ['disp_plan_no', 'so_no', 'item_name', 'item_code', 'pending_qty', 'unit']
-    missing = [k for k in required_cols if col_map[k] is None]
+    missing = [k for k in required_cols if col_map.get(k) is None]
     if missing:
-        error_msg = f"Missing required columns in {filename}: {', '.join(missing)}. Detected columns: {df.columns.tolist()}. Column map: {col_map}"
+        error_msg = f"Missing required columns in {filename}: {', '.join(missing)}. Detected columns: {df.columns.tolist()}."
         logging.debug(f"BACKGROUND_TASK_ERROR: {error_msg}")
         return {
             "inserted": 0,
@@ -3728,15 +3897,18 @@ def process_loading_entry_excel(file_bytes: bytes, filename: str):
     }
 
 @app.post("/api/dispatch/upload-loading-entry")
-async def upload_loading_entry_excel(file: UploadFile = File(...)):
+async def upload_loading_entry_excel(
+    file: UploadFile = File(...),
+    disp_plan_no: Optional[str] = Form(None)
+):
     """
-    Accepts a 'Pending Loading Entry' Excel file and processes it synchronously.
+    Accepts a 'Pending Loading Entry' or 'Pending SO' Excel file and processes it synchronously.
     """
     if not file.filename.lower().endswith((".xlsx", ".xls")):
         raise HTTPException(status_code=400, detail="Only Excel files (.xlsx, .xls) are supported.")
 
     file_bytes = await file.read()
-    result = process_loading_entry_excel(file_bytes, file.filename)
+    result = process_loading_entry_excel(file_bytes, file.filename, custom_dp_no=disp_plan_no)
 
     if result.get("fatal_error"):
         raise HTTPException(status_code=400, detail=result["fatal_error"])
@@ -3970,51 +4142,101 @@ async def upload_dispatch_plan(file: UploadFile = File(...)):
 
 @app.get("/api/dispatch-plans/list")
 def list_dispatch_plans():
-    with get_db_ctx() as (conn, cursor):
+    with get_db_ctx(commit=True) as (conn, cursor):
         cursor.execute("SELECT * FROM dispatch_plans ORDER BY created_at DESC LIMIT 50")
         plans = cursor.fetchall()
+        if not plans:
+            return {"status": "Success", "plans": []}
 
-        for plan in plans:
-            cursor.execute("""
-                SELECT id, item_name, planned_qty, dispatched_qty, unit, weight_per_pc
-                FROM dispatch_plan_items
-                WHERE dispatch_plan_id = %s
-            """, (plan["id"],))
-            items = cursor.fetchall()
+        plan_ids = [plan["id"] for plan in plans]
+        plan_id_placeholders = ",".join(["%s"] * len(plan_ids))
 
-            for item in items:
-                item['locations'] = 'STORE'
+        # 1. Batch fetch all items for these plans (1 single query instead of 50)
+        cursor.execute(f"""
+            SELECT id, dispatch_plan_id, item_name, planned_qty, dispatched_qty, unit, weight_per_pc
+            FROM dispatch_plan_items
+            WHERE dispatch_plan_id IN ({plan_id_placeholders})
+        """, tuple(plan_ids))
+        all_items = cursor.fetchall()
 
-            plan["items"] = items
+        items_by_plan = {}
+        for item in all_items:
+            item['locations'] = 'STORE'
+            items_by_plan.setdefault(item["dispatch_plan_id"], []).append(item)
 
-            total_planned = sum(float(i["planned_qty"]) for i in plan["items"])
-            total_dispatched = sum(float(i["dispatched_qty"]) for i in plan["items"])
+        # 2. Batch fetch verification items for these plans (1 single query instead of 50)
+        dp_numbers = list({plan["plan_no"] for plan in plans if plan.get("plan_no")})
+        so_numbers = list({plan["so_no"] for plan in plans if plan.get("so_no")})
 
-            # Query dispatch_verification for Direct vs Store Kit breakdown
-            cursor.execute("""
-                SELECT item_type, required_qty, scanned_qty, status
+        ver_items_by_dp = {}
+        ver_items_by_so = {}
+        if dp_numbers or so_numbers:
+            conds = []
+            params = []
+            if dp_numbers:
+                conds.append(f"dp_number IN ({','.join(['%s'] * len(dp_numbers))})")
+                params.extend(dp_numbers)
+            if so_numbers:
+                conds.append(f"so_number IN ({','.join(['%s'] * len(so_numbers))})")
+                params.extend(so_numbers)
+
+            cursor.execute(f"""
+                SELECT dp_number, so_number, item_type, required_qty, scanned_qty, status
                 FROM dispatch_verification
-                WHERE dp_number = %s OR so_number = %s
-            """, (plan.get("plan_no"), plan.get("so_no")))
-            ver_items = cursor.fetchall()
+                WHERE {' OR '.join(conds)}
+            """, tuple(params))
+            for v in cursor.fetchall():
+                dp_key = v.get("dp_number")
+                so_key = v.get("so_number")
+                if dp_key:
+                    ver_items_by_dp.setdefault(dp_key, []).append(v)
+                if so_key:
+                    ver_items_by_so.setdefault(so_key, []).append(v)
 
-            direct_tot = sum(float(v["required_qty"]) for v in ver_items if v["item_type"] == "DIRECT_DISPATCH")
-            direct_disc = sum(float(v["scanned_qty"]) for v in ver_items if v["item_type"] == "DIRECT_DISPATCH")
+        # 3. Associate items and calculate progress in-memory (0 queries in loop)
+        completed_plan_ids = []
+        for plan in plans:
+            plan_items = items_by_plan.get(plan["id"], [])
+            plan["items"] = plan_items
+
+            total_planned = sum(float(i.get("planned_qty") or 0) for i in plan_items)
+            total_dispatched = sum(float(i.get("dispatched_qty") or 0) for i in plan_items)
+
+            plan_dp = plan.get("plan_no")
+            plan_so = plan.get("so_no")
+            raw_ver = (ver_items_by_dp.get(plan_dp, []) if plan_dp else []) + \
+                      (ver_items_by_so.get(plan_so, []) if plan_so else [])
+
+            seen_ver = set()
+            ver_items = []
+            for v in raw_ver:
+                v_key = (v.get("dp_number"), v.get("so_number"), v.get("item_type"), v.get("required_qty"), v.get("scanned_qty"))
+                if v_key not in seen_ver:
+                    seen_ver.add(v_key)
+                    ver_items.append(v)
+
+            direct_tot = sum(float(v.get("required_qty") or 0) for v in ver_items if v.get("item_type") == "DIRECT_DISPATCH")
+            direct_disc = sum(float(v.get("scanned_qty") or 0) for v in ver_items if v.get("item_type") == "DIRECT_DISPATCH")
 
             if not ver_items:
-                for itm in plan["items"]:
-                    direct_tot += float(itm["planned_qty"])
-                    direct_disc += float(itm["dispatched_qty"])
+                for itm in plan_items:
+                    direct_tot += float(itm.get("planned_qty") or 0)
+                    direct_disc += float(itm.get("dispatched_qty") or 0)
 
             plan["direct_progress_pct"] = 100.0 if direct_tot == 0 else round(min(100.0, direct_disc / direct_tot * 100), 1)
             plan["challan_unlocked"] = plan["direct_progress_pct"] >= 100.0
 
             is_completed = (total_planned > 0 and total_dispatched >= total_planned)
             if is_completed and plan["status"] != "COMPLETED":
-                cursor.execute("UPDATE dispatch_plans SET status = 'COMPLETED' WHERE id = %s", (plan["id"],))
+                completed_plan_ids.append(plan["id"])
                 plan["status"] = "COMPLETED"
 
             plan["progress_pct"] = 100.0 if is_completed else (round((total_dispatched / total_planned * 100), 1) if total_planned > 0 else 0)
+
+        # 4. Batch update completed statuses if needed
+        if completed_plan_ids:
+            up_ph = ",".join(["%s"] * len(completed_plan_ids))
+            cursor.execute(f"UPDATE dispatch_plans SET status = 'COMPLETED' WHERE id IN ({up_ph})", tuple(completed_plan_ids))
 
     return {"status": "Success", "plans": plans}
 

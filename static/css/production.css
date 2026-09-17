@@ -1,0 +1,561 @@
+:root {
+    --bg-main: #f1f5f9;
+    --bg-card: #ffffff;
+    --border-color: #cbd5e1;
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --input-bg: #ffffff;
+    --input-text: #0f172a;
+    --input-border: #94a3b8;
+    --shadow-glow: rgba(0, 0, 0, 0.08);
+    --brand-500: #22c55e;
+    --brand-600: #16a34a;
+    --accent-color: #6366f1;
+    --card-radius: 16px;
+    --transition-speed: 0.25s ease;
+}
+
+        
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-main) !important;
+            color: var(--text-main) !important;
+            min-height: 100vh;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            color: var(--text-main);
+        }
+
+        .text-muted {
+            color: var(--text-muted) !important;
+        }
+
+        .text-brand {
+            color: var(--brand-500) !important;
+        }
+
+        .bg-brand {
+            background-color: var(--brand-500) !important;
+        }
+
+        .btn-brand {
+            background-color: var(--brand-500) !important;
+            border-color: var(--brand-500) !important;
+            color: #fff !important;
+        }
+
+        .btn-print-custom,
+        .btn-print-custom i,
+        .btn-print-custom span {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border: 1px solid #ffffff !important;
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* માઉસ હોવર કરતી વખતે બ્લુ અને વાઇટ કલર થશે */
+        .btn-print-custom:hover,
+        .btn-print-custom:hover i,
+        .btn-print-custom:hover span {
+            background-color: #0d6efd !important;
+            color: #ffffff !important;
+            border-color: #0d6efd !important;
+        }
+
+        .btn-brand:hover {
+            background-color: var(--brand-600) !important;
+            border-color: var(--brand-600) !important;
+        }
+
+        .border-brand {
+            border-color: var(--brand-500) !important;
+        }
+
+        /* Navigation handled by central style.css */
+
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--card-radius);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            transition: all var(--transition-speed);
+        }
+
+        .card-header-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+    color: #ffffff !important;
+    border-top-left-radius: var(--card-radius, 16px) !important;
+    border-top-right-radius: var(--card-radius, 16px) !important;
+    padding: 16px 24px;
+}
+
+        .form-control-custom,
+        .form-select-custom {
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 11px 16px;
+            font-size: 15px;
+            transition: all var(--transition-speed);
+        }
+
+        .form-control-custom:focus,
+        .form-select-custom:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        }
+
+        .input-label-custom {
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+
+        .btn-gradient-indigo {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            border: none;
+            color: #ffffff;
+            font-weight: 700;
+            padding: 14px 28px;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+            transition: all var(--transition-speed);
+        }
+
+        .btn-gradient-indigo:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+            color: #ffffff;
+        }
+
+        /* 100x150 MM (4x6 Inch) TSC Label Print CSS */
+        @media print {
+
+            html,
+            body {
+                width: 100mm !important;
+                height: 150mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+
+            body * {
+                visibility: hidden !important;
+            }
+
+            #label-print-area,
+            #label-print-area * {
+                visibility: visible !important;
+            }
+
+            #label-print-area {
+                position: fixed !important;
+                /* Keep the outer border inside the printer's non-printable edge. */
+                left: 3mm !important;
+                top: 3mm !important;
+                width: 94mm !important;
+                height: 144mm !important;
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            @page {
+                size: 100mm 150mm;
+                margin: 0;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            /* Reserve a dedicated footer for the QR so it cannot spill to page two. */
+            .sticker-box {
+                display: grid !important;
+                grid-template-rows: auto minmax(0, 1fr) 34mm !important;
+                height: 144mm !important;
+            }
+
+            .sticker-details {
+                min-height: 0 !important;
+                margin: 1.5mm 0 !important;
+                gap: 1mm !important;
+                overflow: hidden !important;
+            }
+
+            .sticker-footer {
+                height: 34mm !important;
+                min-height: 34mm !important;
+                padding-top: 1mm !important;
+                box-sizing: border-box !important;
+                overflow: hidden !important;
+            }
+
+            .qr-container {
+                width: 32mm !important;
+                height: 32mm !important;
+                flex: 0 0 32mm !important;
+                padding: 1mm !important;
+                box-sizing: border-box !important;
+            }
+
+            .qr-container canvas,
+            .qr-container img {
+                width: 30mm !important;
+                height: 30mm !important;
+            }
+        }
+
+        .sticker-box {
+            width: 100%;
+            height: 100%;
+            border: 3px solid #000000;
+            padding: 3.5mm;
+            margin: 0;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Plus Jakarta Sans', sans-serif;
+            color: #000000;
+            overflow: hidden;
+        }
+
+        .sticker-header {
+            text-align: center;
+            border-bottom: 3px solid #000000;
+            padding-bottom: 2.5mm;
+        }
+
+        .company-title {
+            font-size: 18pt;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #000000;
+            line-height: 1.1;
+        }
+
+        .company-sub {
+            font-size: 8pt;
+            font-weight: 700;
+            color: #333333;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .sticker-details {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5mm;
+            margin: 2.5mm 0;
+            flex-grow: 1;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10pt;
+            border-bottom: 1.5px dashed #999999;
+            padding-bottom: 1.5mm;
+        }
+
+        .detail-label {
+            font-weight: 700;
+            color: #222222;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            margin-right: 10px;
+        }
+
+        .detail-value {
+            font-weight: 800;
+            color: #000000;
+            text-align: right;
+        }
+
+        .detail-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5mm;
+            margin: 2.5mm 0;
+        }
+
+        .detail-box {
+            border: 2px solid #000000;
+            border-radius: 6px;
+            padding: 1.5mm;
+            text-align: center;
+        }
+
+        .box-label {
+            display: block;
+            font-size: 8pt;
+            font-weight: 800;
+            color: #333333;
+            text-transform: uppercase;
+        }
+
+        .box-value {
+            display: block;
+            font-size: 16pt;
+            font-weight: 900;
+            color: #000000;
+        }
+
+        .sticker-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 3px solid #000000;
+            padding-top: 2.5mm;
+        }
+
+        .qr-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .qr-label {
+            font-size: 7.5pt;
+            font-weight: 800;
+            color: #444444;
+        }
+
+        .qr-code-text {
+            font-size: 12pt;
+            font-weight: 900;
+            color: #000000;
+            letter-spacing: 0.5px;
+            font-family: monospace;
+        }
+
+        .qr-container {
+            width: 32mm;
+            height: 32mm;
+            box-sizing: border-box;
+            flex: 0 0 32mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            padding: 1mm;
+        }
+
+        .qr-container canvas,
+        .qr-container img {
+            display: block;
+            width: 30mm !important;
+            height: 30mm !important;
+        }
+
+        /* 📦 Pre-Production Screen Preview Card Styling */
+        .sticker-preview {
+            background: #ffffff !important;
+            border-radius: 14px !important;
+            border: 1.5px solid #f59e0b !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .sticker-preview:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15) !important;
+        }
+
+        .sticker-preview .sticker-box {
+            width: 100%;
+            height: auto;
+            min-height: 470px;
+            margin: 0 auto;
+            border: 2px solid #000000;
+        }
+
+                                                                                                                                                                                                                                                                                
+
+                .autocomplete-dropdown {
+            position: relative;
+            z-index: 9999;
+        }
+
+        .autocomplete-dropdown .suggestion-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 250px;
+            overflow-y: auto;
+            background-color: var(--bg-card, #ffffff);
+            border: 1px solid var(--border-color, #cbd5e1);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            z-index: 9999;
+            margin-top: 2px;
+        }
+
+        .autocomplete-dropdown .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.15s ease;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .autocomplete-dropdown .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-dropdown .suggestion-item:hover,
+        .autocomplete-dropdown .suggestion-item.active {
+            background-color: rgba(99, 102, 241, 0.15);
+        }
+
+        .autocomplete-dropdown .suggestion-item .item-name {
+            font-weight: 600;
+        }
+
+        .autocomplete-dropdown .suggestion-item .item-group {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-left: 4px;
+        }
+
+                                        .autocomplete-loading {
+            padding: 8px 12px;
+            font-size: 13px;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+                /* Enterprise Thermal QR Label Print CSS */
+        .thermal-label-box {
+            width: 50mm;
+            height: 50mm;
+            border: 2px solid #000;
+            padding: 2mm;
+            margin: 0;
+            background: #fff;
+            color: #000;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', 'Poppins', sans-serif;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .thermal-header {
+            text-align: center;
+            font-size: 8pt;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1.5px solid #000;
+            padding-bottom: 1mm;
+            margin-bottom: 1mm;
+            line-height: 1.1;
+        }
+
+        .thermal-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8mm;
+            overflow: hidden;
+        }
+
+        .thermal-field {
+            display: flex;
+            align-items: baseline;
+            gap: 1mm;
+            font-size: 7pt;
+            line-height: 1.2;
+        }
+
+        .thermal-label {
+            font-weight: 700;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            min-width: 12mm;
+            color: #000;
+        }
+
+        .thermal-value {
+            font-weight: 600;
+            color: #000;
+            word-break: break-all;
+        }
+
+        .thermal-item-name {
+            font-size: 8pt;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .thermal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            border-top: 1.5px solid #000;
+            padding-top: 1mm;
+            margin-top: 1mm;
+        }
+
+        .thermal-qr-container {
+            width: 14mm !important;
+            height: 14mm !important;
+            flex: 0 0 14mm !important;
+        }
+
+        .thermal-qr-container canvas,
+        .thermal-qr-container img {
+            width: 14mm !important;
+            height: 14mm !important;
+            display: block !important;
+        }
+
+        /* Thermal Print Media Rules */
+        @media print {
+            @page {
+                size: 50mm 50mm;
+                margin: 0;
+            }
+
+            body.print-thermal-label * {
+                visibility: hidden !important;
+            }
+
+            body.print-thermal-label #thermal-label-print-area,
+            body.print-thermal-label #thermal-label-print-area * {
+                visibility: visible !important;
+            }
+
+            body.print-thermal-label #thermal-label-print-area {
+                position: fixed !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 50mm !important;
+                height: 50mm !important;
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+            }
+        }

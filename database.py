@@ -146,9 +146,11 @@ def get_db_ctx(commit=False, dictionary=True):
             pass
 
 def init_db():
+    # On Railway/production, MySQL is provided as a service - don't try to auto-start it
+    is_railway = os.getenv('RAILWAY_PUBLIC_DOMAIN') or os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RAILWAY_SERVICE_ID')
     db_host = MYSQL_CONFIG.get('host', '127.0.0.1')
     db_port = MYSQL_CONFIG.get('port', 3307)
-    if db_host in ('localhost', '127.0.0.1'):
+    if db_host in ('localhost', '127.0.0.1') and not is_railway:
         ensure_mysql_running(host=db_host, port=db_port)
     # Connect to server to create database if not exists
     try:
@@ -486,8 +488,10 @@ def init_db():
         "CREATE INDEX IF NOT EXISTS idx_boxes_location ON boxes(location);",
         "CREATE INDEX IF NOT EXISTS idx_bom_components_bom ON bom_components(bom_id);",
         "CREATE INDEX IF NOT EXISTS idx_dv_dp_number ON dispatch_verification(dp_number);",
+        "CREATE INDEX IF NOT EXISTS idx_dv_so_number ON dispatch_verification(so_number);",
         "CREATE INDEX IF NOT EXISTS idx_dv_status ON dispatch_verification(status);",
         "CREATE INDEX IF NOT EXISTS idx_dv_item_type ON dispatch_verification(item_type);",
+        "CREATE INDEX IF NOT EXISTS idx_dp_created_at ON dispatch_plans(created_at);",
     ]
     for idx_sql in indexes:
         try:

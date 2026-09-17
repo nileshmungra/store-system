@@ -1,64 +1,11 @@
 /* =========================================================
-   🌓 Modern Theme & UI Design System - Inventory Management
+   ☀️ Pure Light Theme & UI Design System - Inventory Management
    ========================================================= */
 
-/* --- Theme Variables (Dark is default — applies before JS sets data-theme) ---
-   Single source of truth: change here and every page updates automatically.
-   ================================================================== */
+/* --- Single Source of Truth: Light Theme Default --- */
 :root,
+[data-theme="light"],
 [data-theme="dark"] {
-    /* Backgrounds */
-    --bg-main: #0f172a;
-    --bg-card: rgba(30, 41, 59, 0.9);
-    --nav-bg: rgba(15, 23, 42, 0.95);
-    /* Borders & Shadows */
-    --border-color: rgba(255, 255, 255, 0.12);
-    --shadow-glow: rgba(0, 0, 0, 0.35);
-    /* Text */
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    /* Brand / Accent */
-    --primary-color: #6366f1;
-    --brand-500: #22c55e;
-    --brand-600: #16a34a;
-    /* Inputs */
-    --input-bg: #0f172a;
-    --input-text: #f8fafc;
-    --input-border: #334155;
-    /* Navigation Pills */
-    --pill-bg: rgba(255, 255, 255, 0.06);
-    --pill-border: rgba(255, 255, 255, 0.1);
-    --pill-color: #cbd5e1;
-    --pill-hover-bg: rgba(255, 255, 255, 0.16);
-    --pill-hover-border: rgba(255, 255, 255, 0.25);
-    /* Tables */
-    --table-header-bg: #1e293b;
-    --table-header-color: #f8fafc;
-}
-
-/* --- Dark Mode Utility Overrides ---
-   Bootstrap .text-dark = near-black, invisible on dark bg → flip to light.
-   Only fire when [data-theme="dark"] is explicitly set (safe — no pre-JS flash). */
-[data-theme="dark"] .text-dark,
-[data-theme="dark"] .text-slate-800,
-[data-theme="dark"] .text-slate-900 {
-    color: #f1f2f4 !important;
-}
-
-[data-theme="dark"] .text-slate-300,
-[data-theme="dark"] .text-slate-400,
-[data-theme="dark"] .text-slate-500,
-[data-theme="dark"] .text-slate-600,
-[data-theme="dark"] .text-slate-700 {
-    color: var(--text-muted) !important;
-}
-
-[data-theme="dark"] .text-slate-200 {
-    color: var(--text-main) !important;
-}
-
-/* --- Light Mode Theme Overrides --- */
-[data-theme="light"] {
     /* Backgrounds */
     --bg-main: #f1f5f9;
     --bg-card: #ffffff;
@@ -69,7 +16,7 @@
     /* Text */
     --text-main: #0f172a;
     --text-muted: #475569;
-    /* Brand / Accent (slightly deeper for light-bg contrast) */
+    /* Brand / Accent */
     --primary-color: #4f46e5;
     --brand-500: #22c55e;
     --brand-600: #16a34a;
@@ -86,6 +33,47 @@
     /* Tables */
     --table-header-bg: #f8fafc;
     --table-header-color: #0f172a;
+}
+
+/* Hide Theme Toggle Buttons Project-Wide */
+#globalThemeBtn,
+.theme-toggle-btn,
+[data-action="toggle-theme"],
+#themeIcon,
+#themeText {
+    display: none !important;
+}
+
+/* Base Light Navbar & Dropdown Styling */
+.navbar-custom {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+}
+
+.nav-pill-custom {
+    color: #334155 !important;
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+}
+
+.dropdown-menu-custom,
+.dropdown-menu,
+.dropdown-menu-dark {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+.dropdown-item-custom,
+.dropdown-item {
+    color: #0f172a !important;
+}
+
+.dropdown-item-custom:hover,
+.dropdown-item:hover {
+    background-color: #e2e8f0 !important;
+    color: #4f46e5 !important;
 }
 
 /* --- Global Body & Typography --- */
@@ -113,13 +101,36 @@ h6 {
 }
 
 /* --- Brand Color Accents --- */
-.text-brand { color: var(--brand-500) !important; }
-.bg-brand { background-color: var(--brand-500) !important; }
-.btn-brand { background-color: var(--brand-500) !important; border-color: var(--brand-500) !important; color: #fff !important; }
-.btn-brand:hover { background-color: var(--brand-600) !important; border-color: var(--brand-600) !important; }
-.border-brand { border-color: var(--brand-500) !important; }
-.bg-brand-100 { background-color: rgba(34, 197, 94, 0.1) !important; }
-.text-brand-600 { color: var(--brand-600) !important; }
+.text-brand {
+    color: var(--brand-500) !important;
+}
+
+.bg-brand {
+    background-color: var(--brand-500) !important;
+}
+
+.btn-brand {
+    background-color: var(--brand-500) !important;
+    border-color: var(--brand-500) !important;
+    color: #fff !important;
+}
+
+.btn-brand:hover {
+    background-color: var(--brand-600) !important;
+    border-color: var(--brand-600) !important;
+}
+
+.border-brand {
+    border-color: var(--brand-500) !important;
+}
+
+.bg-brand-100 {
+    background-color: rgba(34, 197, 94, 0.1) !important;
+}
+
+.text-brand-600 {
+    color: var(--brand-600) !important;
+}
 
 /* --- Navigation & Header Bar --- */
 .navbar-custom,
