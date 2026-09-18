@@ -499,6 +499,26 @@ def init_db():
         except Exception:
             pass
 
+    # Legacy QR Data Table (for old QR codes from deleted databases)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS legacy_qr_data (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            box_id VARCHAR(255) UNIQUE NOT NULL,
+            item_name VARCHAR(255),
+            qty_in_box INT DEFAULT 0,
+            batch_id VARCHAR(255),
+            supplier_or_party VARCHAR(255),
+            rack_location VARCHAR(255),
+            inward_date DATETIME DEFAULT NULL,
+            status VARCHAR(50) DEFAULT 'ARCHIVED',
+            original_data JSON DEFAULT NULL,
+            imported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            notes TEXT,
+            INDEX idx_legacy_box_id (box_id),
+            INDEX idx_legacy_item (item_name)
+        );
+    ''')
+
     # Pending Loading Entry Table (from Excel)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS pending_loading_entries (

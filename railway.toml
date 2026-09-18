@@ -1,0 +1,26 @@
+[build]
+image = "railway/python:3.12"
+
+[deploy]
+startCommand = "uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2"
+buildCommand = "pip install -r requirements.txt"
+
+[app]
+name = "Bhumi-Store-App"
+type = "web"
+
+[databases.db]
+name = "inventory_db"
+user = "root"
+plan = "basic-0"
+
+[env]
+ADMIN_PASSWORD = { generateValue = true }
+API_SECRET_KEY = { generateValue = true }
+ALLOWED_ORIGINS = "*"
+DB_TYPE = "mysql"
+MYSQL_HOST = { fromDatabase = { name = "db", property = "host" } }
+MYSQL_PORT = { fromDatabase = { name = "db", property = "port" } }
+MYSQL_USER = { fromDatabase = { name = "db", property = "user" } }
+MYSQL_PASSWORD = { fromDatabase = { name = "db", property = "password" } }
+MYSQL_DATABASE = "inventory_db"

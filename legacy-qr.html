@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhumi Factory & Dispatch Manager - Legacy QR Manager</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/page-loader.css">
+    <script src="/static/js/page-loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/page-loader.css">
+</head>
+
+<body>
+
+    <div id="page-progress-bar"></div>
+    <div id="page-loader-overlay">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Loading...</div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-custom no-print sticky-top py-2 mb-4">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="/dashboard">
+                <span class="fs-4 text-warning">📦</span>
+                <span>Bhumi Factory & Dispatch Manager</span>
+            </a>
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse"
+                data-bs-target="#topNavbarMenu">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="topNavbarMenu">
+                <div class="navbar-nav ms-auto align-items-center gap-2 flex-wrap">
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle active" href="#" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-box-seam me-1 text-info"></i> Inward & Production
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/inward-page"><i
+                                        class="bi bi-box-arrow-in-down text-info"></i> Inward & QR Code</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/production-page"><i
+                                        class="bi bi-gear-wide-connected text-warning"></i> Extruder Production</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-truck me-1 text-success"></i> Dispatch & Scanning
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/scanner"><i
+                                        class="bi bi-qr-code-scan text-success"></i> Mobile QR Scanner</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/dispatch-page"><i
+                                        class="bi bi-truck text-primary"></i> Dispatch Plans</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/challan-page"><i
+                                        class="bi bi-file-earmark-pdf text-danger"></i> Delivery Challan Generator</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-sliders me-1 text-warning"></i> Master Control
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/bom-page"><i
+                                        class="bi bi-diagram-3 text-warning"></i> BOM Master</a></li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/items-page"><i
+                                        class="bi bi-boxes text-info"></i> Item Master & Admin</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item dropdown-item-custom text-primary fw-bold"
+                                    href="javascript:void(0)" onclick="openBackupModal()"><i
+                                        class="bi bi-database-down text-primary"></i> Database Backup & Restore</a></li>
+                        </ul>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <a class="nav-pill-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="bi bi-bar-chart-line me-1 text-primary"></i> Reports & Logs
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-custom">
+                            <li><a class="dropdown-item dropdown-item-custom" href="/report-page"><i
+                                        class="bi bi-graph-up-arrow text-success"></i> Stock Reports & Analytics</a>
+                            </li>
+                            <li><a class="dropdown-item dropdown-item-custom" href="/logs-page"><i
+                                        class="bi bi-journal-text text-secondary"></i> Activity Audit Logs</a></li>
+                        </ul>
+                    </div>
+                    <button id="globalThemeBtn" onclick="toggleGlobalTheme()"
+                        class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold d-flex align-items-center gap-1 shadow-sm ms-2"
+                        style="display: none !important;">
+                        <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+                        <span id="themeText">Dark Mode</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container px-3 pb-5">
+        <div class="text-center mb-4">
+            <h4 class="fw-extrabold m-0 text-dark"><i class="bi bi-archive text-warning me-2"></i> Legacy QR Manager
+            </h4>
+            <p class="text-secondary small m-0 mt-1">Import, view, and manage old QR codes from deleted databases</p>
+        </div>
+
+        <div id="result" class="mb-3"></div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <button class="btn btn-primary fw-bold w-100" data-bs-toggle="collapse" href="#importSection"
+                    role="button">
+                    <i class="bi bi-file-earmark-arrow-down me-2"></i>Import Legacy QR Data
+                </button>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-success fw-bold w-100" data-bs-toggle="collapse" href="#scanLegacySection"
+                    role="button">
+                    <i class="bi bi-qr-code-scan me-2"></i>Scan Old QR Code
+                </button>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-info fw-bold w-100" onclick="exportLegacyData()">
+                    <i class="bi bi-download me-2"></i>Export All Legacy Data
+                </button>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-warning fw-bold w-100" data-bs-toggle="collapse" href="#uploadSection"
+                    role="button">
+                    <i class="bi bi-image me-2"></i>Upload QR Image
+                </button>
+            </div>
+        </div>
+
+        <div class="collapse mb-4" id="importSection">
+            <div class="card glass-card p-4">
+                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-upload me-2"></i>Import Legacy QR Record</h6>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-dark fw-bold small">Box ID / QR Code Text *</label>
+                        <input type="text" id="legacyBoxId" class="form-control form-control-custom"
+                            placeholder="e.g., COIL-EX-00001 or BATCH-001">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-dark fw-bold small">Item Name *</label>
+                        <input type="text" id="legacyItemName" class="form-control form-control-custom"
+                            placeholder="e.g., HDPE Pipe 16mm">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-dark fw-bold small">Qty in Box *</label>
+                        <input type="number" id="legacyQty" class="form-control form-control-custom" min="0" value="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-dark fw-bold small">Batch ID</label>
+                        <input type="text" id="legacyBatchId" class="form-control form-control-custom"
+                            placeholder="e.g., BATCH-2024-001">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-dark fw-bold small">Supplier / Party</label>
+                        <input type="text" id="legacySupplier" class="form-control form-control-custom">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-dark fw-bold small">Rack Location</label>
+                        <input type="text" id="legacyRack" class="form-control form-control-custom"
+                            placeholder="e.g., Rack-A-01">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-dark fw-bold small">Inward Date</label>
+                        <input type="datetime-local" id="legacyInwardDate" class="form-control form-control-custom">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label text-dark fw-bold small">Notes</label>
+                        <input type="text" id="legacyNotes" class="form-control form-control-custom"
+                            placeholder="Optional notes about this record">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-dark fw-bold small">Original QR Data (JSON - optional)</label>
+                        <textarea id="legacyOriginalData" class="form-control form-control-custom" rows="3"
+                            placeholder='{"boxId":"...","batchId":"...","item":"...","qty":...}'></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button onclick="importLegacyQR()" class="btn btn-primary fw-bold px-4">
+                            <i class="bi bi-check-circle me-2"></i>Import Record
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="collapse mb-4" id="scanLegacySection">
+            <div class="card glass-card p-4">
+                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-camera me-2"></i>Scan Old QR Code</h6>
+                <p class="text-muted small">Scan a QR code printed on an item from the old database. The item details
+                    will be displayed (read-only mode).</p>
+                <div id="legacyScannerPlaceholder" class="text-center p-5">
+                    <div style="font-size:3rem;">📷</div>
+                    <p class="text-muted mt-2">Click below to start scanning old QR codes</p>
+                    <button class="btn btn-primary fw-bold px-4" onclick="startLegacyScanner()">
+                        <i class="bi bi-camera-video me-2"></i>Start Camera Scanner
+                    </button>
+                </div>
+                <div id="legacyReaderWrapper" style="display:none;">
+                    <div id="legacyReader" style="max-width:400px;margin:0 auto;"></div>
+                    <div class="mt-2 text-center">
+                        <button class="btn btn-outline-danger btn-sm" onclick="stopLegacyScanner()">
+                            <i class="bi bi-camera-video-off me-1"></i>Stop Scanner
+                        </button>
+                    </div>
+                </div>
+                <div id="legacyScanResult" class="mt-3"></div>
+            </div>
+        </div>
+
+        <div class="collapse mb-4" id="uploadSection">
+            <div class="card glass-card p-4">
+                <h6 class="fw-bold text-primary mb-3"><i class="bi bi-upload me-2"></i>Upload QR Image</h6>
+                <p class="text-muted small">Upload a QR code image file (PNG, JPG, JPEG, GIF, BMP) to decode and save.
+                </p>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <input type="file" id="legacyImageUpload" accept="image/*"
+                            class="form-control form-control-custom">
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary fw-bold w-100" onclick="scanLegacyImage()">
+                            <i class="bi bi-upload me-2"></i>Scan Image
+                        </button>
+                    </div>
+                </div>
+                <div id="legacyImagePreview" class="mt-3 text-center" style="display:none;">
+                    <img id="legacyImagePreviewImg"
+                        style="max-width:300px;max-height:300px;border:2px solid #dee2e6;border-radius:8px;" />
+                </div>
+            </div>
+        </div>
+
+        <div class="card glass-card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-dark m-0"><i class="bi bi-table me-2"></i>Legacy QR Records</h6>
+                <div class="d-flex gap-2">
+                    <input type="text" id="legacySearch" class="form-control form-control-custom" style="width:250px;"
+                        placeholder="Search box ID, item name..." oninput="loadLegacyRecords()">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="loadLegacyRecords()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <button class="btn btn-warning fw-bold btn-sm" onclick="generateAllLegacyQR()">
+                        <i class="bi bi-qr-code me-1"></i> Generate All QR
+                    </button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Box ID</th>
+                            <th>Item Name</th>
+                            <th>Qty</th>
+                            <th>Batch ID</th>
+                            <th>Supplier</th>
+                            <th>Status</th>
+                            <th>Imported At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="legacyTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center text-muted p-4">No records yet. Import legacy QR data or
+                                scan old QR codes.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <span id="legacyTotalInfo" class="text-muted small"></span>
+                <div>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="legacyPage(-1)" id="legacyPrevBtn"
+                        disabled>
+                        <i class="bi bi-chevron-left"></i> Previous
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="legacyPage(1)" id="legacyNextBtn"
+                        disabled>
+                        Next <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="legacyDetailModal" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title text-primary fw-bold m-0"><i class="bi bi-eye me-2"></i>Legacy QR Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="legacyDetailContent"></div>
+                <div class="modal-footer border-top py-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="editLegacyRecord()">
+                        <i class="bi bi-pencil me-1"></i> Edit
+                    </button>
+                    <button type="button" class="btn btn-warning btn-sm"
+                        onclick="generateLegacyQR(legacyCurrentRecord?.box_id)">
+                        <i class="bi bi-qr-code me-1"></i> Generate QR
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="confirmDeleteLegacy()">
+                        <i class="bi bi-trash me-1"></i> Delete
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="legacyEditModal" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title text-primary fw-bold m-0"><i class="bi bi-pencil-square me-2"></i>Edit Legacy
+                        QR</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editBoxId">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small">Item Name</label>
+                        <input type="text" id="editItemName" class="form-control form-control-custom">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small">Qty in Box</label>
+                        <input type="number" id="editQty" class="form-control form-control-custom" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small">Supplier / Party</label>
+                        <input type="text" id="editSupplier" class="form-control form-control-custom">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small">Rack Location</label>
+                        <input type="text" id="editRack" class="form-control form-control-custom">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small">Notes</label>
+                        <input type="text" id="editNotes" class="form-control form-control-custom">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark small">Status</label>
+                        <select id="editStatus" class="form-select form-control-custom">
+                            <option value="ARCHIVED">ARCHIVED</option>
+                            <option value="ACTIVE">ACTIVE</option>
+                            <option value="DISPATCHED">DISPATCHED</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-2">
+                    <button type="button" class="btn btn-primary fw-bold px-4" onclick="saveLegacyEdit()">
+                        <i class="bi bi-check-circle me-1"></i> Save
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="legacyQRModal" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header border-bottom py-3">
+                    <h5 class="modal-title text-primary fw-bold m-0"><i class="bi bi-qr-code me-2"></i>Legacy QR Code
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div id="legacyQRPreview"></div>
+                    <div class="mt-3">
+                        <label class="form-label fw-bold text-dark small">Box ID</label>
+                        <div class="fw-bold fs-5 font-monospace" id="legacyQRBoxId"></div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label fw-bold text-dark small">Item Name</label>
+                        <div class="fw-bold" id="legacyQRItemName"></div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label fw-bold text-dark small">QR Payload</label>
+                        <pre class="bg-light p-2 rounded small" id="legacyQRPayload"
+                            style="max-height:100px;overflow:auto;"></pre>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-2">
+                    <button type="button" class="btn btn-primary fw-bold px-4" onclick="printLegacyQR()">
+                        <i class="bi bi-printer me-2"></i>Print QR
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/security.js"></script>
+    <script src="/static/js/theme.js"></script>
+    <script src="/static/js/toast.js"></script>
+    <script src="/static/js/english-ui.js"></script>
+    <script src="/static/js/backup-modal.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script>
+        if (typeof jsQR === 'undefined') {
+            document.write('<script src="https://unpkg.com/jsQR@1.4.0/dist/jsQR.js"><\/script>');
+        }
+    </script>
+    <script src="/static/js/legacy-qr.js"></script>
+</body>
+
+</html>

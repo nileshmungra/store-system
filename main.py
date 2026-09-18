@@ -370,6 +370,12 @@ def get_challan_page():
         raise HTTPException(status_code=404, detail="challan.html not found!")
     return FileResponse("challan.html")
 
+@app.get("/legacy-qr-page")
+def get_legacy_qr_page():
+    if not os.path.exists("legacy-qr.html"):
+        raise HTTPException(status_code=404, detail="legacy-qr.html not found!")
+    return FileResponse("legacy-qr.html")
+
 class VehicleInfoUpdateRequest(BaseModel):
     plan_id: int | str
     vehicle_no: str | None = ""
@@ -402,6 +408,31 @@ class NonDpOutwardRequest(BaseModel):
     issued_to: str | None = "Internal Dept"
     scanned_by: str | None = "Store Keeper"
     remark: str | None = ""
+
+
+class LegacyQRImportRequest(BaseModel):
+    box_id: str
+    item_name: str
+    qty_in_box: int = 0
+    batch_id: str | None = None
+    supplier_or_party: str | None = None
+    rack_location: str | None = None
+    inward_date: str | None = None
+    notes: str | None = None
+    original_data: dict | None = None
+
+
+class LegacyQRUpdateRequest(BaseModel):
+    item_name: str | None = None
+    qty_in_box: int | None = None
+    supplier_or_party: str | None = None
+    rack_location: str | None = None
+    notes: str | None = None
+    status: str | None = None
+
+
+class LegacyQRScanSaveRequest(BaseModel):
+    scanned_text: str
 
 
 class FifoOutwardRequest(BaseModel):
@@ -1938,10 +1969,21 @@ def _check_box_status_impl(box_id: str, dp_number: str | None = None, dispatch_p
         """, (box_id,))
         box = cursor.fetchone()
 
+        is_legacy = False
         if not box:
-            raise HTTPException(status_code=404, detail="This Box/Coil/Store Kit ID was not found in store inventory!")
-        if box["status"] == 'OUT' or box["status"] == 'DISPATCHED':
-            raise HTTPException(status_code=400, detail="This Box/Coil has already been DISPATCHED / ISSUED OUT!")
+            cursor.execute("""
+                SELECT lq.box_id, lq.item_name, lq.qty_in_box, lq.status,
+                       COALESCE(NULLIF(lq.item_name, ''), IF(lq.box_id LIKE 'COIL-%%', 'MTR', 'Pcs')) as unit
+                FROM legacy_qr_data lq
+                WHERE lq.box_id = %s
+            """, (box_id,))
+            box = cursor.fetchone()
+            is_legacy = bool(box)
+
+            if not box:
+                raise HTTPException(status_code=404, detail="This Box/Coil/Store Kit ID was not found in store inventory!")
+            if box["status"] == 'OUT' or box["status"] == 'DISPATCHED':
+                raise HTTPException(status_code=400, detail="This Box/Coil has already been DISPATCHED / ISSUED OUT!")
 
         cursor.execute("""
             SELECT COALESCE(SUM(qty_in_box), 0) as total_stock
@@ -1956,11 +1998,15 @@ def _check_box_status_impl(box_id: str, dp_number: str | None = None, dispatch_p
         "item_name": box["item_name"],
         "qty": box["qty_in_box"],
         "unit": box["unit"],
-        "total_available_stock": tot_stock
+        "total_available_stock": tot_stock,
+        "is_legacy": is_legacy
     }
 
+    if is_legacy:
+        response["legacy_note"] = "This item data is from archived legacy QR records. Outward processing is not available for legacy items."
+
     dp_target = dp_number or (str(dispatch_plan_id) if dispatch_plan_id else None)
-    if dp_target:
+    if dp_target and not is_legacy:
         with get_db_ctx() as (conn, cursor):
             dpi_items = []
 
@@ -2023,6 +2069,207 @@ def _check_box_status_impl(box_id: str, dp_number: str | None = None, dispatch_p
                 response["dp_unit"] = unit
 
     return response
+
+# ================================================
+# LEGACY QR DATA APIs (Old QR codes from deleted databases)
+# ================================================
+
+@app.post("/api/legacy-qr/import")
+def import_legacy_qr(req: LegacyQRImportRequest):
+    """Import legacy QR data from old/deleted database records."""
+    with get_db_ctx(commit=True) as (conn, cursor):
+        try:
+            cursor.execute("""
+                INSERT INTO legacy_qr_data 
+                (box_id, item_name, qty_in_box, batch_id, supplier_or_party, rack_location, inward_date, notes, original_data)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    item_name = VALUES(item_name),
+                    qty_in_box = VALUES(qty_in_box),
+                    batch_id = VALUES(batch_id),
+                    supplier_or_party = VALUES(supplier_or_party),
+                    rack_location = VALUES(rack_location),
+                    inward_date = VALUES(inward_date),
+                    notes = VALUES(notes),
+                    original_data = VALUES(original_data)
+            """, (
+                req.box_id, req.item_name, req.qty_in_box, req.batch_id,
+                req.supplier_or_party, req.rack_location, req.inward_date,
+                req.notes, json.dumps(req.original_data) if req.original_data else None
+            ))
+            add_log(conn, "LEGACY_QR_IMPORT", f"Imported legacy QR data for box_id: {req.box_id}")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to import legacy QR data: {str(e)}")
+
+    return {"status": "Success", "message": f"Legacy QR data for {req.box_id} imported successfully"}
+
+@app.get("/api/legacy-qr/list")
+def list_legacy_qr(search: str = "", item_name: str = "", page: int = 1, limit: int = 100):
+    """List all legacy QR records with optional search filters."""
+    with get_db_ctx() as (conn, cursor):
+        where_clauses = []
+        params = []
+
+        if search:
+            where_clauses.append("(lq.box_id LIKE %s OR lq.item_name LIKE %s OR lq.batch_id LIKE %s)")
+            params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
+        if item_name:
+            where_clauses.append("lq.item_name LIKE %s")
+            params.append(f"%{item_name}%")
+
+        where_sql = ""
+        if where_clauses:
+            where_sql = "WHERE " + " AND ".join(where_clauses)
+
+        offset = (page - 1) * limit
+        cursor.execute(f"""
+            SELECT lq.* FROM legacy_qr_data lq {where_sql}
+            ORDER BY lq.imported_at DESC LIMIT %s OFFSET %s
+        """, (*params, limit, offset))
+        records = cursor.fetchall()
+
+        cursor.execute(f"""
+            SELECT COUNT(*) as total FROM legacy_qr_data lq {where_sql}
+        """, params)
+        total = cursor.fetchone()["total"]
+
+    return {
+        "status": "Success",
+        "records": records,
+        "page": page,
+        "limit": limit,
+        "total": total
+    }
+
+@app.get("/api/legacy-qr/{box_id}")
+def get_legacy_qr(box_id: str):
+    """Get a specific legacy QR record by box_id."""
+    with get_db_ctx() as (conn, cursor):
+        cursor.execute("SELECT * FROM legacy_qr_data WHERE box_id = %s", (box_id,))
+        record = cursor.fetchone()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Legacy QR record not found")
+
+    return {"status": "Success", "record": record}
+
+@app.put("/api/legacy-qr/{box_id}")
+def update_legacy_qr(box_id: str, req: LegacyQRUpdateRequest):
+    """Update a legacy QR record."""
+    with get_db_ctx(commit=True) as (conn, cursor):
+        cursor.execute("SELECT * FROM legacy_qr_data WHERE box_id = %s", (box_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Legacy QR record not found")
+
+        update_fields = []
+        params = []
+        for field in ["item_name", "qty_in_box", "supplier_or_party", "rack_location", "notes", "status"]:
+            val = getattr(req, field)
+            if val is not None:
+                update_fields.append(f"{field} = %s")
+                params.append(val)
+
+        if update_fields:
+            params.append(box_id)
+            cursor.execute(f"UPDATE legacy_qr_data SET {', '.join(update_fields)} WHERE box_id = %s", params)
+            add_log(conn, "LEGACY_QR_UPDATE", f"Updated legacy QR data for box_id: {box_id}")
+
+    return {"status": "Success", "message": f"Legacy QR data for {box_id} updated successfully"}
+
+@app.delete("/api/legacy-qr/{box_id}")
+def delete_legacy_qr(box_id: str):
+    """Delete a legacy QR record."""
+    with get_db_ctx(commit=True) as (conn, cursor):
+        cursor.execute("SELECT * FROM legacy_qr_data WHERE box_id = %s", (box_id,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Legacy QR record not found")
+        cursor.execute("DELETE FROM legacy_qr_data WHERE box_id = %s", (box_id,))
+        add_log(conn, "LEGACY_QR_DELETE", f"Deleted legacy QR record for box_id: {box_id}")
+
+    return {"status": "Success", "message": f"Legacy QR record for {box_id} deleted"}
+
+@app.post("/api/legacy-qr/scan-save")
+def scan_save_legacy_qr(req: LegacyQRScanSaveRequest):
+    """Scan a QR code and save data to database with available details."""
+    scanned_text = req.scanned_text.strip()
+    if not scanned_text:
+        raise HTTPException(status_code=400, detail="Scanned text is required")
+
+    with get_db_ctx(commit=True) as (conn, cursor):
+        cursor.execute("SELECT * FROM legacy_qr_data WHERE box_id = %s", (scanned_text,))
+        existing = cursor.fetchone()
+
+        if existing:
+            add_log(conn, "LEGACY_QR_SCAN", f"Scanned existing legacy QR: {scanned_text}")
+            return {"status": "Success", "message": "Legacy QR found in database", "record": existing, "is_new": False}
+
+        item_name = None
+        qty_in_box = 0
+        batch_id = None
+        supplier = None
+        rack_location = None
+        notes = None
+        original_data = None
+
+        try:
+            parsed = json.loads(scanned_text)
+            if isinstance(parsed, dict):
+                item_name = parsed.get("item_name") or parsed.get("item") or parsed.get("itemName") or parsed.get("name")
+                qty_in_box = parsed.get("qty") or parsed.get("qty_in_box") or parsed.get("quantity") or parsed.get("qty") or 0
+                batch_id = parsed.get("batch_id") or parsed.get("batchId") or parsed.get("batch") or None
+                supplier = parsed.get("supplier") or parsed.get("supplier_or_party") or parsed.get("party") or parsed.get("supplier_name") or None
+                rack_location = parsed.get("rack_location") or parsed.get("rack") or parsed.get("location") or None
+                notes = parsed.get("notes") or parsed.get("remark") or None
+                original_data = scanned_text
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+        if not item_name:
+            item_name = scanned_text
+
+        cursor.execute("""
+            INSERT INTO legacy_qr_data 
+            (box_id, item_name, qty_in_box, batch_id, supplier_or_party, rack_location, notes, original_data, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (scanned_text, item_name, qty_in_box, batch_id, supplier, rack_location, notes, original_data, "ARCHIVED"))
+
+        record = {
+            "id": cursor.lastrowid,
+            "box_id": scanned_text,
+            "item_name": item_name,
+            "qty_in_box": qty_in_box,
+            "batch_id": batch_id,
+            "supplier_or_party": supplier,
+            "rack_location": rack_location,
+            "inward_date": None,
+            "status": "ARCHIVED",
+            "original_data": original_data,
+            "imported_at": datetime.now().isoformat(),
+            "notes": notes,
+        }
+
+        add_log(conn, "LEGACY_QR_SCAN_SAVE", f"Scanned and saved new legacy QR: {scanned_text}")
+
+    return {"status": "Success", "message": "New legacy QR scanned and saved to database", "record": record, "is_new": True}
+
+@app.get("/api/legacy-qr/qr-export")
+def export_legacy_qr_for_qr(search: str = "", limit: int = 1000):
+    """Export legacy QR data for QR code generation."""
+    with get_db_ctx() as (conn, cursor):
+        where_clauses = []
+        params = []
+        if search:
+            where_clauses.append("(box_id LIKE %s OR item_name LIKE %s OR batch_id LIKE %s)")
+            params.extend([f"%{search}%", f"%{search}%", f"%{search}%"])
+
+        where_sql = ""
+        if where_clauses:
+            where_sql = "WHERE " + " AND ".join(where_clauses)
+
+        cursor.execute(f"SELECT * FROM legacy_qr_data {where_sql} ORDER BY box_id LIMIT %s", (*params, limit))
+        records = cursor.fetchall()
+
+    return {"status": "Success", "records": records, "total": len(records)}
 
 # 8. Search QR Codes
 @app.get("/api/search-qrs")

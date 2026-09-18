@@ -807,6 +807,44 @@ function initCameraScanner() {
                     return;
                 }
 
+                // 🎯 Handle Legacy QR Code - show read-only details
+                if (boxData.is_legacy) {
+                    isScanning = false;
+                    const legacyNote = boxData.legacy_note || "This item data is from archived legacy QR records.";
+                    resultDiv.className = "mb-3 text-center p-4 rounded border border-warning shadow";
+                    resultDiv.style.background = "linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%)";
+                    resultDiv.innerHTML = `
+                        <div style="font-size:2.5rem;">📦</div>
+                        <div class="fw-extrabold fs-5 text-warning mt-2">Legacy QR Code Detected</div>
+                        <div class="text-dark fw-bold mt-1">${boxData.item_name || 'N/A'}</div>
+                        <div class="small text-muted mt-1">Box ID: <span class="font-monospace fw-bold">${cleanBoxId}</span></div>
+                        <div class="row g-2 mt-3 justify-content-center">
+                            <div class="col-6">
+                                <div class="p-2 rounded bg-white border">
+                                    <div class="small text-muted">Qty</div>
+                                    <div class="fw-bold fs-5">${boxData.qty || 0} ${boxData.unit || 'Pcs'}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 rounded bg-white border">
+                                    <div class="small text-muted">Store Stock</div>
+                                    <div class="fw-bold fs-5">${boxData.total_available_stock || 0}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 p-2 rounded bg-warning bg-opacity-10 border border-warning">
+                            <small class="text-warning"><i class="bi bi-info-circle me-1"></i>${legacyNote}</small>
+                        </div>
+                        <div class="mt-2">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="startNextScan()">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Scan Next
+                            </button>
+                        </div>
+                    `;
+                    if (window.showToast) window.showToast("Legacy QR scanned - details shown (read-only)", "warning");
+                    return;
+                }
+
                 // 🎯 Validation for DP mode
                 let dpRemaining = null;
                 let dpPlanned = null;
