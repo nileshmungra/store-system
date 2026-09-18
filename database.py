@@ -17,12 +17,31 @@ logging.basicConfig(
 logger = logging.getLogger("database")
 
 # MySQL connection configuration
+def _parse_mysql_url(url):
+    if not url:
+        return None
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        return {
+            'host': parsed.hostname,
+            'port': parsed.port or 3306,
+            'user': parsed.username,
+            'password': parsed.password,
+            'database': parsed.path.lstrip('/'),
+        }
+    except Exception:
+        return None
+
+_mysql_url = os.getenv('DATABASE_URL') or os.getenv('MYSQL_URL') or os.getenv('MYSQL_PRIVATE_URL')
+_parsed_url = _parse_mysql_url(_mysql_url) if _mysql_url else None
+
 MYSQL_CONFIG = {
-    'host': os.getenv('MYSQL_HOST') or os.getenv('MYSQLHOST', 'localhost'),
-    'port': int(os.getenv('MYSQL_PORT') or os.getenv('MYSQLPORT', 3307)),
-    'user': os.getenv('MYSQL_USER') or os.getenv('MYSQLUSER', 'root'),
-    'password': os.getenv('MYSQL_PASSWORD') or os.getenv('MYSQLPASSWORD', ''),
-    'database': os.getenv('MYSQL_DATABASE') or os.getenv('MYSQLDATABASE', 'inventory_db'),
+    'host': _parsed_url.get('host') if _parsed_url else (os.getenv('MYSQL_HOST') or os.getenv('MYSQLHOST', 'localhost')),
+    'port': _parsed_url.get('port') if _parsed_url else int(os.getenv('MYSQL_PORT') or os.getenv('MYSQLPORT', 3306)),
+    'user': _parsed_url.get('user') if _parsed_url else (os.getenv('MYSQL_USER') or os.getenv('MYSQLUSER', 'root')),
+    'password': _parsed_url.get('password') if _parsed_url else (os.getenv('MYSQL_PASSWORD') or os.getenv('MYSQLPASSWORD', '')),
+    'database': _parsed_url.get('database') if _parsed_url else (os.getenv('MYSQL_DATABASE') or os.getenv('MYSQLDATABASE', 'inventory_db')),
 }
 
 # Global connection pool object
